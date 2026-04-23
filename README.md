@@ -56,14 +56,4 @@
 
 Если есть `client/dist`, сервер автоматически раздает статику и SPA-роуты.
 
-## Deploy на Render
-- Frontend: **Static Site** (`client`)
-  - Build: `npm install && npm run build`
-  - Publish directory: `dist`
-- Backend: **Web Service** (`server`)
-  - Build: `npm install`
-  - Start: `node index.js`
-
-## Безопасность
-- Не коммитьте `.env`, ключи и токены
-- Если секрет уже попал в git-историю, перевыпустите (rotate) ключ
+## Ссылка - 
