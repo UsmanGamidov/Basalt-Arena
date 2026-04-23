@@ -1,5 +1,6 @@
-const BASE = '/api/mock/v1'
-const BASE_V2 = '/api/mock/v1/v2'
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
+const BASE = `${API_BASE_URL}/api/mock/v1`
+const BASE_V2 = `${API_BASE_URL}/api/mock/v1/v2`
 const TOKEN_KEY = 'basalt_mock_token'
 
 function safeStorage(fn) {
