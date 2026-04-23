@@ -56,4 +56,4 @@
 
 Если есть `client/dist`, сервер автоматически раздает статику и SPA-роуты.
 
-Ссылка - `https://basalt-arena.onrender.com`
+[Ссылка на сайт](https://basalt-arena.onrender.com)
