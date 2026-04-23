@@ -1,0 +1,133 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Onest', ui-sans-serif, system-ui, sans-serif;
+  /* --font-sans: 'Unbounded', ui-sans-serif, system-ui, sans-serif; */
+  /* --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; */
+  --font-onest: 'Onest', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --color-aztec: #101f22;
+  --color-timber: #1a2e33;
+  --color-plantation: #224249;
+  --color-turquoise: #0dccf2;
+  --color-spring: #00ff9d;
+  --color-half-baked: #90c1cb;
+  --color-catskill: #f1f5f9;
+  --color-slate-arena: #64748b;
+  --color-pale-sky: #6b7280;
+  --color-gull: #94a3b8;
+  --color-fiord: #475569;
+  --color-mystic: #e2e8f0;
+}
+
+@layer base {
+  :root {
+    --app-scrollbar-track: #101f22;
+    --app-scrollbar-thumb: #2d4a52;
+    --app-scrollbar-thumb-hover: #3d6b7a;
+  }
+
+  html {
+    -webkit-font-smoothing: auto;
+    -moz-osx-font-smoothing: auto;
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-scrollbar-thumb) var(--app-scrollbar-track);
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--app-scrollbar-track);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--app-scrollbar-thumb);
+    border-radius: 5px;
+    border: 2px solid var(--app-scrollbar-track);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--app-scrollbar-thumb-hover);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: var(--app-scrollbar-track);
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-aztec font-sans text-catskill/92;
+    font-synthesis: none;
+  }
+
+  a,
+  button,
+  [role='button'],
+  input,
+  textarea,
+  select {
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: 260ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  select option {
+    background-color: var(--color-timber);
+    color: var(--color-catskill);
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+    line-height: 1;
+    user-select: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 1ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .scrollbar-track-transparent {
+    scrollbar-color: var(--app-scrollbar-thumb) transparent;
+  }
+
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-track-transparent::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scrollbar-track-transparent::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
