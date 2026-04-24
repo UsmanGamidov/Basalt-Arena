@@ -53,6 +53,5 @@
 2. Запустить сервер:
    - `npm run start`
 
-Если есть `client/dist`, сервер автоматически раздает статику и SPA-роуты.
 
 [Ссылка на сайт](https://basalt-arena.onrender.com)
