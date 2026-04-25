@@ -215,7 +215,7 @@ export function SprintBriefModal({ open, onClose, sprint }) {
                   {brief.acceptanceItems.map((item, idx) => (
                     <li key={idx} className="flex gap-3">
                       <span className="mt-0.5 shrink-0">
-                        <MaterialIcon name="check" size={16} className="text-spring" />
+                        <MaterialIcon name="check_circle" size={16} className="text-spring" />
                       </span>
                       <div className="min-w-0">
                         <RichLine parts={item.parts} />
@@ -264,7 +264,7 @@ export function SprintBriefModal({ open, onClose, sprint }) {
           <Link
             to={sprintTo}
             onClick={onClose}
-            className="relative inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-turquoise px-5 py-2.5 font-sans text-sm font-bold leading-5 text-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.25),0_4px_6px_-4px_rgba(13,204,242,0.25)] transition hover:brightness-110 sm:w-auto"
+            className="relative inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-turquoise px-5 py-2.5 font-sans text-sm font-bold leading-5 text-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.25),0_4px_6px_-4px_rgba(13,204,242,0.25)] transition-[background-color,box-shadow] duration-300 hover:bg-white hover:shadow-[0_12px_18px_-3px_rgba(255,255,255,0.35),0_6px_10px_-4px_rgba(255,255,255,0.35)] sm:w-auto"
           >
             <MaterialIcon name="rocket_launch" size={18} className="text-aztec" />
             Перейти к спринту

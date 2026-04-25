@@ -19,15 +19,15 @@ export function MainScreen() {
     <div className="flex min-h-screen flex-col bg-aztec">
       <AppHeader />
       <main className="flex-1 px-0 pt-[73px]">
-        <div className="mx-auto max-w-[1400px] px-6 py-10 md:px-10">
-          <div className="flex flex-col gap-8">
+        <div className="mx-auto max-w-[1400px] px-6 py-10 max-[360px]:px-3 max-[360px]:py-6 md:px-10">
+          <div className="flex flex-col gap-8 max-[360px]:gap-6">
             {activeSprint ? (
               <>
                 <PageTitleRow title={activeSprint.title} systemActive={activeSprint.systemActive} />
 
                 <SprintTimer endAt={activeSprint.endsAt} />
 
-                <div className="grid grid-cols-1 gap-6 md:gap-8 xl:grid-cols-[minmax(0,1fr)_418px] xl:items-start">
+                <div className="grid grid-cols-1 gap-6 max-[360px]:gap-5 md:gap-8 xl:grid-cols-[minmax(0,1fr)_418px] xl:items-start">
                   <TaskDescriptionCard />
 
                   <aside className="flex flex-col gap-6">

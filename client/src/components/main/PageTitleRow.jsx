@@ -1,22 +1,20 @@
-import { figmaCellTower } from '../../assets/icons/index.js'
-import { figmaIcon } from '../ui/figmaIconSizes.js'
-import { SvgIcon } from '../ui/SvgIcon.jsx'
+import { MaterialIcon } from '../ui/MaterialIcon.jsx'
 
 export function PageTitleRow({
   title = '#2 BASALT ARENA (FRONTEND)',
   systemActive = true,
 }) {
   return (
-    <div className="flex w-full flex-row flex-nowrap items-center justify-between gap-2 md:gap-4">
-      <div className="flex min-w-0 flex-1 items-center gap-3 md:gap-4">
-        <SvgIcon src={figmaCellTower} className={`${figmaIcon.row24} shrink-0`} alt="" />
-        <h1 className="max-w-[161px] text-[20px] font-bold leading-[28px] tracking-[-0.5px] text-catskill sm:max-w-[220px] md:max-w-[276px] lg:max-w-none">
+    <div className="flex w-full flex-row flex-nowrap items-center justify-between gap-2 max-[360px]:gap-1 md:gap-4">
+      <div className="flex min-w-0 flex-1 items-center gap-3 max-[360px]:gap-2 md:gap-4">
+        <MaterialIcon name="sensors" size={22} opticalSize={22} className="shrink-0 text-turquoise" />
+        <h1 className="max-w-[198px] text-balance text-[20px] font-bold leading-[28px] tracking-[-0.5px] text-catskill max-[360px]:max-w-[170px] max-[360px]:text-[16px] max-[360px]:leading-[22px] max-[360px]:tracking-[-0.2px] sm:max-w-[220px] md:max-w-[276px] lg:max-w-none">
           {title}
         </h1>
       </div>
       <div
         className={[
-          'box-border flex shrink-0 flex-row items-center gap-2 rounded-full border px-3 py-1 md:h-[25px] md:gap-2',
+          'box-border flex shrink-0 flex-row items-center gap-2 rounded-full border px-3 py-1 max-[360px]:gap-1 max-[360px]:px-2 max-[360px]:py-[3px] md:h-[25px] md:gap-2',
           systemActive
             ? 'border-spring/30 bg-spring/10'
             : 'border-gull/30 bg-gull/10',
@@ -30,7 +28,7 @@ export function PageTitleRow({
           aria-hidden
         />
         {systemActive ? (
-          <span className="pr-1 text-left text-[10px] font-medium uppercase leading-[15px] tracking-[1px] text-spring md:pr-2">
+          <span className="pr-1 text-left text-[10px] font-medium uppercase leading-[15px] tracking-[1px] text-spring max-[360px]:text-[9px] max-[360px]:leading-[12px] max-[360px]:tracking-[0.8px] md:pr-2">
             <span className="flex flex-col items-start justify-center gap-0 md:hidden">
               <span>СИСТЕМА</span>
               <span>АКТИВНА</span>

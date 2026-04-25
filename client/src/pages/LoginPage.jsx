@@ -143,7 +143,7 @@ export function LoginPage() {
         aria-hidden
       />
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col justify-center px-6 py-10 md:px-10 md:py-[70px] lg:flex-row lg:items-center lg:gap-16 xl:gap-[100px]">
+      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1400px] flex-col justify-center px-6 py-10 max-[360px]:px-3 max-[360px]:py-6 md:px-10 md:py-[70px] lg:flex-row lg:items-center lg:gap-16 xl:gap-[100px]">
         <section className="mb-10 hidden w-full max-w-md flex-col gap-8 lg:mb-0 lg:flex xl:max-w-[448px]">
           <div className="inline-flex w-fit items-center gap-2 rounded border border-turquoise/30 bg-turquoise/5 px-3 py-1.5">
             <span className="size-2 shrink-0 rounded-full bg-turquoise" aria-hidden />
@@ -202,37 +202,39 @@ export function LoginPage() {
           </ul>
         </section>
 
-        <section className="mx-auto w-full max-w-[448px] shrink-0 lg:mx-0">
-          <div className="relative isolate overflow-hidden rounded-2xl border border-plantation bg-[rgba(26,46,50,0.3)] p-8 backdrop-blur-sm">
+        <section className="mx-auto w-full max-w-[448px] shrink-0 max-[360px]:max-w-full lg:mx-0">
+          <div className="relative isolate overflow-hidden rounded-2xl border border-plantation bg-[rgba(26,46,50,0.3)] p-8 backdrop-blur-sm max-[360px]:p-4">
             <div
               className="pointer-events-none absolute -right-24 -top-24 size-48 rounded-full bg-turquoise/5 blur-[32px]"
               aria-hidden
             />
 
-            <div className="relative z-[1] flex flex-col gap-6">
-              <div className="flex items-start justify-between gap-4">
+            <div className="relative z-[1] flex flex-col gap-6 max-[360px]:gap-4">
+              <div className="flex items-start justify-between gap-4 max-[360px]:gap-3">
                 <div className="min-w-0 space-y-1">
                   <p className="font-mono text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-slate-arena">
                     // auth.access()
                   </p>
-                  <h2 className="text-2xl font-bold leading-8 text-white">Авторизация</h2>
+                  <h2 className="text-2xl font-bold leading-8 text-white max-[360px]:text-[28px] max-[360px]:leading-7">
+                    Авторизация
+                  </h2>
                 </div>
                 <div
-                  className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-turquoise/30 bg-turquoise/10"
+                  className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-turquoise/30 bg-turquoise/10 max-[360px]:size-11"
                   aria-hidden
                 >
                   <MaterialIcon name="lock" size={24} opticalSize={24} className="text-turquoise" />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 rounded-lg border border-plantation bg-aztec/50 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-lg border border-plantation bg-aztec/50 px-3 py-2 max-[360px]:px-2.5">
                 <span className="size-2 shrink-0 rounded-full bg-spring" aria-hidden />
-                <p className="font-mono text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-slate-arena">
+                <p className="font-mono text-[10px] font-bold uppercase leading-[15px] tracking-[1px] text-slate-arena max-[360px]:text-[9px] max-[360px]:leading-3">
                   Только вход. Аккаунты выдаются администратором.
                 </p>
               </div>
 
-              <form className="flex flex-col gap-5" onSubmit={onSubmit}>
+              <form className="flex flex-col gap-5 max-[360px]:gap-4" onSubmit={onSubmit}>
                   <div className="space-y-2">
                     <label className="block text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">
                       Логин или email
@@ -252,7 +254,7 @@ export function LoginPage() {
                           dismissErr()
                           setLoginOrEmail(e.target.value)
                         }}
-                        className="box-border h-[45px] w-full rounded-lg border border-plantation bg-aztec py-2.5 pl-10 pr-4 font-sans text-base font-normal leading-5 text-white outline-none placeholder:text-fiord focus:border-turquoise/40 focus:ring-1 focus:ring-turquoise/20"
+                        className="box-border h-[45px] w-full rounded-lg border border-plantation bg-aztec py-2.5 pl-10 pr-4 font-sans text-base font-normal leading-5 text-white outline-none placeholder:text-fiord focus:border-turquoise/40 focus:ring-1 focus:ring-turquoise/20 max-[360px]:h-11 max-[360px]:text-[15px]"
                         placeholder="dev_architect"
                         required
                       />
@@ -290,7 +292,11 @@ export function LoginPage() {
                           dismissErr()
                           setPassword(e.target.value)
                         }}
-                        className="box-border h-[45px] w-full rounded-lg border border-plantation bg-aztec py-2.5 pl-10 pr-11 font-sans text-base font-normal leading-5 text-white outline-none placeholder:text-fiord focus:border-turquoise/40 focus:ring-1 focus:ring-turquoise/20"
+                        className={`box-border h-[45px] w-full rounded-lg border border-plantation bg-aztec py-2.5 pl-10 pr-11 font-sans font-normal text-white outline-none placeholder:text-fiord focus:border-turquoise/40 focus:ring-1 focus:ring-turquoise/20 ${
+                          showPassword
+                            ? 'text-base leading-5 tracking-normal'
+                            : 'text-[14px] leading-5 tracking-[0.08em] md:text-base md:tracking-normal'
+                        }`}
                         placeholder="••••••••"
                         required
                       />
@@ -309,14 +315,17 @@ export function LoginPage() {
                     </div>
                   </div>
 
-                  <label className="flex cursor-pointer items-center gap-2">
+                  <label className="group flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
                       checked={remember}
                       onChange={(e) => setRemember(e.target.checked)}
-                      className="size-4 shrink-0 rounded border border-plantation bg-aztec text-turquoise focus:ring-turquoise/30"
+                      className="peer sr-only"
                     />
-                    <span className="font-mono text-xs leading-4 text-gull">Запомнить сессию на 30 дней</span>
+                    <span className="relative inline-flex size-4 shrink-0 items-center justify-center rounded border border-plantation bg-aztec transition-colors after:content-['✓'] after:text-[11px] after:font-bold after:text-aztec after:opacity-0 after:transition-opacity peer-checked:border-turquoise peer-checked:bg-turquoise peer-checked:after:opacity-100 peer-focus-visible:ring-2 peer-focus-visible:ring-turquoise/30" />
+                    <span className="font-mono text-xs leading-4 text-gull transition-colors group-hover:text-catskill max-[360px]:text-[11px] max-[360px]:leading-4">
+                      Запомнить сессию на 30 дней
+                    </span>
                   </label>
 
                   <AuthFeedback info={info} err={err} errRef={errRef} />
@@ -325,7 +334,7 @@ export function LoginPage() {
                     <button
                       type="submit"
                       disabled={pending}
-                      className="flex h-[52px] w-full items-center justify-center gap-2 rounded-lg bg-[#0DCCF2] font-sans text-sm font-bold leading-5 text-aztec transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-[52px] w-full items-center justify-center gap-2 rounded-lg bg-[#0DCCF2] font-sans text-sm font-bold leading-5 text-aztec transition-[background-color,box-shadow] duration-300 hover:bg-white hover:shadow-[0_0_14px_rgba(255,255,255,0.35)] disabled:cursor-not-allowed disabled:opacity-60 max-[360px]:h-12"
                     >
                       <MaterialIcon name="login" size={18} opticalSize={18} className="text-aztec" />
                       {pending ? 'Вход…' : 'Войти в арену'}
@@ -340,10 +349,10 @@ export function LoginPage() {
                     <div className="h-px flex-1 bg-plantation" />
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 max-[360px]:gap-1.5">
                     <button
                       type="button"
-                      className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-lg border border-plantation bg-aztec/50 font-sans text-sm font-medium leading-5 text-[#CBD5E1] transition hover:bg-white/5"
+                      className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-lg border border-plantation bg-aztec/50 font-sans text-sm font-medium leading-5 text-[#CBD5E1] transition hover:bg-white/5 max-[360px]:h-11 max-[360px]:text-[13px]"
                       title="Скоро"
                       onClick={() => {
                         dismissErr()
@@ -355,7 +364,7 @@ export function LoginPage() {
                     </button>
                     <button
                       type="button"
-                      className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-lg border border-plantation bg-aztec/50 font-sans text-sm font-medium leading-5 text-[#CBD5E1] transition hover:bg-white/5"
+                      className="flex h-[50px] flex-1 items-center justify-center gap-2 rounded-lg border border-plantation bg-aztec/50 font-sans text-sm font-medium leading-5 text-[#CBD5E1] transition hover:bg-white/5 max-[360px]:h-11 max-[360px]:text-[13px]"
                       title="Скоро"
                       onClick={() => {
                         dismissErr()

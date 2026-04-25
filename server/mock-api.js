@@ -157,7 +157,7 @@ function profilePayload(user) {
         value: '#3',
         trendLabel: '+2 позиции',
         trendVariant: 'malachite',
-        icon: 'bar_chart',
+        icon: 'leaderboard',
         iconTint: 'turquoise',
       },
       {
@@ -175,7 +175,7 @@ function profilePayload(user) {
         value: '20 000 \u20BD',
         trendLabel: '+20 000 \u20BD',
         trendVariant: 'spring',
-        icon: 'account_balance_wallet',
+        icon: 'payments',
         iconTint: 'spring',
       },
     ],

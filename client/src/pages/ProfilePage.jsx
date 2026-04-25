@@ -30,7 +30,7 @@ const FALLBACK_PROFILE = {
       value: '90',
       trendLabel: '+12% за месяц',
       trendVariant: 'malachite',
-      icon: 'star',
+      icon: 'military_tech',
       iconTint: 'turquoise',
     },
     {
@@ -39,7 +39,7 @@ const FALLBACK_PROFILE = {
       value: '#3',
       trendLabel: '+2 позиции',
       trendVariant: 'malachite',
-      icon: 'bar_chart',
+      icon: 'leaderboard',
       iconTint: 'turquoise',
     },
     {
@@ -57,7 +57,7 @@ const FALLBACK_PROFILE = {
       value: '20 000 \u20BD',
       trendLabel: '+20 000 \u20BD',
       trendVariant: 'spring',
-      icon: 'account_balance_wallet',
+      icon: 'payments',
       iconTint: 'spring',
     },
   ],
@@ -102,7 +102,7 @@ const FALLBACK_PROFILE = {
 const SIDEBAR_NAV = [
   { key: 'overview', label: 'Обзор', icon: 'person', sectionId: 'profile-hero' },
   { key: 'badges', label: 'Бейджи и достижения', icon: 'workspace_premium', sectionId: 'profile-achievements' },
-  { key: 'stats', label: 'Статистика', icon: 'leaderboard', sectionId: 'profile-stats' },
+  { key: 'stats', label: 'Статистика', icon: 'query_stats', sectionId: 'profile-stats' },
   { key: 'history', label: 'История спринтов', icon: 'history', sectionId: null, disabled: true },
   { key: 'settings', label: 'Настройки', icon: 'settings', sectionId: 'profile-settings' },
 ]
@@ -128,7 +128,9 @@ function trendPillClass(variant) {
 }
 
 function bigIconTintClass(tint) {
-  return tint === 'spring' ? 'text-spring' : 'text-turquoise'
+  return tint === 'spring'
+    ? 'text-spring group-hover:opacity-35 group-hover:text-[#22FFB4]'
+    : 'text-turquoise group-hover:opacity-35 group-hover:text-[#22D3EE]'
 }
 
 function StatMetricCard({ card }) {
@@ -143,19 +145,23 @@ function StatMetricCard({ card }) {
   return (
     <div
       className={[
-        'relative isolate overflow-hidden rounded-xl border border-plantation bg-timber/20 p-6 transition-[border-color,box-shadow] duration-300',
+        'group relative isolate overflow-hidden rounded-xl border border-plantation bg-timber/20 p-6 transition-[border-color,box-shadow] duration-300 max-[360px]:p-4',
         hoverFrameClass,
       ].join(' ')}
     >
       <div
-        className={`pointer-events-none absolute right-px top-px flex items-start justify-end p-2 opacity-10 ${bigIconTintClass(iconTint)}`}
+        className={`pointer-events-none absolute right-px top-px flex items-start justify-end p-2 opacity-10 transition-[opacity,color] duration-300 ${bigIconTintClass(iconTint)}`}
         aria-hidden
       >
         <MaterialIcon name={card.icon} size={72} opticalSize={24} className="leading-none" />
       </div>
-      <div className="relative z-[1] flex min-h-[99px] flex-col">
-        <p className="pb-1 text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">{card.label}</p>
-        <p className="pb-2 text-[36px] font-bold leading-[45px] text-white">{card.value}</p>
+      <div className="relative z-[1] flex min-h-[99px] flex-col max-[360px]:min-h-[84px]">
+        <p className="pb-1 text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull max-[360px]:text-[10px]">
+          {card.label}
+        </p>
+        <p className="pb-2 text-[36px] font-bold leading-[45px] text-white max-[360px]:text-[30px] max-[360px]:leading-9">
+          {card.value}
+        </p>
         <div
           className={`inline-flex w-max max-w-full items-center gap-1.5 rounded px-2 py-0.5 text-xs font-bold leading-4 ${trendPillClass(trendVariant)}`}
         >
@@ -173,7 +179,7 @@ function AchievementTile({ achievement }) {
   return (
     <div
       className={[
-        'group relative isolate flex flex-col items-center rounded-xl p-6 transition-[border-color,background-color,box-shadow] duration-300',
+        'group relative isolate flex flex-col items-center rounded-xl p-6 transition-[border-color,background-color,box-shadow] duration-300 max-[360px]:p-4',
         locked
           ? 'border border-dashed border-red-500/30 bg-[rgba(239,68,68,0.05)] hover:border-red-400/55 hover:bg-[rgba(239,68,68,0.08)]'
           : 'border border-plantation bg-timber/10 hover:border-turquoise/45 hover:bg-timber/20 hover:shadow-[0_0_24px_-12px_rgba(13,204,242,0.28)]',
@@ -182,7 +188,7 @@ function AchievementTile({ achievement }) {
       <div className="relative z-[1] mb-4 flex flex-col items-center">
         <div
           className={[
-            'relative flex size-16 items-center justify-center rounded-full bg-timber shadow-[0_10px_15px_-3px_rgba(0,0,0,0.2),0_4px_6px_-4px_rgba(0,0,0,0.2)]',
+            'relative flex size-16 items-center justify-center rounded-full bg-timber shadow-[0_10px_15px_-3px_rgba(0,0,0,0.2),0_4px_6px_-4px_rgba(0,0,0,0.2)] max-[360px]:size-14',
             locked ? 'border border-red-500/40' : 'border border-plantation',
           ].join(' ')}
         >
@@ -191,7 +197,7 @@ function AchievementTile({ achievement }) {
             size={30}
             opticalSize={24}
             className={[
-              'transition-transform duration-300 group-hover:scale-110',
+              'transition-transform duration-300 group-hover:scale-110 max-[360px]:[font-size:26px]',
               locked ? 'text-[#F87171]' : 'text-turquoise',
             ].join(' ')}
           />
@@ -292,10 +298,10 @@ export function ProfilePage() {
     <div className="flex min-h-screen flex-col bg-aztec">
       <AppHeader />
       <main className="flex-1 pt-[73px]">
-        <div className="mx-auto max-w-[1400px] px-6 pb-10 pt-10 md:px-10">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-8">
+        <div className="mx-auto max-w-[1400px] px-6 pb-10 pt-10 max-[360px]:px-3 max-[360px]:pb-6 max-[360px]:pt-6 md:px-10">
+          <div className="flex flex-col gap-8 max-[360px]:gap-6 lg:flex-row lg:items-start lg:gap-8">
             <aside className="flex w-full shrink-0 flex-col gap-6 lg:w-[306px]">
-              <nav className="flex flex-col gap-2">
+              <nav className="flex flex-col gap-2 max-[360px]:gap-1.5">
                 {SIDEBAR_NAV.map((item) => {
                   const active = activeNav === item.key
                   return (
@@ -308,7 +314,7 @@ export function ProfilePage() {
                       }}
                       disabled={item.disabled}
                       className={[
-                        'flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium leading-5 transition',
+                        'flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium leading-5 transition max-[360px]:gap-2 max-[360px]:px-3 max-[360px]:py-2.5 max-[360px]:text-xs',
                         active
                           ? 'border border-turquoise/20 bg-turquoise/10 text-turquoise'
                           : item.disabled
@@ -328,12 +334,12 @@ export function ProfilePage() {
                 })}
               </nav>
 
-              <div className="flex flex-col gap-4 rounded-xl border border-plantation bg-timber/20 p-5">
+              <div className="flex flex-col gap-4 rounded-xl border border-plantation bg-timber/20 p-5 max-[360px]:gap-3 max-[360px]:p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-slate-arena">Контакты</p>
                   <button
                     type="button"
-                    className="rounded p-1 text-slate-arena transition hover:bg-white/5 hover:text-white"
+                    className="rounded p-1 text-slate-arena transition-colors hover:text-white"
                     aria-label="Изменить контакты"
                   >
                     <MaterialIcon name="edit" size={14} opticalSize={14} />
@@ -341,7 +347,7 @@ export function ProfilePage() {
                 </div>
                 <div className="flex flex-col gap-4">
                   <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
-                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white">
+                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
                       <MaterialIcon
                         name="send"
                         size={18}
@@ -350,10 +356,10 @@ export function ProfilePage() {
                       />
                       Telegram
                     </span>
-                    <span className="text-sm text-turquoise">{profile.contacts.telegram}</span>
+                    <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.telegram}</span>
                   </div>
                   <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
-                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white">
+                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
                       <MaterialIcon
                         name="mail"
                         size={18}
@@ -362,10 +368,10 @@ export function ProfilePage() {
                       />
                       Email
                     </span>
-                    <span className="truncate text-sm text-turquoise">{profile.contacts.email}</span>
+                    <span className="truncate text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.email}</span>
                   </div>
                   <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
-                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white">
+                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
                       <MaterialIcon
                         name="code"
                         size={18}
@@ -374,7 +380,7 @@ export function ProfilePage() {
                       />
                       GitHub
                     </span>
-                    <span className="text-sm text-turquoise">{profile.contacts.github}</span>
+                    <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.github}</span>
                   </div>
                 </div>
               </div>
@@ -383,27 +389,27 @@ export function ProfilePage() {
             <div className="flex min-w-0 flex-1 flex-col gap-8">
               <section
                 id="profile-hero"
-                className="scroll-mt-[88px] relative isolate overflow-hidden rounded-xl border border-plantation bg-timber/20 p-8"
+                className="scroll-mt-[88px] relative isolate overflow-hidden rounded-xl border border-plantation bg-timber/20 p-8 max-[360px]:p-4"
               >
                 <div
                   className="pointer-events-none absolute -right-[127px] -top-[127px] size-64 rounded-full bg-turquoise/5 blur-[32px]"
                   aria-hidden
                 />
-                <div className="relative z-[1] flex flex-col items-center gap-8 md:flex-row md:items-center">
-                  <div className="relative flex size-[132px] shrink-0 items-center justify-center rounded-2xl border-2 border-turquoise/50 bg-white/[0.002] shadow-[0_10px_15px_-3px_rgba(13,204,242,0.1),0_4px_6px_-4px_rgba(13,204,242,0.1)]">
+                <div className="relative z-[1] flex flex-col items-center gap-8 max-[360px]:gap-4 md:flex-row md:items-center">
+                  <div className="relative flex size-[132px] shrink-0 items-center justify-center rounded-2xl border-2 border-turquoise/50 bg-white/[0.002] shadow-[0_10px_15px_-3px_rgba(13,204,242,0.1),0_4px_6px_-4px_rgba(13,204,242,0.1)] transition-transform duration-300 hover:scale-105 max-[360px]:size-24">
                     <img
                       src={avatarSrc}
                       alt=""
-                      className="size-32 object-contain"
+                      className="size-32 object-contain max-[360px]:size-20"
                       decoding="async"
                       draggable={false}
                     />
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col items-center gap-1 md:items-start">
-                    <h1 className="text-center text-[30px] font-bold leading-9 tracking-[-0.75px] text-white md:text-left">
+                    <h1 className="text-center text-[30px] font-bold leading-9 tracking-[-0.75px] text-white max-[360px]:text-2xl max-[360px]:leading-8 md:text-left">
                       {displayHandle}
                     </h1>
-                    <p className="max-w-[512px] text-center font-mono text-sm font-normal leading-5 text-gull md:text-left">
+                    <p className="max-w-[512px] text-center font-mono text-sm font-normal leading-5 text-gull max-[360px]:text-xs md:text-left">
                       {profile.bio}
                     </p>
                     <div className="flex w-full flex-wrap justify-center gap-2 pt-4 md:justify-start">
@@ -423,10 +429,10 @@ export function ProfilePage() {
                 ))}
               </section>
 
-              <section id="profile-achievements" className="scroll-mt-[88px] flex flex-col gap-6">
+              <section id="profile-achievements" className="scroll-mt-[88px] flex flex-col gap-6 max-[360px]:gap-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:pb-2">
                   <h2 className="inline-flex items-center gap-2 text-lg font-bold leading-7 text-white">
-                    <MaterialIcon name="emoji_events" size={24} opticalSize={24} className="text-turquoise" />
+                    <MaterialIcon name="military_tech" size={24} opticalSize={24} className="text-turquoise" />
                     Галерея достижений
                   </h2>
                   <Link
@@ -442,7 +448,7 @@ export function ProfilePage() {
                     />
                   </Link>
                 </div>
-                <div className="grid grid-cols-2 gap-4 min-[760px]:grid-cols-4">
+                <div className="grid grid-cols-2 gap-4 max-[360px]:grid-cols-1 max-[360px]:gap-3 min-[760px]:grid-cols-4">
                   {profile.achievements.map((a) => (
                     <AchievementTile key={String(a.id)} achievement={a} />
                   ))}
@@ -451,7 +457,7 @@ export function ProfilePage() {
 
               <section
                 id="profile-settings"
-                className="scroll-mt-[88px] flex flex-col gap-6 rounded-xl border border-plantation bg-timber/10 px-8 pb-12 pt-8"
+                className="scroll-mt-[88px] flex flex-col gap-6 rounded-xl border border-plantation bg-timber/10 px-8 pb-12 pt-8 max-[360px]:gap-4 max-[360px]:px-4 max-[360px]:pb-6 max-[360px]:pt-5"
               >
                 <div className="flex items-center gap-3 pb-2">
                   <MaterialIcon name="manage_accounts" size={24} opticalSize={24} className="text-turquoise" />
@@ -474,7 +480,7 @@ export function ProfilePage() {
                     }
                   }}
                 >
-                  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-6 max-[360px]:gap-4 xl:grid-cols-2">
                     <div className="flex flex-col gap-2">
                       <label className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">
                         Имя пользователя
@@ -516,7 +522,7 @@ export function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-6 max-[360px]:gap-4 xl:grid-cols-2">
                     <div className="flex flex-col gap-2">
                       <label className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">Telegram</label>
                       <div className="relative isolate">
@@ -565,13 +571,13 @@ export function ProfilePage() {
                         <button
                           type="submit"
                           disabled={saveState === 'saving'}
-                          className="group relative inline-flex h-12 min-w-0 flex-[1.15] basis-0 items-center justify-center gap-2 rounded-lg bg-turquoise px-4 text-sm font-bold leading-5 text-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.2),0_4px_6px_-4px_rgba(13,204,242,0.2)] transition-[box-shadow,filter] duration-300 hover:brightness-105 hover:shadow-[0_12px_18px_-3px_rgba(13,204,242,0.3),0_6px_10px_-4px_rgba(13,204,242,0.3)] active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:flex-none md:basis-auto md:px-8"
+                          className="relative inline-flex h-12 min-w-0 flex-[1.15] basis-0 items-center justify-center gap-2 rounded-lg bg-turquoise px-4 text-sm font-bold leading-5 text-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.2),0_4px_6px_-4px_rgba(13,204,242,0.2)] transition-[background-color,box-shadow] duration-300 hover:bg-white hover:shadow-[0_12px_18px_-3px_rgba(255,255,255,0.35),0_6px_10px_-4px_rgba(255,255,255,0.35)] disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:flex-none md:basis-auto md:px-8"
                         >
                           <MaterialIcon
                             name="save"
                             size={18}
                             opticalSize={18}
-                            className="shrink-0 text-aztec transition-transform duration-300 group-hover:translate-x-0.5"
+                            className="shrink-0 text-aztec"
                           />
                           {saveState === 'saving' ? 'Сохранение…' : 'Сохранить'}
                         </button>

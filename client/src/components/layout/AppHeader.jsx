@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
-import {
-  figmaAvatar,
-  figmaTerminal,
-} from '../../assets/icons/index.js'
-import { figmaIcon } from '../ui/figmaIconSizes.js'
 import { MaterialIcon } from '../ui/MaterialIcon.jsx'
-import { SvgIcon } from '../ui/SvgIcon.jsx'
 
 const MOCK_NOTIFICATION_ROWS = [
   {
@@ -17,6 +11,15 @@ const MOCK_NOTIFICATION_ROWS = [
   },
 ]
 
+function dicebearAvatar(seed) {
+  const q = new URLSearchParams({
+    seed: String(seed ?? 'user'),
+    scale: '62',
+    radius: '12',
+  })
+  return `https://api.dicebear.com/7.x/identicon/svg?${q.toString()}`
+}
+
 export function AppHeader() {
   const { pathname } = useLocation()
   const { user, notificationsUnread, logout, markNotificationsRead } = useAuth()
@@ -24,7 +27,7 @@ export function AppHeader() {
   const [marking, setMarking] = useState(false)
   const panelRef = useRef(null)
 
-  const avatarSrc = user?.avatarUrl?.trim() || figmaAvatar
+  const avatarSrc = user?.avatarUrl?.trim() || dicebearAvatar(user?.handle ?? user?.id ?? 'user')
 
   useEffect(() => {
     if (!notifOpen) return
@@ -64,17 +67,17 @@ export function AppHeader() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 min-h-[73px] border-b border-plantation bg-aztec">
-      <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between gap-0 px-6 md:px-10">
-        <div className="flex min-w-0 shrink items-center gap-6 md:gap-10">
+      <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between gap-0 px-6 max-[360px]:px-3 md:px-10">
+        <div className="flex min-w-0 shrink items-center gap-6 max-[360px]:gap-3 md:gap-10">
           <Link to="/" className="flex shrink-0 items-center gap-3 leading-none">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-turquoise/10">
-              <SvgIcon src={figmaTerminal} className={figmaIcon.headerLogoMark} alt="" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-turquoise/10 max-[360px]:size-9">
+              <MaterialIcon name="terminal" size={24} opticalSize={24} className="text-turquoise" />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-lg font-bold uppercase leading-[18px] tracking-[-0.45px] text-white">
+              <span className="text-lg font-bold uppercase leading-[18px] tracking-[-0.45px] text-white max-[360px]:text-base max-[360px]:leading-4">
                 Basalt
               </span>
-              <span className="font-mono text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-slate-arena">
+              <span className="font-mono text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-slate-arena max-[360px]:text-[9px] max-[360px]:leading-3">
                 Арена v4.2
               </span>
             </div>
@@ -108,7 +111,7 @@ export function AppHeader() {
           </nav>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 xl:gap-3">
+        <div className="flex shrink-0 items-center gap-2 max-[360px]:gap-1 xl:gap-3">
           <button
             type="button"
             onClick={logout}
@@ -129,7 +132,7 @@ export function AppHeader() {
               <button
                 type="button"
                 onClick={() => setNotifOpen((o) => !o)}
-                className="relative flex size-10 items-center justify-center rounded-lg text-gull transition hover:bg-white/5 hover:text-catskill"
+                className="relative flex size-10 items-center justify-center rounded-lg text-gull transition hover:bg-white/5 hover:text-catskill max-[360px]:size-9"
                 aria-label="Уведомления"
                 aria-expanded={notifOpen}
               >
@@ -198,7 +201,7 @@ export function AppHeader() {
           <Link
             to="/profile"
             className={[
-              'flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 leading-none transition hover:bg-white/5 xl:gap-3 xl:pr-3',
+              'flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 leading-none transition hover:bg-white/5 max-[360px]:gap-1 max-[360px]:pr-1 xl:gap-3 xl:pr-3',
               pathname === '/profile' ? 'bg-turquoise/5 ring-1 ring-turquoise/25' : '',
             ]
               .filter(Boolean)
@@ -207,7 +210,7 @@ export function AppHeader() {
           >
             <div
               aria-hidden
-              className="relative size-8 shrink-0 overflow-hidden rounded-lg border border-turquoise/30 bg-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.2),0_4px_6px_-4px_rgba(13,204,242,0.2)]"
+              className="relative size-9 shrink-0 overflow-hidden rounded-lg border border-turquoise/30 bg-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.2),0_4px_6px_-4px_rgba(13,204,242,0.2)]"
             >
               <img
                 src={avatarSrc}
