@@ -295,7 +295,7 @@ export function LoginPage() {
                         className={`box-border h-[45px] w-full rounded-lg border border-plantation bg-aztec py-2.5 pl-10 pr-11 font-sans font-normal text-white outline-none placeholder:text-fiord focus:border-turquoise/40 focus:ring-1 focus:ring-turquoise/20 ${
                           showPassword
                             ? 'text-base leading-5 tracking-normal'
-                            : 'text-[14px] leading-5 tracking-[0.08em] md:text-base md:tracking-normal'
+                            : 'text-[12px] leading-5 tracking-[0.14em] md:text-base md:tracking-normal'
                         }`}
                         placeholder="••••••••"
                         required
