@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Onest', ui-sans-serif, system-ui, sans-serif;
+  /* --font-sans: 'Onest', ui-sans-serif, system-ui, sans-serif; */
   /* --font-sans: 'Unbounded', ui-sans-serif, system-ui, sans-serif; */
-  /* --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; */
+   --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-onest: 'Onest', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --color-aztec: #101f22;
