@@ -5,7 +5,7 @@ import { getRedis } from '../infra/redis.js'
 
 function buildStore() {
   const redis = getRedis()
-  if (!redis) return undefined
+  if (!redis || typeof redis.call !== 'function') return undefined
   return new RedisStore({
     // ioredis returns Promise<unknown>; rate-limit-redis expects Promise<RedisReply>.
     sendCommand: (command: string, ...args: string[]) =>

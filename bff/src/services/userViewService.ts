@@ -10,6 +10,7 @@ export interface MePayload {
   activeSprint: {
     id: string
     title: string
+    tabIcon: string | null
     endsAt: string | null
     systemActive: boolean
     resourceLinks: Array<{ label: string; href: string; icon: string }>
@@ -71,6 +72,7 @@ function activeSprintPayload(sprint: Sprint | null) {
   return {
     id: sprint.id,
     title: sprint.title.toUpperCase(),
+    tabIcon: sprint.tabIcon ?? null,
     endsAt: sprint.endsAt ? sprint.endsAt.toISOString() : null,
     systemActive: sprint.active,
     resourceLinks: resourceLinksFromBrief(sprint.brief),

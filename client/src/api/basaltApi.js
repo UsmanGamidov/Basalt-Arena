@@ -1,3 +1,4 @@
+// VITE_API_BASE_URL: пусто → относительный /api/v1 (dev: Vite прокси на BFF, см. vite.config и client/.env.example).
 const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
 const BASE = `${API_BASE_URL}/api/v1`
 const ACCESS_KEY = 'basalt_access_token'

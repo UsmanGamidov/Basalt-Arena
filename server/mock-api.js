@@ -264,7 +264,7 @@ function applyProfilePatch(userId, body) {
   user.avatarUrl = dicebearIdenticonUrl(handle)
 
   const about = f.about != null ? String(f.about) : prev.bio
-  const email = f.email != null ? String(f.email).trim() : prev.contacts.email
+  const email = String(user.email ?? prev.contacts.email ?? '').trim()
   const telegram = f.telegram != null ? String(f.telegram).trim() : prev.contacts.telegram
 
   const nextProfile = {

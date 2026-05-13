@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useId, useRef, useState } from 'react'
-import { getHall } from '../api/basaltApi.js'
+import { deleteSolutionLike, getHall, putSolutionLike } from '../api/basaltApi.js'
 import { useAuth } from '../auth/useAuth.js'
 import { queryKeys } from '../lib/queryKeys.js'
 import { AppFooter } from '../components/layout/AppFooter.jsx'
@@ -30,11 +30,11 @@ function rankBadgeClasses(badge) {
   }
 }
 
-function SolutionCard({ solution, isWinner }) {
+function SolutionCard({ solution, isWinner, onLikeClick, likePending }) {
   const s = solution
   const rank = s.rank
   const badge = s.rankBadge ?? 'muted'
-  const likesActive = rank === 1
+  const likedByMe = !!s.likedByMe
 
   return (
     <article
@@ -167,18 +167,19 @@ function SolutionCard({ solution, isWinner }) {
 
           <button
             type="button"
+            aria-pressed={likedByMe}
+            aria-label={likedByMe ? 'Убрать лайк' : 'Поставить лайк'}
+            disabled={likePending}
+            onClick={onLikeClick}
             className={[
               'inline-flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-sm font-bold transition max-[360px]:px-2 max-[360px]:py-1.5 max-[360px]:text-xs',
-              likesActive
+              likedByMe
                 ? 'border-turquoise/30 bg-turquoise/15 text-half-baked hover:border-turquoise/50 hover:bg-turquoise/20'
                 : 'border-plantation bg-aztec text-gull hover:border-fiord hover:text-catskill',
+              likePending ? 'pointer-events-none opacity-60' : '',
             ].join(' ')}
           >
-            <MaterialIcon
-              name="favorite"
-              size={18}
-              className={likesActive ? 'text-turquoise' : ''}
-            />
+            <MaterialIcon name="favorite" size={18} className={likedByMe ? 'text-turquoise' : ''} />
             {s.likes}
           </button>
         </div>
@@ -441,9 +442,25 @@ function hallSprintCalendarLabel(sprint) {
 
 export function HallOfFamePage() {
   const { user } = useAuth()
+  const qc = useQueryClient()
   const [hallSort, setHallSort] = useState('efficiency')
   const [loadMoreClicked, setLoadMoreClicked] = useState(false)
   const [briefOpen, setBriefOpen] = useState(false)
+  const [likeError, setLikeError] = useState(null)
+
+  const likeMutation = useMutation({
+    mutationFn: async ({ id, liked }) => {
+      if (liked) return deleteSolutionLike(id)
+      return putSolutionLike(id)
+    },
+    onSuccess: () => {
+      setLikeError(null)
+      void qc.invalidateQueries({ queryKey: ['hall'] })
+    },
+    onError: (e) => {
+      setLikeError(e instanceof Error ? e.message : 'Не удалось изменить лайк')
+    },
+  })
 
   const {
     data,
@@ -485,6 +502,14 @@ export function HallOfFamePage() {
             </div>
           ) : (
             <div className="flex flex-col gap-8 max-[360px]:gap-6">
+              {likeError ? (
+                <div
+                  role="alert"
+                  className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 font-mono text-sm text-red-200"
+                >
+                  {likeError}
+                </div>
+              ) : null}
               <header className="flex flex-col gap-3">
                 <div className="inline-flex w-fit max-w-full items-center gap-2 rounded-full border border-turquoise/10 bg-turquoise/5 px-3 py-1">
                   {page?.breadcrumbs?.map((crumb, i) => (
@@ -559,7 +584,17 @@ export function HallOfFamePage() {
                         </p>
                       ) : (
                         solutionsList.map((sol) => (
-                          <SolutionCard key={sol.rank} solution={sol} isWinner={sol.rank === 1} />
+                          <SolutionCard
+                            key={sol.id}
+                            solution={sol}
+                            isWinner={sol.rank === 1}
+                            likePending={
+                              likeMutation.isPending && likeMutation.variables?.id === sol.id
+                            }
+                            onLikeClick={() =>
+                              likeMutation.mutate({ id: sol.id, liked: !!sol.likedByMe })
+                            }
+                          />
                         ))
                       )}
 

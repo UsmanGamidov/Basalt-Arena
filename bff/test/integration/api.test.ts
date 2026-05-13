@@ -5,9 +5,10 @@ import { fileURLToPath } from 'node:url'
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
 import RedisMock from 'ioredis-mock'
 import request from 'supertest'
+import type { Express } from 'express'
 import type { PrismaClient as PrismaClientType } from '@prisma/client'
-import { createApp } from '../../src/app.js'
 import { buildContainer } from '../../src/container.js'
+import { createApp } from '../../src/app.js'
 import { setRedisForTests } from '../../src/infra/redis.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -19,10 +20,7 @@ const REGISTER_KEY = process.env.DEV_REGISTER_KEY ?? 'basalt-dev-register-key'
 const conditionalDescribe = RUN_INTEGRATION ? describe : describe.skip
 let testIpCounter = 10
 
-function registerMember(
-  app: ReturnType<typeof createApp>,
-  body: { email: string; handle: string; password: string }
-) {
+function registerMember(app: Express, body: { email: string; handle: string; password: string }) {
   testIpCounter += 1
   return request(app)
     .post('/api/v1/auth/register')
@@ -34,7 +32,7 @@ function registerMember(
 conditionalDescribe('BFF integration', () => {
   let container: StartedPostgreSqlContainer
   let prisma: PrismaClientType
-  let app: ReturnType<typeof createApp>
+  let app: Express
 
   beforeAll(async () => {
     container = await new PostgreSqlContainer('postgres:16')
@@ -62,6 +60,7 @@ conditionalDescribe('BFF integration', () => {
         slug: 'sprint-test',
         title: 'Test Sprint',
         tabLabel: 'Test',
+        tabIcon: 'deployed_code',
         completedLabel: 'Активный',
         active: true,
         brief: {},
@@ -103,6 +102,7 @@ conditionalDescribe('BFF integration', () => {
       .set('Authorization', `Bearer ${access}`)
       .expect(200)
     expect(me.body.user.handle).toBe('alice')
+    expect(me.body.activeSprint?.tabIcon).toBe('deployed_code')
 
     const sprint = await prisma.sprint.findFirstOrThrow()
 

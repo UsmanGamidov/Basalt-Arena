@@ -603,10 +603,13 @@ export function SprintsPage() {
             <Button
               type="button"
               variant="outline"
-              className="py-1.5 text-[10px]"
+              className="inline-flex items-center gap-1 py-1.5 text-[10px]"
               disabled={activateMutation.isPending}
               onClick={() => activateMutation.mutate(s.id)}
             >
+              <span className="material-symbols-outlined text-[16px] leading-none" aria-hidden>
+                stadium
+              </span>
               На арену
             </Button>
           ) : null}

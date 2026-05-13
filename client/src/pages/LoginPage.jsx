@@ -4,6 +4,18 @@ import { getMeta } from '../api/basaltApi.js'
 import { useAuth } from '../auth/useAuth.js'
 import { MaterialIcon } from '../components/ui/MaterialIcon.jsx'
 
+function isLikelyNetworkFailure(err) {
+  if (!err || typeof err !== 'object') return false
+  if (err instanceof TypeError) return true
+  if (!(err instanceof Error)) return false
+  const m = err.message || ''
+  return (
+    m === 'Failed to fetch' ||
+    m === 'Load failed' ||
+    m === 'NetworkError when attempting to fetch resource.'
+  )
+}
+
 function safeRedirectPath(state) {
   const from = state && typeof state === 'object' && 'from' in state ? state.from : null
   if (typeof from !== 'string' || !from.startsWith('/') || from.startsWith('//')) {
@@ -118,7 +130,13 @@ export function LoginPage() {
       await login(loginOrEmail.trim(), password, remember)
       navigate(safeRedirectPath(location.state), { replace: true })
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'Не удалось войти')
+      if (isLikelyNetworkFailure(e)) {
+        setErr(
+          'Сервер API недоступен. Запустите BFF (из корня: npm run dev) или проверьте VITE_API_BASE_URL в .env — см. client/.env.example.'
+        )
+      } else {
+        setErr(e instanceof Error ? e.message : 'Не удалось войти')
+      }
     } finally {
       setPending(false)
     }

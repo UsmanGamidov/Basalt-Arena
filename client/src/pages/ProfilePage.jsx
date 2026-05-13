@@ -263,15 +263,21 @@ export function ProfilePage() {
   }, [profileRaw])
 
   const [activeNav, setActiveNav] = useState('overview')
-  const [form, setForm] = useState(() => ({ ...FALLBACK_PROFILE.form }))
+  const [form, setForm] = useState(() => ({
+    username: FALLBACK_PROFILE.form.username,
+    telegram: FALLBACK_PROFILE.form.telegram,
+    about: FALLBACK_PROFILE.form.about,
+  }))
   const [saveState, setSaveState] = useState('idle')
   const scrollSuppressRef = useRef(0)
 
   useEffect(() => {
     const id = window.setTimeout(() => {
+      const f = profileRaw?.form && typeof profileRaw.form === 'object' ? profileRaw.form : {}
       setForm({
-        ...FALLBACK_PROFILE.form,
-        ...(profileRaw?.form && typeof profileRaw.form === 'object' ? profileRaw.form : {}),
+        username: f.username ?? FALLBACK_PROFILE.form.username,
+        telegram: f.telegram ?? FALLBACK_PROFILE.form.telegram,
+        about: f.about ?? FALLBACK_PROFILE.form.about,
       })
     }, 0)
     return () => window.clearTimeout(id)
@@ -311,6 +317,9 @@ export function ProfilePage() {
   }, [])
 
   const displayHandle = `@${String(user.handle ?? '').replace(/^@/, '')}`
+  const registeredEmail =
+    String(profile.form?.email ?? profile.contacts?.email ?? '').trim() ||
+    FALLBACK_PROFILE.form.email
 
   if (!user) return null
 
@@ -538,7 +547,13 @@ export function ProfilePage() {
                     e.preventDefault()
                     setSaveState('saving')
                     try {
-                      await patchProfile({ form })
+                      await patchProfile({
+                        form: {
+                          username: form.username,
+                          telegram: form.telegram,
+                          about: form.about,
+                        },
+                      })
                       await refreshSession()
                       setSaveState('saved')
                       window.setTimeout(() => setSaveState('idle'), 2800)
@@ -580,13 +595,24 @@ export function ProfilePage() {
                           className="pointer-events-none absolute left-3 top-1/2 z-[1] -translate-y-1/2 text-slate-arena"
                         />
                         <input
+                          id="profile-settings-email"
                           type="email"
-                          value={form.email}
-                          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                          className="box-border h-[46px] w-full rounded-lg border border-plantation bg-aztec py-2.5 pl-10 pr-4 text-base font-normal leading-6 text-white outline-none placeholder:text-gull/50 focus:border-turquoise/40"
-                          autoComplete="email"
+                          readOnly
+                          tabIndex={-1}
+                          value={registeredEmail}
+                          aria-readonly="true"
+                          aria-describedby="profile-settings-email-hint"
+                          className="box-border h-[46px] w-full cursor-default rounded-lg border border-plantation bg-aztec/70 py-2.5 pl-10 pr-4 text-base font-normal leading-6 text-gull outline-none focus:border-plantation focus:ring-0"
+                          autoComplete="off"
                         />
                       </div>
+                      <p
+                        className="font-mono text-[11px] font-normal leading-[17px] text-slate-arena"
+                        id="profile-settings-email-hint"
+                      >
+                        Почту нельзя изменить самостоятельно. Для смены адреса обратитесь к
+                        администратору.
+                      </p>
                     </div>
                   </div>
 
@@ -640,7 +666,13 @@ export function ProfilePage() {
                         <button
                           type="button"
                           className="h-12 min-w-0 flex-1 basis-0 rounded-lg border border-plantation px-4 text-sm font-bold leading-5 text-gull transition hover:bg-white/5 md:w-auto md:flex-none md:basis-auto md:min-w-[107px] md:px-6"
-                          onClick={() => setForm({ ...profile.form })}
+                          onClick={() =>
+                            setForm({
+                              username: profile.form.username,
+                              telegram: profile.form.telegram,
+                              about: profile.form.about,
+                            })
+                          }
                         >
                           Отмена
                         </button>

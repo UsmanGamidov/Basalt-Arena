@@ -23,7 +23,11 @@ export function MainScreen() {
           <div className="flex flex-col gap-8 max-[360px]:gap-6">
             {activeSprint ? (
               <>
-                <PageTitleRow title={activeSprint.title} systemActive={activeSprint.systemActive} />
+                <PageTitleRow
+                  title={activeSprint.title}
+                  systemActive={activeSprint.systemActive}
+                  tabIcon={activeSprint.tabIcon}
+                />
 
                 <SprintTimer endAt={activeSprint.endsAt} />
 

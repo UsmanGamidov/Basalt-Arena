@@ -44,3 +44,6 @@ coverage/
 *.log
 *.tmp
 *.temp
+
+# Local agent/runtime state
+.claude/

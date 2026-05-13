@@ -16,8 +16,7 @@
       "@/*": ["src/*"],
       "@/core/*": ["src/core/*"],
       "@/api/*": ["src/api/*"],
-      "@/modules/*": ["src/modules/*"],
-      "@/shared/*": ["src/shared/*"]
+      "@/modules/*": ["src/modules/*"]
     }
   },
   "include": ["src/**/*.ts"]

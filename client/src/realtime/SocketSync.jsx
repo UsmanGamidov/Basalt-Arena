@@ -45,21 +45,37 @@ export function SocketSync() {
       path: '/socket.io/',
       auth: { token },
       transports: ['polling', 'websocket'],
-      reconnectionAttempts: 8,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 8000,
+      autoConnect: false,
+      reconnectionAttempts: 12,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 30_000,
+      randomizationFactor: 0.5,
+      timeout: 20_000,
     })
     socketRef.current = socket
 
+    let connectErrorStreak = 0
+    const maxConnectErrorsBeforeStop = 8
+
     /** @param {DataUpdatedPayload} _payload */
     const onDataUpdated = (_payload) => {
+      if (!socket.connected) return
       void queryClient.invalidateQueries({ queryKey: queryKeys.me() })
       void queryClient.invalidateQueries({
         predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === 'hall',
       })
     }
 
+    const onConnect = () => {
+      connectErrorStreak = 0
+    }
+
     const onConnectError = (err) => {
+      connectErrorStreak += 1
+      if (connectErrorStreak >= maxConnectErrorsBeforeStop) {
+        socket.io.reconnection(false)
+        socket.disconnect()
+      }
       if (!import.meta.env.DEV) return
       const now = Date.now()
       if (now - lastConnectErrorAt.current < 12_000) return
@@ -70,10 +86,16 @@ export function SocketSync() {
       )
     }
 
+    socket.on('connect', onConnect)
     socket.on(DATA_UPDATED, onDataUpdated)
     socket.on('connect_error', onConnectError)
+    queueMicrotask(() => {
+      if (socketRef.current === socket) socket.connect()
+    })
 
     return () => {
+      socket.io.reconnection(false)
+      socket.off('connect', onConnect)
       socket.off(DATA_UPDATED, onDataUpdated)
       socket.off('connect_error', onConnectError)
       socket.disconnect()

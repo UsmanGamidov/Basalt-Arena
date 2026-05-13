@@ -114,7 +114,6 @@ paths:
                   additionalProperties: false
                   properties:
                     username: { type: string, minLength: 2, maxLength: 64 }
-                    email: { type: string, format: email, maxLength: 320 }
                     telegram: { type: string, minLength: 2, maxLength: 64 }
                     about: { type: string, maxLength: 1024 }
       responses:

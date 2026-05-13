@@ -11,5 +11,6 @@ export default defineConfig({
     include: integration ? ['test/integration/**/*.test.ts'] : ['test/unit/**/*.test.ts'],
     testTimeout: integration ? 120_000 : 5_000,
     hookTimeout: integration ? 120_000 : 10_000,
+    setupFiles: integration ? ['test/integration/setup-rate-limit-off.ts'] : [],
   },
 })

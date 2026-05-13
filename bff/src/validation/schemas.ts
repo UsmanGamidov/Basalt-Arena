@@ -42,7 +42,6 @@ export const meProfilePatchBody = z
     form: z
       .object({
         username: usernameOrHandleShape.optional(),
-        email: z.string().email().max(320).optional(),
         telegram: z.string().min(2).max(64).optional(),
         about: z.string().max(1024).optional(),
       })
