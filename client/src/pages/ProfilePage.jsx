@@ -5,6 +5,7 @@ import { useAuth } from '../auth/useAuth.js'
 import { AppFooter } from '../components/layout/AppFooter.jsx'
 import { AppHeader } from '../components/layout/AppHeader.jsx'
 import { MaterialIcon } from '../components/ui/MaterialIcon.jsx'
+import { ProfileSprintHistory } from './ProfileSprintHistory.jsx'
 
 function dicebearAvatar(seed) {
   const q = new URLSearchParams({
@@ -30,7 +31,8 @@ const FALLBACK_PROFILE = {
       value: '90',
       trendLabel: '+12% за месяц',
       trendVariant: 'malachite',
-      icon: 'military_tech',
+      trendIcon: 'trending_up',
+      icon: 'star',
       iconTint: 'turquoise',
     },
     {
@@ -39,6 +41,7 @@ const FALLBACK_PROFILE = {
       value: '#3',
       trendLabel: '+2 позиции',
       trendVariant: 'malachite',
+      trendIcon: 'trending_flat',
       icon: 'leaderboard',
       iconTint: 'turquoise',
     },
@@ -48,6 +51,7 @@ const FALLBACK_PROFILE = {
       value: '1',
       trendLabel: '100% участия',
       trendVariant: 'turquoise',
+      trendIcon: 'trending_flat',
       icon: 'bolt',
       iconTint: 'turquoise',
     },
@@ -57,6 +61,7 @@ const FALLBACK_PROFILE = {
       value: '20 000 \u20BD',
       trendLabel: '+20 000 \u20BD',
       trendVariant: 'spring',
+      trendIcon: 'trending_up',
       icon: 'payments',
       iconTint: 'spring',
     },
@@ -103,7 +108,7 @@ const SIDEBAR_NAV = [
   { key: 'overview', label: 'Обзор', icon: 'person', sectionId: 'profile-hero' },
   { key: 'badges', label: 'Бейджи и достижения', icon: 'workspace_premium', sectionId: 'profile-achievements' },
   { key: 'stats', label: 'Статистика', icon: 'query_stats', sectionId: 'profile-stats' },
-  { key: 'history', label: 'История спринтов', icon: 'history', sectionId: null, disabled: true },
+  { key: 'history', label: 'История спринтов', icon: 'history', sectionId: 'profile-sprint-history' },
   { key: 'settings', label: 'Настройки', icon: 'settings', sectionId: 'profile-settings' },
 ]
 
@@ -111,6 +116,7 @@ const SECTION_TO_NAV = {
   'profile-hero': 'overview',
   'profile-stats': 'stats',
   'profile-achievements': 'badges',
+  'profile-sprint-history': 'history',
   'profile-settings': 'settings',
 }
 
@@ -121,7 +127,11 @@ function trendPillClass(variant) {
     case 'turquoise':
       return 'border border-turquoise/20 bg-turquoise/10 text-turquoise'
     case 'spring':
-      return 'border border-[rgba(0,255,157,0.2)] bg-[rgba(0,255,157,0.1)] text-spring'
+      return 'border border-spring/20 bg-spring/10 text-spring'
+    case 'rose':
+      return 'border border-red-500/25 bg-red-500/10 text-red-300'
+    case 'slate':
+      return 'border border-slate-arena/35 bg-slate-arena/10 text-gull'
     default:
       return 'border border-turquoise/20 bg-turquoise/10 text-turquoise'
   }
@@ -129,23 +139,20 @@ function trendPillClass(variant) {
 
 function bigIconTintClass(tint) {
   return tint === 'spring'
-    ? 'text-spring group-hover:opacity-35 group-hover:text-[#22FFB4]'
-    : 'text-turquoise group-hover:opacity-35 group-hover:text-[#22D3EE]'
+    ? 'text-spring group-hover:opacity-35 group-hover:text-[#4ade80]'
+    : 'text-turquoise group-hover:opacity-35 group-hover:text-half-baked'
 }
 
 function StatMetricCard({ card }) {
   const trendVariant = card.trendVariant ?? 'turquoise'
   const iconTint = card.iconTint ?? 'turquoise'
   const cardKey = String(card.key ?? '')
-  const hoverFrameClass =
-    cardKey === 'money'
-      ? 'hover:border-spring/45 hover:shadow-[0_0_28px_-10px_rgba(0,255,157,0.3)]'
-      : 'hover:border-turquoise/40 hover:shadow-[0_0_24px_-12px_rgba(13,204,242,0.28)]'
+  const hoverFrameClass = 'hover:border-fiord'
 
   return (
     <div
       className={[
-        'group relative isolate overflow-hidden rounded-xl border border-plantation bg-timber/20 p-6 transition-[border-color,box-shadow] duration-300 max-[360px]:p-4',
+        'group relative isolate overflow-hidden rounded-xl border border-plantation bg-timber p-6 transition-colors duration-150 max-[360px]:p-4',
         hoverFrameClass,
       ].join(' ')}
     >
@@ -165,7 +172,12 @@ function StatMetricCard({ card }) {
         <div
           className={`inline-flex w-max max-w-full items-center gap-1.5 rounded px-2 py-0.5 text-xs font-bold leading-4 ${trendPillClass(trendVariant)}`}
         >
-          <MaterialIcon name="trending_up" size={14} opticalSize={14} className="leading-none" />
+          <MaterialIcon
+            name={card.trendIcon ?? 'trending_up'}
+            size={14}
+            opticalSize={14}
+            className="leading-none"
+          />
           <span>{card.trendLabel}</span>
         </div>
       </div>
@@ -181,15 +193,15 @@ function AchievementTile({ achievement }) {
       className={[
         'group relative isolate flex flex-col items-center rounded-xl p-6 transition-[border-color,background-color,box-shadow] duration-300 max-[360px]:p-4',
         locked
-          ? 'border border-dashed border-red-500/30 bg-[rgba(239,68,68,0.05)] hover:border-red-400/55 hover:bg-[rgba(239,68,68,0.08)]'
-          : 'border border-plantation bg-timber/10 hover:border-turquoise/45 hover:bg-timber/20 hover:shadow-[0_0_24px_-12px_rgba(13,204,242,0.28)]',
+          ? 'border border-dashed border-red-500/25 bg-[rgba(239,68,68,0.04)] hover:border-red-400/40'
+          : 'border border-plantation bg-timber hover:border-fiord',
       ].join(' ')}
     >
       <div className="relative z-[1] mb-4 flex flex-col items-center">
         <div
           className={[
-            'relative flex size-16 items-center justify-center rounded-full bg-timber shadow-[0_10px_15px_-3px_rgba(0,0,0,0.2),0_4px_6px_-4px_rgba(0,0,0,0.2)] max-[360px]:size-14',
-            locked ? 'border border-red-500/40' : 'border border-plantation',
+            'relative flex size-16 items-center justify-center rounded-full bg-aztec max-[360px]:size-14',
+            locked ? 'border border-red-500/30' : 'border border-plantation',
           ].join(' ')}
         >
           <MaterialIcon
@@ -220,8 +232,7 @@ function AchievementTile({ achievement }) {
 
 export function ProfilePage() {
   const navigate = useNavigate()
-  const { user, profile: profileRaw, refreshSession, logout } =
-    useAuth()
+  const { user, profile: profileRaw, refreshSession, logout, sprintHistory } = useAuth()
   const profile = useMemo(() => {
     const p = profileRaw && typeof profileRaw === 'object' ? profileRaw : {}
     return {
@@ -308,11 +319,11 @@ export function ProfilePage() {
                     <button
                       key={item.key}
                       type="button"
+                      disabled={Boolean(item.disabled)}
                       onClick={() => {
                         if (item.disabled || !item.sectionId) return
                         scrollToSection(item.key, item.sectionId)
                       }}
-                      disabled={item.disabled}
                       className={[
                         'flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium leading-5 transition max-[360px]:gap-2 max-[360px]:px-3 max-[360px]:py-2.5 max-[360px]:text-xs',
                         active
@@ -389,14 +400,10 @@ export function ProfilePage() {
             <div className="flex min-w-0 flex-1 flex-col gap-8">
               <section
                 id="profile-hero"
-                className="scroll-mt-[88px] relative isolate overflow-hidden rounded-xl border border-plantation bg-timber/20 p-8 max-[360px]:p-4"
+                className="scroll-mt-[88px] relative isolate overflow-hidden rounded-xl border border-plantation bg-timber p-8 max-[360px]:p-4"
               >
-                <div
-                  className="pointer-events-none absolute -right-[127px] -top-[127px] size-64 rounded-full bg-turquoise/5 blur-[32px]"
-                  aria-hidden
-                />
                 <div className="relative z-[1] flex flex-col items-center gap-8 max-[360px]:gap-4 md:flex-row md:items-center">
-                  <div className="relative flex size-[132px] shrink-0 items-center justify-center rounded-2xl border-2 border-turquoise/50 bg-white/[0.002] shadow-[0_10px_15px_-3px_rgba(13,204,242,0.1),0_4px_6px_-4px_rgba(13,204,242,0.1)] transition-transform duration-300 hover:scale-105 max-[360px]:size-24">
+                  <div className="relative flex size-[132px] shrink-0 items-center justify-center rounded-2xl border border-plantation bg-aztec transition-colors duration-150 hover:border-fiord max-[360px]:size-24">
                     <img
                       src={avatarSrc}
                       alt=""
@@ -453,6 +460,17 @@ export function ProfilePage() {
                     <AchievementTile key={String(a.id)} achievement={a} />
                   ))}
                 </div>
+              </section>
+
+              <section
+                id="profile-sprint-history"
+                className="scroll-mt-[88px] flex flex-col gap-6 max-[360px]:gap-4"
+              >
+                <h2 className="inline-flex items-center gap-2 text-lg font-bold leading-7 text-white">
+                  <MaterialIcon name="history" size={24} opticalSize={24} className="text-turquoise" />
+                  История спринтов
+                </h2>
+                <ProfileSprintHistory items={sprintHistory?.items} />
               </section>
 
               <section
@@ -552,7 +570,7 @@ export function ProfilePage() {
                     />
                   </div>
 
-                  <div className="flex flex-col gap-2 border-t border-[rgba(34,66,73,0.5)] pt-4">
+                  <div className="flex flex-col gap-2 border-t border-plantation pt-4">
                     <div className="flex min-h-6 w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-end">
                       {saveState === 'saved' ? (
                         <span className="font-mono text-xs text-spring md:mr-auto">Изменения сохранены</span>
@@ -571,13 +589,13 @@ export function ProfilePage() {
                         <button
                           type="submit"
                           disabled={saveState === 'saving'}
-                          className="relative inline-flex h-12 min-w-0 flex-[1.15] basis-0 items-center justify-center gap-2 rounded-lg bg-turquoise px-4 text-sm font-bold leading-5 text-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.2),0_4px_6px_-4px_rgba(13,204,242,0.2)] transition-[background-color,box-shadow] duration-300 hover:bg-white hover:shadow-[0_12px_18px_-3px_rgba(255,255,255,0.35),0_6px_10px_-4px_rgba(255,255,255,0.35)] disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:flex-none md:basis-auto md:px-8"
+                          className="inline-flex h-11 min-w-0 flex-[1.15] basis-0 items-center justify-center gap-2 rounded-lg bg-turquoise px-4 text-sm font-semibold leading-5 text-white transition-colors duration-150 hover:bg-[#6d4ef0] disabled:cursor-not-allowed disabled:opacity-60 md:w-auto md:flex-none md:basis-auto md:px-8"
                         >
                           <MaterialIcon
                             name="save"
-                            size={18}
-                            opticalSize={18}
-                            className="shrink-0 text-aztec"
+                            size={16}
+                            opticalSize={16}
+                            className="shrink-0 text-white"
                           />
                           {saveState === 'saving' ? 'Сохранение…' : 'Сохранить'}
                         </button>

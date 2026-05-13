@@ -1,0 +1,25 @@
+{
+  "kind": "collectionType",
+  "collectionName": "sprint_accesses",
+  "info": {
+    "singularName": "sprint-access",
+    "pluralName": "sprint-accesses",
+    "displayName": "Sprint Access"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "canSubmit": { "type": "boolean", "default": true },
+    "canView": { "type": "boolean", "default": true },
+    "sprint": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::sprint.sprint",
+      "inversedBy": "accesses"
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

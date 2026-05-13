@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "submissions",
+  "info": {
+    "singularName": "submission",
+    "pluralName": "submissions",
+    "displayName": "Submission"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "repoUrl": { "type": "string", "required": true },
+    "demoUrl": { "type": "string" },
+    "mentorScore": { "type": "integer", "default": 0 },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "reviewed", "accepted", "rejected"],
+      "default": "pending"
+    },
+    "likesCount": { "type": "integer", "default": 0 },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "submissions"
+    },
+    "sprint": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::sprint.sprint",
+      "inversedBy": "submissions"
+    },
+    "likes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::solution-like.solution-like",
+      "mappedBy": "submission"
+    }
+  }
+}

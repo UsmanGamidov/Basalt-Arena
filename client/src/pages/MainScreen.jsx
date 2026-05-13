@@ -28,7 +28,7 @@ export function MainScreen() {
                 <SprintTimer endAt={activeSprint.endsAt} />
 
                 <div className="grid grid-cols-1 gap-6 max-[360px]:gap-5 md:gap-8 xl:grid-cols-[minmax(0,1fr)_418px] xl:items-start">
-                  <TaskDescriptionCard />
+                  <TaskDescriptionCard sprint={activeSprint} />
 
                   <aside className="flex flex-col gap-6">
                     <SubmissionTerminal />
@@ -44,7 +44,7 @@ export function MainScreen() {
               <div className="rounded-xl border border-plantation bg-timber/40 px-6 py-16 text-center">
                 <p className="font-mono text-sm leading-relaxed text-half-baked">
                   У вас сейчас нет активного спринта. Когда наставник назначит задание, здесь появится
-                  таймер и материалы — данные придут с сервера через тот же API, что и сейчас (мок).
+                  таймер и материалы — данные придут с основного API.
                 </p>
               </div>
             )}

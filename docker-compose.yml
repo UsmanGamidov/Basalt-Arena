@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: basalt
+      POSTGRES_USER: basalt
+      POSTGRES_PASSWORD: basalt
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U basalt -d basalt"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  cms:
+    image: node:20
+    working_dir: /workspace/cms
+    command: sh -c "npm install --no-audit --no-fund && npm run dev"
+    volumes:
+      - ./:/workspace
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: basalt
+      DATABASE_USERNAME: basalt
+      DATABASE_PASSWORD: basalt
+      DATABASE_SSL: "false"
+      HOST: 0.0.0.0
+      PORT: 1337
+      APP_KEYS: basalt-app-key-1,basalt-app-key-2
+      API_TOKEN_SALT: basalt-api-token-salt
+      ADMIN_JWT_SECRET: basalt-admin-jwt-secret
+      JWT_SECRET: basalt-strapi-jwt-secret
+      TRANSFER_TOKEN_SALT: basalt-transfer-token-salt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "1337:1337"
+    restart: unless-stopped
+
+  bff:
+    image: node:20
+    working_dir: /workspace/bff
+    command: sh -c "npm install --no-audit --no-fund && npx prisma migrate deploy && npm run dev"
+    volumes:
+      - ./:/workspace
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://basalt:basalt@postgres:5432/basalt?schema=bff
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: basalt-dev-access-secret-please-change-me-32+chars
+      JWT_REFRESH_SECRET: basalt-dev-refresh-secret-please-change-me-32+chars
+      DEV_REGISTER_KEY: basalt-dev-register-key
+      CORS_ORIGINS: http://localhost:5173,http://localhost:4173,http://localhost:5174
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  redis_data:

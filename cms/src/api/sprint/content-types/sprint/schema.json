@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "sprints",
+  "info": {
+    "singularName": "sprint",
+    "pluralName": "sprints",
+    "displayName": "Sprint"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": { "type": "string", "required": true },
+    "tabLabel": { "type": "string", "required": true },
+    "tabIcon": { "type": "string" },
+    "completedLabel": { "type": "string", "required": true },
+    "tags": { "type": "json", "required": true },
+    "systemActive": { "type": "boolean", "default": false },
+    "startsAt": { "type": "datetime" },
+    "endsAt": { "type": "datetime" },
+    "brief": { "type": "json", "required": true },
+    "metrics": { "type": "json", "required": true },
+    "submissions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::submission.submission",
+      "mappedBy": "sprint"
+    },
+    "accesses": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::sprint-access.sprint-access",
+      "mappedBy": "sprint"
+    }
+  }
+}

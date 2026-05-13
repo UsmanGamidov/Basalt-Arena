@@ -1,12 +1,22 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { postSubmission } from '../../api/basaltApi.js'
+import { queryKeys } from '../../lib/queryKeys.js'
 import { MaterialIcon } from '../ui/MaterialIcon.jsx'
 
 export function SubmissionTerminal() {
+  const queryClient = useQueryClient()
   const [repo, setRepo] = useState('')
   const [demo, setDemo] = useState('')
-  const [pending, setPending] = useState(false)
   const [notice, setNotice] = useState(null)
+
+  const submitMutation = useMutation({
+    mutationFn: (payload) => postSubmission(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.me() })
+      void queryClient.invalidateQueries({ queryKey: ['hall'] })
+    },
+  })
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -14,29 +24,28 @@ export function SubmissionTerminal() {
       setNotice({ type: 'err', text: 'Укажите ссылку на репозиторий' })
       return
     }
-    setPending(true)
     setNotice(null)
     try {
-      const res = await postSubmission({
+      const res = await submitMutation.mutateAsync({
         repoUrl: repo.trim(),
         demoUrl: demo.trim() || undefined,
       })
-      setNotice({ type: 'ok', text: `Отправлено (мок): ${res.id}` })
+      setNotice({ type: 'ok', text: `Решение принято. Id отправки: ${res.id}` })
       setRepo('')
       setDemo('')
     } catch (err) {
       setNotice({ type: 'err', text: err instanceof Error ? err.message : 'Ошибка отправки' })
-    } finally {
-      setPending(false)
     }
   }
 
+  const pending = submitMutation.isPending
+
   return (
-    <section className="flex flex-col gap-6 rounded-xl border border-plantation bg-timber p-6 pb-10 max-[360px]:gap-4 max-[360px]:p-4 max-[360px]:pb-6">
+    <section className="flex flex-col gap-6 rounded-xl border border-plantation bg-timber p-6 max-[360px]:gap-4 max-[360px]:p-4">
       <div className="flex items-center gap-2">
-        <MaterialIcon name="publish" size={24} opticalSize={25} className="text-spring" />
-        <h2 className="text-lg font-bold uppercase leading-7 tracking-[0.45px] text-catskill max-[360px]:text-base max-[360px]:leading-6">
-          Терминал отправки
+        <MaterialIcon name="upload" size={20} opticalSize={20} className="text-turquoise" />
+        <h2 className="text-base font-semibold leading-6 text-catskill max-[360px]:text-sm max-[360px]:leading-5">
+          Отправить решение
         </h2>
       </div>
 
@@ -50,7 +59,7 @@ export function SubmissionTerminal() {
               name="code"
               size={14}
               opticalSize={14}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-turquoise"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-arena"
             />
             <input
               value={repo}
@@ -70,7 +79,7 @@ export function SubmissionTerminal() {
               name="visibility"
               size={14}
               opticalSize={14}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-turquoise"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-arena"
             />
             <input
               value={demo}
@@ -84,15 +93,15 @@ export function SubmissionTerminal() {
         <button
           type="submit"
           disabled={pending}
-          className="group flex h-14 w-full items-center justify-center gap-3 rounded-lg border border-transparent bg-turquoise px-0 py-4 font-sans text-base font-bold uppercase leading-6 tracking-[1.6px] text-aztec shadow-[0_0_5px_rgba(13,204,242,0.3)] transition-[background-color,box-shadow] duration-300 hover:bg-white hover:shadow-[0_0_14px_rgba(255,255,255,0.4)] disabled:opacity-60 max-[360px]:h-12 max-[360px]:gap-2 max-[360px]:text-sm max-[360px]:tracking-[1.2px]"
+          className="group flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-turquoise px-4 font-sans text-sm font-semibold leading-5 text-white transition-colors duration-150 hover:bg-[#6d4ef0] disabled:opacity-60"
         >
-          {pending ? 'Отправка…' : 'Отправить решение'}
           <MaterialIcon
             name="send"
-            size={24}
-            opticalSize={24}
-            className="text-aztec transition-transform duration-300 group-hover:translate-x-1"
+            size={16}
+            opticalSize={16}
+            className="text-white"
           />
+          {pending ? 'Отправка…' : 'Отправить решение'}
         </button>
         {notice ? (
           <p

@@ -3,14 +3,6 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { MaterialIcon } from '../ui/MaterialIcon.jsx'
 
-const MOCK_NOTIFICATION_ROWS = [
-  {
-    id: 'sprint',
-    title: 'Спринт',
-    body: '#2 BASALT ARENA (FRONTEND): следите за таймером и отправьте решение до дедлайна.',
-  },
-]
-
 function dicebearAvatar(seed) {
   const q = new URLSearchParams({
     seed: String(seed ?? 'user'),
@@ -22,7 +14,7 @@ function dicebearAvatar(seed) {
 
 export function AppHeader() {
   const { pathname } = useLocation()
-  const { user, notificationsUnread, logout, markNotificationsRead } = useAuth()
+  const { user, notificationsUnread, notifications, logout, markNotificationsRead } = useAuth()
   const [notifOpen, setNotifOpen] = useState(false)
   const [marking, setMarking] = useState(false)
   const panelRef = useRef(null)
@@ -52,7 +44,7 @@ export function AppHeader() {
   const navItems = [
     { label: 'Активный спринт', to: '/', active: pathname === '/', disabled: false },
     { label: 'Зал славы', to: '/hall', active: pathname === '/hall', disabled: false },
-    { label: 'Документация', to: '/docs', active: false, disabled: true },
+    { label: 'Документация', to: '/docs', active: pathname === '/docs', disabled: false },
   ]
 
   async function onMarkAllRead() {
@@ -143,7 +135,7 @@ export function AppHeader() {
                   className="leading-none text-gull [font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_24]"
                 />
                 {notificationsUnread > 0 ? (
-                  <span className="absolute right-2 top-2 size-2 rounded-full bg-turquoise shadow-[0_0_0_2px_#101F22]" />
+                  <span className="absolute right-2 top-2 size-2 rounded-full bg-turquoise ring-2 ring-aztec" />
                 ) : null}
               </button>
 
@@ -159,18 +151,31 @@ export function AppHeader() {
                     </p>
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 max-md:px-3">
-                    {notificationsUnread > 0 ? (
+                    {notifications.length > 0 ? (
                       <ul className="flex flex-col gap-2">
-                        {MOCK_NOTIFICATION_ROWS.map((row) => (
+                        {notifications.map((row) => (
                           <li
                             key={row.id}
-                            className="rounded-lg border border-plantation/80 bg-aztec/50 px-3 py-2.5 max-md:px-3.5 max-md:py-3"
+                            className={[
+                              'rounded-lg border border-plantation/80 bg-aztec/50 px-3 py-2.5 max-md:px-3.5 max-md:py-3',
+                              row.unread ? 'border-l-[3px] border-l-turquoise pl-[calc(0.75rem-2px)]' : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
                           >
-                            <p className="text-xs font-semibold text-catskill max-md:text-[13px]">
-                              {row.title}
-                            </p>
-                            <p className="mt-1 font-mono text-[11px] leading-relaxed text-half-baked max-md:text-xs max-md:leading-snug">
+                            <p className="text-xs font-semibold text-catskill max-md:text-[13px]">{row.title}</p>
+                            <p className="mt-1 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-half-baked max-md:text-xs max-md:leading-snug">
                               {row.body}
+                            </p>
+                            <p className="mt-1.5 font-mono text-[10px] text-fiord">
+                              {row.createdAt
+                                ? new Date(row.createdAt).toLocaleString('ru-RU', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : ''}
                             </p>
                           </li>
                         ))}
@@ -210,7 +215,7 @@ export function AppHeader() {
           >
             <div
               aria-hidden
-              className="relative size-9 shrink-0 overflow-hidden rounded-lg border border-turquoise/30 bg-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.2),0_4px_6px_-4px_rgba(13,204,242,0.2)]"
+              className="relative size-9 shrink-0 overflow-hidden rounded-lg border border-plantation bg-aztec"
             >
               <img
                 src={avatarSrc}

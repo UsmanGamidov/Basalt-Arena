@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "up_users",
+  "info": {
+    "name": "user",
+    "singularName": "user",
+    "pluralName": "users",
+    "displayName": "User"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "handle": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "roleLabel": {
+      "type": "string",
+      "default": "Участник"
+    },
+    "avatarUrl": {
+      "type": "string"
+    },
+    "points": {
+      "type": "integer",
+      "default": 0
+    },
+    "globalRank": {
+      "type": "integer",
+      "default": 0
+    },
+    "achievements": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::achievement.achievement"
+    },
+    "submissions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::submission.submission",
+      "mappedBy": "user"
+    },
+    "likes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::solution-like.solution-like",
+      "mappedBy": "user"
+    }
+  }
+}
