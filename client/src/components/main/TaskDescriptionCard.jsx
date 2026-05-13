@@ -17,7 +17,9 @@ const FALLBACK_LINKS = [
 export function TaskDescriptionCard({ sprint = null }) {
   const title = sprint?.title ? String(sprint.title) : 'Basalt Arena (frontend)'
   const apiLinks =
-    Array.isArray(sprint?.resourceLinks) && sprint.resourceLinks.length > 0 ? sprint.resourceLinks : null
+    Array.isArray(sprint?.resourceLinks) && sprint.resourceLinks.length > 0
+      ? sprint.resourceLinks
+      : null
 
   return (
     <article className="flex flex-col gap-6 rounded-xl border border-plantation bg-timber p-6 max-[360px]:gap-4 max-[360px]:p-4">
@@ -39,9 +41,9 @@ export function TaskDescriptionCard({ sprint = null }) {
         </p>
 
         <p className="font-mono text-sm font-normal leading-[23px] text-half-baked [font-synthesis:none] max-[360px]:text-[13px] max-[360px]:leading-5">
-          Реализуйте все три страницы по макету: index.html (активный спринт), hall.html (зал славы) и
-          profile.html (профиль). Стек — любой: чистый HTML/CSS, React, Vue, Svelte, Tailwind, Bootstrap,
-          генерация через ИИ — что угодно.
+          Реализуйте все три страницы по макету: index.html (активный спринт), hall.html (зал славы)
+          и profile.html (профиль). Стек — любой: чистый HTML/CSS, React, Vue, Svelte, Tailwind,
+          Bootstrap, генерация через ИИ — что угодно.
         </p>
 
         <h3 className="font-mono text-xs font-semibold uppercase tracking-[1px] leading-[23px] text-half-baked [font-synthesis:none] max-[360px]:text-[11px] max-[360px]:leading-5">
@@ -59,8 +61,8 @@ export function TaskDescriptionCard({ sprint = null }) {
           </li>
           <li>
             Авторизация, профиль, отправка решения и зал славы работают через{' '}
-            <span className="text-spring">реальный API</span> (BFF); в макете можно оставить заглушки
-            только для сторонних сервисов (GitHub, оплата и т.п.), если они не подключены.
+            <span className="text-spring">реальный API</span> (BFF); в макете можно оставить
+            заглушки только для сторонних сервисов (GitHub, оплата и т.п.), если они не подключены.
           </li>
         </ul>
       </div>
@@ -81,14 +83,24 @@ export function TaskDescriptionCard({ sprint = null }) {
                     rel="noopener noreferrer"
                     className={CHIP_LINK}
                   >
-                    <MaterialIcon name={item.icon} size={14} opticalSize={14} className="font-normal" />
+                    <MaterialIcon
+                      name={item.icon}
+                      size={14}
+                      opticalSize={14}
+                      className="font-normal"
+                    />
                     <span className="whitespace-nowrap">{item.label}</span>
                   </a>
                 )
               })
             : FALLBACK_LINKS.map((item) => (
                 <span key={item.label} className={CHIP_STATIC}>
-                  <MaterialIcon name={item.icon} size={14} opticalSize={14} className="font-normal" />
+                  <MaterialIcon
+                    name={item.icon}
+                    size={14}
+                    opticalSize={14}
+                    className="font-normal"
+                  />
                   <span className="whitespace-nowrap">{item.label}</span>
                 </span>
               ))}

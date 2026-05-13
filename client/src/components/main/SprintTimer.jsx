@@ -29,7 +29,8 @@ export function SprintTimer({ endAt }) {
   const m = Math.floor((totalSec % 3600) / 60)
   const s = totalSec % 60
 
-  const digitBase = 'font-mono tabular-nums text-[56px] font-bold leading-[60px] tracking-[-2px] max-[360px]:text-[44px] max-[360px]:leading-[48px] max-[360px]:tracking-[-1.5px]'
+  const digitBase =
+    'font-mono tabular-nums text-[56px] font-bold leading-[60px] tracking-[-2px] max-[360px]:text-[44px] max-[360px]:leading-[48px] max-[360px]:tracking-[-1.5px]'
   const digitHours = `${digitBase} text-catskill`
   const digitMinutes = `${digitBase} text-catskill`
   const digitSeconds = `${digitBase} text-turquoise`

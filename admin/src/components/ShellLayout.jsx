@@ -1,13 +1,4 @@
-import {
-  Award,
-  FileCode2,
-  History,
-  Home,
-  KeyRound,
-  LogOut,
-  Trophy,
-  Users,
-} from 'lucide-react'
+import { Award, FileCode2, History, Home, KeyRound, LogOut, Trophy, Users } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { clearSession, postLogout } from '../api.js'
 import { Button } from './ui/button.jsx'
@@ -44,8 +35,12 @@ export function ShellLayout() {
     <div className="flex min-h-screen">
       <aside className="flex w-60 shrink-0 flex-col border-r border-plantation bg-gradient-to-b from-timber to-aztec p-4">
         <div className="mb-8 px-2">
-          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-turquoise">Basalt</div>
-          <div className="mt-1 text-lg font-semibold tracking-tight text-catskill">Админка арены</div>
+          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-turquoise">
+            Basalt
+          </div>
+          <div className="mt-1 text-lg font-semibold tracking-tight text-catskill">
+            Админка арены
+          </div>
         </div>
         <nav className="flex flex-1 flex-col gap-1">
           {items.map(({ to, label, icon: Icon }) => (

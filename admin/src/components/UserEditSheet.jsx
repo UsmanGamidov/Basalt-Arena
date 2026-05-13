@@ -76,12 +76,16 @@ function buildPatch(user, form) {
   if (form.handle !== user.handle) body.handle = form.handle
   if (form.role !== user.role) body.role = form.role
   if (Number(form.points) !== Number(user.points)) body.points = Number(form.points)
-  if ((form.realName ?? '').trim() !== (user.realName ?? '').trim()) body.realName = (form.realName ?? '').trim()
+  if ((form.realName ?? '').trim() !== (user.realName ?? '').trim())
+    body.realName = (form.realName ?? '').trim()
   if ((form.bio ?? '') !== (user.bio ?? '')) body.bio = form.bio ?? ''
-  if ((form.telegram ?? '').trim() !== (user.telegram ?? '').trim()) body.telegram = (form.telegram ?? '').trim()
-  if ((form.github ?? '').trim() !== (user.github ?? '').trim()) body.github = (form.github ?? '').trim()
+  if ((form.telegram ?? '').trim() !== (user.telegram ?? '').trim())
+    body.telegram = (form.telegram ?? '').trim()
+  if ((form.github ?? '').trim() !== (user.github ?? '').trim())
+    body.github = (form.github ?? '').trim()
   if (!sameStack(form.stack, user.stack ?? [])) body.stack = form.stack
-  if (Number(form.moneyEarned) !== Number(user.moneyEarned ?? 0)) body.moneyEarned = Number(form.moneyEarned)
+  if (Number(form.moneyEarned) !== Number(user.moneyEarned ?? 0))
+    body.moneyEarned = Number(form.moneyEarned)
   return body
 }
 
@@ -158,11 +162,12 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
   const allAchievements = allAchRes?.achievements ?? []
   const grantable = useMemo(
     () => allAchievements.filter((a) => !earnedIds.has(a.id)),
-    [allAchievements, earnedIds],
+    [allAchievements, earnedIds]
   )
 
   const grantMut = useMutation({
-    mutationFn: (achievementId) => api(`/admin/users/${user.id}/achievements/${achievementId}`, { method: 'POST' }),
+    mutationFn: (achievementId) =>
+      api(`/admin/users/${user.id}/achievements/${achievementId}`, { method: 'POST' }),
     onSuccess: () => {
       toast.success('Ачивка выдана')
       setGrantAchievementId('')
@@ -217,7 +222,7 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
   const sprintRows = sprintActivityRes?.items ?? []
   const sprintDetailRow = useMemo(
     () => sprintRows.find((r) => r.sprint?.id === sprintDetailSprintId) ?? null,
-    [sprintRows, sprintDetailSprintId],
+    [sprintRows, sprintDetailSprintId]
   )
 
   return (
@@ -277,7 +282,10 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                   </div>
                   <div>
                     <Label>Роль</Label>
-                    <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v }))}>
+                    <Select
+                      value={form.role}
+                      onValueChange={(v) => setForm((f) => ({ ...f, role: v }))}
+                    >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Выберите роль" />
                       </SelectTrigger>
@@ -300,11 +308,7 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                   </div>
                   <div>
                     <Label>Почта</Label>
-                    <Input
-                      className="mt-1 opacity-80"
-                      value={user.email}
-                      readOnly
-                    />
+                    <Input className="mt-1 opacity-80" value={user.email} readOnly />
                     <HintRow className="mt-1.5" icon="lock">
                       Почту человек меняет в личном кабинете на сайте, не здесь.
                     </HintRow>
@@ -363,7 +367,9 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                             type="button"
                             className="text-gull hover:text-catskill"
                             aria-label={`Удалить ${tag}`}
-                            onClick={() => setForm((f) => ({ ...f, stack: f.stack.filter((x) => x !== tag) }))}
+                            onClick={() =>
+                              setForm((f) => ({ ...f, stack: f.stack.filter((x) => x !== tag) }))
+                            }
                           >
                             ×
                           </button>
@@ -400,8 +406,8 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
 
                 <TabsContent value="logs" className="space-y-3">
                   <HintRow icon="history_edu">
-                    Журнал по этому человеку: что он делал сам, что у него меняли другие, и упоминания в связанных
-                    событиях.
+                    Журнал по этому человеку: что он делал сам, что у него меняли другие, и
+                    упоминания в связанных событиях.
                   </HintRow>
                   <div className="overflow-hidden rounded-xl border border-plantation">
                     <table className="w-full text-left text-xs">
@@ -428,13 +434,20 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                               </tr>
                             ))
                           : logItems.map((row) => (
-                              <tr key={row.id} className="border-b border-plantation/40 align-top last:border-0">
+                              <tr
+                                key={row.id}
+                                className="border-b border-plantation/40 align-top last:border-0"
+                              >
                                 <td className="whitespace-nowrap p-2 font-mono text-[10px] text-gull">
                                   {new Date(row.createdAt).toLocaleString()}
                                 </td>
                                 <td className="p-2">
-                                  <div className="font-mono text-[10px] text-turquoise">@{row.actor?.handle}</div>
-                                  <div className="text-[9px] text-slate-arena">{roleLabel(row.actor?.role)}</div>
+                                  <div className="font-mono text-[10px] text-turquoise">
+                                    @{row.actor?.handle}
+                                  </div>
+                                  <div className="text-[9px] text-slate-arena">
+                                    {roleLabel(row.actor?.role)}
+                                  </div>
                                 </td>
                                 <td className="p-2">
                                   <div className="font-sans text-[11px] font-medium leading-snug text-catskill">
@@ -484,7 +497,10 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                     <Label className="text-[10px]">Добавить ачивку</Label>
                     <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end">
                       <div className="min-w-0 flex-1">
-                        <Select value={grantAchievementId || undefined} onValueChange={setGrantAchievementId}>
+                        <Select
+                          value={grantAchievementId || undefined}
+                          onValueChange={setGrantAchievementId}
+                        >
                           <SelectTrigger>
                             <SelectValue placeholder="Выберите из списка" />
                           </SelectTrigger>
@@ -504,14 +520,18 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                         type="button"
                         variant="gradient"
                         className="shrink-0 py-2"
-                        disabled={!grantAchievementId || grantMut.isPending || grantable.length === 0}
+                        disabled={
+                          !grantAchievementId || grantMut.isPending || grantable.length === 0
+                        }
                         onClick={() => grantAchievementId && grantMut.mutate(grantAchievementId)}
                       >
                         Выдать
                       </Button>
                     </div>
                     {grantable.length === 0 ? (
-                      <p className="mt-2 font-sans text-[10px] text-gull">Все ачивки из справочника уже выданы.</p>
+                      <p className="mt-2 font-sans text-[10px] text-gull">
+                        Все ачивки из справочника уже выданы.
+                      </p>
                     ) : null}
                   </div>
                   <div>
@@ -568,8 +588,9 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
 
                 <TabsContent value="sprints" className="space-y-3">
                   <HintRow icon="event">
-                    Спринты, где есть отправленная работа или отдельно выданный доступ. Активный — текущий бой на
-                    арене. Откройте строку, чтобы увидеть ссылки на репозиторий и демо.
+                    Спринты, где есть отправленная работа или отдельно выданный доступ. Активный —
+                    текущий бой на арене. Откройте строку, чтобы увидеть ссылки на репозиторий и
+                    демо.
                   </HintRow>
                   {sprintsPending ? (
                     <Skeleton className="h-36 w-full rounded-xl" />
@@ -594,12 +615,21 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                             const sub = row.submission
                             const acc = row.access
                             return (
-                              <tr key={s.id} className="border-b border-plantation/40 align-top last:border-0">
+                              <tr
+                                key={s.id}
+                                className="border-b border-plantation/40 align-top last:border-0"
+                              >
                                 <td className="p-2">
-                                  <div className="font-sans text-sm font-semibold leading-snug text-catskill">{s.title}</div>
-                                  <div className="mt-0.5 font-mono text-[10px] text-gull">{s.slug}</div>
+                                  <div className="font-sans text-sm font-semibold leading-snug text-catskill">
+                                    {s.title}
+                                  </div>
+                                  <div className="mt-0.5 font-mono text-[10px] text-gull">
+                                    {s.slug}
+                                  </div>
                                   {s.tabLabel ? (
-                                    <div className="mt-0.5 text-[10px] text-slate-arena">подпись вкладки: {s.tabLabel}</div>
+                                    <div className="mt-0.5 text-[10px] text-slate-arena">
+                                      подпись вкладки: {s.tabLabel}
+                                    </div>
                                   ) : null}
                                 </td>
                                 <td className="p-2">
@@ -615,8 +645,8 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                                   {sub ? (
                                     <div className="space-y-0.5">
                                       <div className="text-[11px] leading-snug text-catskill">
-                                        {submissionStatusLabel(sub.status)} · {sub.mentorScore} б. · лайки{' '}
-                                        {sub.likesCount}
+                                        {submissionStatusLabel(sub.status)} · {sub.mentorScore} б. ·
+                                        лайки {sub.likesCount}
                                       </div>
                                       <div className="font-mono text-[9px] text-slate-arena">
                                         обновлено {new Date(sub.updatedAt).toLocaleString()}
@@ -658,7 +688,12 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
 
               {(tab === 'account' || tab === 'profile') && (
                 <div className="mt-6 flex gap-2 border-t border-plantation pt-4">
-                  <Button type="button" variant="gradient" disabled={!canSubmit || isPending} onClick={handleSave}>
+                  <Button
+                    type="button"
+                    variant="gradient"
+                    disabled={!canSubmit || isPending}
+                    onClick={handleSave}
+                  >
                     Сохранить
                   </Button>
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
@@ -686,7 +721,9 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
               <div className="mt-3 space-y-2 text-xs text-gull">
                 <p>
                   <span className="text-slate-arena">Короткий адрес страницы:</span>{' '}
-                  <span className="font-mono text-[10px] text-catskill">{sprintDetailRow.sprint.slug}</span>
+                  <span className="font-mono text-[10px] text-catskill">
+                    {sprintDetailRow.sprint.slug}
+                  </span>
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {sprintDetailRow.sprint.active ? (
@@ -738,15 +775,18 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                           {submissionStatusLabel(sprintDetailRow.submission.status)}
                         </div>
                         <div className="mt-1 text-[11px]">
-                          <span className="text-gull">Баллы ментора:</span> {sprintDetailRow.submission.mentorScore}
+                          <span className="text-gull">Баллы ментора:</span>{' '}
+                          {sprintDetailRow.submission.mentorScore}
                         </div>
                         <div className="mt-1 text-[11px]">
-                          <span className="text-gull">Лайки:</span> {sprintDetailRow.submission.likesCount}
+                          <span className="text-gull">Лайки:</span>{' '}
+                          {sprintDetailRow.submission.likesCount}
                         </div>
                         <div className="mt-1 font-mono text-[10px] text-slate-arena">
                           создано {new Date(sprintDetailRow.submission.createdAt).toLocaleString()}
                           {' · '}
-                          обновлено {new Date(sprintDetailRow.submission.updatedAt).toLocaleString()}
+                          обновлено{' '}
+                          {new Date(sprintDetailRow.submission.updatedAt).toLocaleString()}
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -773,7 +813,9 @@ export function UserEditSheet({ user, open, onOpenChange, isPending, onSave }) {
                       </div>
                     </div>
                   ) : (
-                    <p className="mt-1 font-sans text-sm text-gull">По этому спринту работа ещё не отправлена.</p>
+                    <p className="mt-1 font-sans text-sm text-gull">
+                      По этому спринту работа ещё не отправлена.
+                    </p>
                   )}
                 </div>
               </div>

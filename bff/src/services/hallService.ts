@@ -3,10 +3,7 @@ import { AppError } from '../errors/AppError.js'
 import type { LikeRepository } from '../repositories/likeRepo.js'
 import type { SprintAccessRepository } from '../repositories/sprintAccessRepo.js'
 import type { SprintRepository, SortBy } from '../repositories/sprintRepo.js'
-import type {
-  SubmissionRepository,
-  SubmissionWithAuthor,
-} from '../repositories/submissionRepo.js'
+import type { SubmissionRepository, SubmissionWithAuthor } from '../repositories/submissionRepo.js'
 
 const RANK_BADGES = ['gold', 'slate', 'bronze'] as const
 
@@ -20,11 +17,7 @@ function formatDate(date: Date): string {
   return iso.slice(0, 10)
 }
 
-function decorateSolution(
-  submission: SubmissionWithAuthor,
-  index: number,
-  likedSet: Set<string>,
-) {
+function decorateSolution(submission: SubmissionWithAuthor, index: number, likedSet: Set<string>) {
   const rank = index + 1
   const badge = rank <= 3 ? RANK_BADGES[rank - 1] : 'muted'
   const displayName = submission.user.handle.replace(/^@/, '')
@@ -50,7 +43,7 @@ function describeSprint(
   sprint: Sprint,
   submissions: SubmissionWithAuthor[],
   likedSet: Set<string>,
-  participantsWithoutSubmission: Array<{ id: string; handle: string; avatarUrl: string }>,
+  participantsWithoutSubmission: Array<{ id: string; handle: string; avatarUrl: string }>
 ) {
   return {
     id: sprint.id,
@@ -125,9 +118,7 @@ export function createHallService(deps: {
     const sprints = await deps.sprints.list()
     const detailed = await Promise.all(
       sprints.map(async (sprint) => {
-        const rights = userId
-          ? await deps.sprintAccess.effectiveRights(userId, sprint.id)
-          : null
+        const rights = userId ? await deps.sprintAccess.effectiveRights(userId, sprint.id) : null
         const canView = rights?.canView ?? true
         const participants = canView ? await participantsWithoutSubmissionForSprint(sprint.id) : []
         if (!canView) {
@@ -135,9 +126,11 @@ export function createHallService(deps: {
         }
         const submissions = await deps.submissions.listBySprint(sprint.id, sortBy)
         const ids = submissions.map((s) => s.id)
-        const likedSet = userId ? await deps.likes.likedSubmissionIds(userId, ids) : new Set<string>()
+        const likedSet = userId
+          ? await deps.likes.likedSubmissionIds(userId, ids)
+          : new Set<string>()
         return describeSprint(sprint, submissions, likedSet, participants)
-      }),
+      })
     )
     return detailed
   }
@@ -163,10 +156,7 @@ export function createHallService(deps: {
         })
       return {
         page: {
-          breadcrumbs: [
-            { label: 'BASALT ARENA' },
-            { label: 'ЗАЛ СЛАВЫ', muted: true },
-          ],
+          breadcrumbs: [{ label: 'BASALT ARENA' }, { label: 'ЗАЛ СЛАВЫ', muted: true }],
           title: 'Зал славы',
           description:
             'Лучшие решения сообщества. Сортировка: эффективность (балл и лайки), лайки или оценка наставника.',
@@ -194,9 +184,7 @@ export function createHallService(deps: {
       const submissions = await deps.submissions.listBySprint(id, sortBy)
       const ids = submissions.map((s) => s.id)
       const likedSet = userId ? await deps.likes.likedSubmissionIds(userId, ids) : new Set<string>()
-      const participants = userId
-        ? await participantsWithoutSubmissionForSprint(id)
-        : []
+      const participants = userId ? await participantsWithoutSubmissionForSprint(id) : []
       return { sprint: describeSprint(sprint, submissions, likedSet, participants) }
     },
   }

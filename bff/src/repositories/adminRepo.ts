@@ -183,7 +183,7 @@ export function createAdminRepository(prisma: PrismaClient) {
 
     async setActiveSprint(id: string) {
       await prisma.$transaction([
-        prisma.sprint.updateMany({ data: { active: false } }),
+        prisma.sprint.updateMany({ where: { id: { not: id } }, data: { active: false } }),
         prisma.sprint.update({ where: { id }, data: { active: true, archived: false } }),
       ])
       return prisma.sprint.findUnique({ where: { id } })
@@ -250,7 +250,7 @@ export function createAdminRepository(prisma: PrismaClient) {
         repoUrl?: string
         demoUrl?: string | null
         mentorComment?: string | null
-      },
+      }
     ) {
       return prisma.$transaction(async (tx) => {
         const before = await tx.submission.findUnique({
@@ -281,7 +281,12 @@ export function createAdminRepository(prisma: PrismaClient) {
       if (input.id) {
         return prisma.achievement.update({
           where: { id: input.id },
-          data: { slug: input.slug, title: input.title, subtitle: input.subtitle, icon: input.icon },
+          data: {
+            slug: input.slug,
+            title: input.title,
+            subtitle: input.subtitle,
+            icon: input.icon,
+          },
         })
       }
       return prisma.achievement.create({
@@ -362,8 +367,8 @@ export function createAdminRepository(prisma: PrismaClient) {
               canView: input.canView,
             },
             update: { canSubmit: input.canSubmit, canView: input.canView },
-          }),
-        ),
+          })
+        )
       )
       return { ok: true as const, count: input.userIds.length }
     },

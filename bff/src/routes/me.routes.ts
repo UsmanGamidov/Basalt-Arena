@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { respondSuccess } from '../api/http/respond.js'
 import { AppError } from '../errors/AppError.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
@@ -14,8 +15,8 @@ export function meRouter(container: Container) {
     asyncHandler(async (req, res) => {
       const me = await container.userView.me(req.auth!.sub)
       if (!me) throw AppError.unauthorized('User no longer exists')
-      res.json(me)
-    }),
+      return respondSuccess(res, me)
+    })
   )
 
   router.patch(
@@ -24,11 +25,11 @@ export function meRouter(container: Container) {
     asyncHandler(async (req, res) => {
       const { form } = meProfilePatchBody.parse(req.body)
       const updated = await container.profiles.patch(req.auth!.sub, form)
-      res.json({
+      return respondSuccess(res, {
         ok: true,
         user: { id: updated.id, handle: updated.handle, avatarUrl: updated.avatarUrl },
       })
-    }),
+    })
   )
 
   router.post(
@@ -36,8 +37,8 @@ export function meRouter(container: Container) {
     requireAuth,
     asyncHandler(async (req, res) => {
       const unreadCount = await container.userView.markAllNotificationsRead(req.auth!.sub)
-      res.json({ unreadCount })
-    }),
+      return respondSuccess(res, { unreadCount })
+    })
   )
 
   return router

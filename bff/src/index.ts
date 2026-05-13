@@ -1,11 +1,15 @@
 import http from 'node:http'
-import { env } from './config/env.js'
-import { createApp } from './app.js'
-import { buildContainer } from './container.js'
-import { disconnectPrisma, prisma } from './infra/prisma.js'
-import { disconnectRedis, getRedis } from './infra/redis.js'
-import { logger } from './infra/logger.js'
-import { attachSocketIO, emitDataUpdated } from './realtime/socketServer.js'
+import { createApp } from './api/http/index.js'
+import {
+  buildContainer,
+  disconnectPrisma,
+  disconnectRedis,
+  env,
+  getRedis,
+  logger,
+  prisma,
+} from './core/index.js'
+import { attachSocketIO, emitDataUpdated } from './modules/realtime/index.js'
 
 async function main() {
   await prisma.$connect()

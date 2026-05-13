@@ -43,8 +43,8 @@ export function MainScreen() {
             ) : (
               <div className="rounded-xl border border-plantation bg-timber/40 px-6 py-16 text-center">
                 <p className="font-mono text-sm leading-relaxed text-half-baked">
-                  У вас сейчас нет активного спринта. Когда наставник назначит задание, здесь появится
-                  таймер и материалы — данные придут с основного API.
+                  У вас сейчас нет активного спринта. Когда наставник назначит задание, здесь
+                  появится таймер и материалы — данные придут с основного API.
                 </p>
               </div>
             )}

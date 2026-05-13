@@ -165,7 +165,11 @@ const RESOURCE_ICON_PRESETS = [
 
 function MaterialIconPresetGrid({ value, onPick, idPrefix }) {
   return (
-    <div className="mt-2 grid grid-cols-8 gap-1.5 max-sm:grid-cols-4" role="group" aria-label="Выбор значка">
+    <div
+      className="mt-2 grid grid-cols-8 gap-1.5 max-sm:grid-cols-4"
+      role="group"
+      aria-label="Выбор значка"
+    >
       {RESOURCE_ICON_PRESETS.map((p) => {
         const selected = value === p.value
         return (
@@ -178,7 +182,9 @@ function MaterialIconPresetGrid({ value, onPick, idPrefix }) {
             aria-pressed={selected}
             className={cn(
               'flex h-10 w-full max-w-10 items-center justify-center justify-self-center rounded-lg border transition',
-              selected ? 'border-turquoise bg-turquoise/15' : 'border-plantation hover:border-turquoise/40',
+              selected
+                ? 'border-turquoise bg-turquoise/15'
+                : 'border-plantation hover:border-turquoise/40'
             )}
             onClick={() => onPick(p.value)}
           >
@@ -194,7 +200,10 @@ function MaterialIconPresetGrid({ value, onPick, idPrefix }) {
 
 function newResourceLinkRow() {
   return {
-    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `rl-${Date.now()}-${Math.random()}`,
+    id:
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `rl-${Date.now()}-${Math.random()}`,
     label: '',
     href: '',
     icon: 'link',
@@ -219,10 +228,16 @@ function buildResourceLinksPayload(rows) {
     const icon = String(r.icon ?? 'link').trim() || 'link'
     if (!label && !href) continue
     if (!label || !href) {
-      return { ok: false, message: 'Для каждой строки укажите подпись и URL или очистите строку целиком.' }
+      return {
+        ok: false,
+        message: 'Для каждой строки укажите подпись и URL или очистите строку целиком.',
+      }
     }
     if (!isValidHttpUrl(href)) {
-      return { ok: false, message: `Укажите полную ссылку с https:// или http:// — сейчас не подходит: ${href}` }
+      return {
+        ok: false,
+        message: `Укажите полную ссылку с https:// или http:// — сейчас не подходит: ${href}`,
+      }
     }
     links.push({ label, href, icon })
   }
@@ -233,7 +248,8 @@ function buildResourceLinksPayload(rows) {
 }
 
 function resourceLinksFromSprintBrief(brief) {
-  const raw = brief && typeof brief === 'object' && !Array.isArray(brief) ? brief.resourceLinks : null
+  const raw =
+    brief && typeof brief === 'object' && !Array.isArray(brief) ? brief.resourceLinks : null
   if (!Array.isArray(raw)) return []
   return raw
     .filter((x) => x && typeof x === 'object')
@@ -269,21 +285,31 @@ function SprintPreviewCard({ title, tabLabel, completedLabel, tags, tabIcon, ran
   const period = formatSprintRangePreview(range)
   return (
     <div className="rounded-xl border border-plantation bg-gradient-to-b from-timber/80 to-aztec/60 p-4 shadow-inner">
-      <p className="font-mono text-[9px] uppercase tracking-wider text-slate-arena">Как выглядит на сайте</p>
+      <p className="font-mono text-[9px] uppercase tracking-wider text-slate-arena">
+        Как выглядит на сайте
+      </p>
       <div className="mt-3 flex items-start gap-3">
         {tabIcon ? (
-          <span className="material-symbols-outlined shrink-0 text-2xl text-turquoise/80" aria-hidden>
+          <span
+            className="material-symbols-outlined shrink-0 text-2xl text-turquoise/80"
+            aria-hidden
+          >
             {tabIcon}
           </span>
         ) : null}
         <div className="min-w-0 flex-1">
-          <div className="font-sans text-lg font-semibold leading-tight text-catskill">{title || 'Название'}</div>
+          <div className="font-sans text-lg font-semibold leading-tight text-catskill">
+            {title || 'Название'}
+          </div>
           <div className="mt-1.5 inline-flex rounded-md bg-white/5 px-2 py-0.5 font-mono text-[10px] text-turquoise">
             {tabLabel || 'Вкладка'}
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-1">
             {(tags ?? []).slice(0, 6).map((tag) => (
-              <span key={tag} className="rounded bg-aztec px-1.5 py-0.5 font-mono text-[9px] text-gull">
+              <span
+                key={tag}
+                className="rounded bg-aztec px-1.5 py-0.5 font-mono text-[9px] text-gull"
+              >
                 {tag}
               </span>
             ))}
@@ -294,9 +320,12 @@ function SprintPreviewCard({ title, tabLabel, completedLabel, tags, tabIcon, ran
               {period ?? 'Выберите период в календаре'}
             </span>
           </div>
-          <p className="mt-3 font-mono text-[9px] uppercase tracking-wide text-slate-arena">Подпись после сдачи</p>
+          <p className="mt-3 font-mono text-[9px] uppercase tracking-wide text-slate-arena">
+            Подпись после сдачи
+          </p>
           <p className="mt-0.5 font-mono text-[10px] leading-snug text-gull">
-            {completedLabel?.trim() ? completedLabel.trim() : 'Сдано'} — такой текст покажется на зале рядом со значком события.
+            {completedLabel?.trim() ? completedLabel.trim() : 'Сдано'} — такой текст покажется на
+            зале рядом со значком события.
           </p>
         </div>
       </div>
@@ -308,7 +337,9 @@ function Section({ title, subtitle, children }) {
   return (
     <section className="space-y-2">
       <div>
-        <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-turquoise">{title}</h2>
+        <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-turquoise">
+          {title}
+        </h2>
         {subtitle ? <p className="mt-0.5 text-[11px] text-gull">{subtitle}</p> : null}
       </div>
       <ul className="space-y-2">{children}</ul>
@@ -395,7 +426,7 @@ export function SprintsPage() {
             from: s.startsAt ? new Date(s.startsAt) : undefined,
             to: s.endsAt ? new Date(s.endsAt) : undefined,
           }
-        : undefined,
+        : undefined
     )
     setSheetOpen(true)
   }
@@ -412,7 +443,8 @@ export function SprintsPage() {
   })
 
   const patchMutation = useMutation({
-    mutationFn: ({ id, body }) => api(`/admin/sprints/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+    mutationFn: ({ id, body }) =>
+      api(`/admin/sprints/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: async (_data, variables) => {
       if (variables.makeActive) {
         try {
@@ -449,7 +481,11 @@ export function SprintsPage() {
   })
 
   const archiveMutation = useMutation({
-    mutationFn: (id) => api(`/admin/sprints/${id}`, { method: 'PATCH', body: JSON.stringify({ archived: true }) }),
+    mutationFn: (id) =>
+      api(`/admin/sprints/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ archived: true, active: false }),
+      }),
     onSuccess: () => {
       toast.success('Спринт в архиве')
       void qc.invalidateQueries({ queryKey: ['admin', 'sprints'] })
@@ -525,8 +561,7 @@ export function SprintsPage() {
   const previewTags = useMemo(() => parseTags(form.tagsRaw), [form.tagsRaw])
 
   const renderSprintRow = (s, section) => {
-    const barVariant =
-      section === 'active' ? 'arena' : section === 'planned' ? 'ongoing' : 'done'
+    const barVariant = section === 'active' ? 'arena' : section === 'planned' ? 'ongoing' : 'done'
     const arenaButFinished = s.active && section === 'finished'
     return (
       <li
@@ -536,8 +571,10 @@ export function SprintsPage() {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-bold text-mystic">{s.title}</span>
-            {s.active ? (
-              <span className="rounded bg-spring/20 px-2 py-0.5 font-mono text-[10px] text-spring">Арена</span>
+            {s.active && section !== 'archive' ? (
+              <span className="rounded bg-spring/20 px-2 py-0.5 font-mono text-[10px] text-spring">
+                Арена
+              </span>
             ) : null}
             {arenaButFinished ? (
               <span className="rounded border border-turquoise/30 bg-turquoise/10 px-2 py-0.5 font-mono text-[10px] text-turquoise">
@@ -557,7 +594,9 @@ export function SprintsPage() {
               {s.endsAt ? new Date(s.endsAt).toLocaleDateString() : '—'}
             </div>
           ) : null}
-          {section !== 'archive' ? <SprintTimeBar sprint={s} variant={barVariant} nowMs={nowMs} /> : null}
+          {section !== 'archive' ? (
+            <SprintTimeBar sprint={s} variant={barVariant} nowMs={nowMs} />
+          ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {!s.active ? (
@@ -571,7 +610,12 @@ export function SprintsPage() {
               На арену
             </Button>
           ) : null}
-          <Button type="button" variant="outline" className="py-1.5 text-[10px]" onClick={() => openEdit(s)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="py-1.5 text-[10px]"
+            onClick={() => openEdit(s)}
+          >
             Редактировать
           </Button>
           <Button
@@ -603,10 +647,12 @@ export function SprintsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">Спринты</h1>
+          <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">
+            Спринты
+          </h1>
           <p className="mt-2 max-w-2xl text-sm text-gull">
-            Секции отражают очередь боёв и календарь. Редактирование — в боковой панели. Короткий адрес в ссылке
-            подставляется из названия; при необходимости поправьте его вручную.
+            Секции отражают очередь боёв и календарь. Редактирование — в боковой панели. Короткий
+            адрес в ссылке подставляется из названия; при необходимости поправьте его вручную.
           </p>
         </div>
         <Button variant="gradient" onClick={openCreate}>
@@ -635,7 +681,10 @@ export function SprintsPage() {
             )}
           </Section>
 
-          <Section title="Запланированные" subtitle="Старт ещё впереди или полоска времени не дошла до конца.">
+          <Section
+            title="Запланированные"
+            subtitle="Старт ещё впереди или полоска времени не дошла до конца."
+          >
             {groups.planned.length === 0 ? (
               <li className="list-none rounded-xl border border-dashed border-plantation px-4 py-6 text-center text-sm text-gull">
                 Нет запланированных.
@@ -645,7 +694,10 @@ export function SprintsPage() {
             )}
           </Section>
 
-          <Section title="Завершённые" subtitle="Финиш по датам уже прошёл или шкала времени заполнилась до конца.">
+          <Section
+            title="Завершённые"
+            subtitle="Финиш по датам уже прошёл или шкала времени заполнилась до конца."
+          >
             {groups.finished.length === 0 ? (
               <li className="list-none rounded-xl border border-dashed border-plantation px-4 py-6 text-center text-sm text-gull">
                 Пока пусто.
@@ -679,7 +731,11 @@ export function SprintsPage() {
             <form className="space-y-4" onSubmit={submitSheet}>
               <div>
                 <Label>Название</Label>
-                <Input className="mt-1" value={form.title} onChange={(e) => onTitleChange(e.target.value)} />
+                <Input
+                  className="mt-1"
+                  value={form.title}
+                  onChange={(e) => onTitleChange(e.target.value)}
+                />
               </div>
               <div>
                 <Label>Короткий адрес в ссылке</Label>
@@ -692,7 +748,8 @@ export function SprintsPage() {
                   }}
                 />
                 <HintRow className="mt-1.5" icon="link">
-                  Латиница без пробелов — часть URL карточки спринта; при вводе названия подставляется автоматически.
+                  Латиница без пробелов — часть URL карточки спринта; при вводе названия
+                  подставляется автоматически.
                 </HintRow>
               </div>
               <div>
@@ -708,7 +765,11 @@ export function SprintsPage() {
                 <Label>Значок вкладки</Label>
                 <MaterialIconPresetGrid
                   idPrefix="tab-icon"
-                  value={RESOURCE_ICON_PRESETS.some((p) => p.value === form.tabIcon.trim()) ? form.tabIcon.trim() : ''}
+                  value={
+                    RESOURCE_ICON_PRESETS.some((p) => p.value === form.tabIcon.trim())
+                      ? form.tabIcon.trim()
+                      : ''
+                  }
                   onPick={(icon) => setForm((f) => ({ ...f, tabIcon: icon }))}
                 />
                 <Input
@@ -744,8 +805,8 @@ export function SprintsPage() {
                   <div>
                     <Label>Полезные ссылки в брифе</Label>
                     <HintRow className="mt-0.5 max-w-md" icon="list_alt">
-                      Подпись, полная ссылка и значок. Порядок строк = порядок чипов у участников. Ссылки только с
-                      https:// или http://.
+                      Подпись, полная ссылка и значок. Порядок строк = порядок чипов у участников.
+                      Ссылки только с https:// или http://.
                     </HintRow>
                   </div>
                   <Button
@@ -758,7 +819,9 @@ export function SprintsPage() {
                   </Button>
                 </div>
                 {resourceLinks.length === 0 ? (
-                  <p className="py-2 text-center font-mono text-[11px] text-slate-arena">Пока нет ссылок</p>
+                  <p className="py-2 text-center font-mono text-[11px] text-slate-arena">
+                    Пока нет ссылок
+                  </p>
                 ) : (
                   <ul className="space-y-3">
                     {resourceLinks.map((row, idx) => (
@@ -776,7 +839,7 @@ export function SprintsPage() {
                               onChange={(e) => {
                                 const v = e.target.value
                                 setResourceLinks((rows) =>
-                                  rows.map((r) => (r.id === row.id ? { ...r, label: v } : r)),
+                                  rows.map((r) => (r.id === row.id ? { ...r, label: v } : r))
                                 )
                               }}
                             />
@@ -790,7 +853,7 @@ export function SprintsPage() {
                               onChange={(e) => {
                                 const v = e.target.value
                                 setResourceLinks((rows) =>
-                                  rows.map((r) => (r.id === row.id ? { ...r, href: v } : r)),
+                                  rows.map((r) => (r.id === row.id ? { ...r, href: v } : r))
                                 )
                               }}
                             />
@@ -801,10 +864,14 @@ export function SprintsPage() {
                             <Label className="text-[10px] text-gull">Иконка</Label>
                             <MaterialIconPresetGrid
                               idPrefix={`rl-icon-${row.id}`}
-                              value={RESOURCE_ICON_PRESETS.some((p) => p.value === row.icon) ? row.icon : ''}
+                              value={
+                                RESOURCE_ICON_PRESETS.some((p) => p.value === row.icon)
+                                  ? row.icon
+                                  : ''
+                              }
                               onPick={(icon) =>
                                 setResourceLinks((rows) =>
-                                  rows.map((r) => (r.id === row.id ? { ...r, icon } : r)),
+                                  rows.map((r) => (r.id === row.id ? { ...r, icon } : r))
                                 )
                               }
                             />
@@ -815,7 +882,7 @@ export function SprintsPage() {
                               onChange={(e) => {
                                 const v = e.target.value
                                 setResourceLinks((rows) =>
-                                  rows.map((r) => (r.id === row.id ? { ...r, icon: v } : r)),
+                                  rows.map((r) => (r.id === row.id ? { ...r, icon: v } : r))
                                 )
                               }}
                             />
@@ -859,7 +926,9 @@ export function SprintsPage() {
                               type="button"
                               variant="outline"
                               className="h-8 px-2 text-[11px] text-red-300/90"
-                              onClick={() => setResourceLinks((rows) => rows.filter((r) => r.id !== row.id))}
+                              onClick={() =>
+                                setResourceLinks((rows) => rows.filter((r) => r.id !== row.id))
+                              }
                             >
                               Удалить
                             </Button>
@@ -891,7 +960,8 @@ export function SprintsPage() {
               <div>
                 <Label>Период спринта</Label>
                 <p className="mt-0.5 text-[10px] text-gull">
-                  Выберите дату начала и окончания в одном календаре. Прошлые даты не блокируются — если не выбраны, это просто другой клик, а не ограничение.
+                  Выберите дату начала и окончания в одном календаре. Прошлые даты не блокируются —
+                  если не выбраны, это просто другой клик, а не ограничение.
                 </p>
                 <div className="sprint-day-picker-scope mt-2 flex justify-center rounded-xl border border-plantation bg-aztec p-2 text-catskill">
                   <DayPicker

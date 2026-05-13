@@ -17,11 +17,19 @@ function storageFor(persist) {
 }
 
 export function getStoredToken() {
-  return safe(() => localStorage.getItem(ACCESS_KEY)) ?? safe(() => sessionStorage.getItem(ACCESS_KEY)) ?? null
+  return (
+    safe(() => localStorage.getItem(ACCESS_KEY)) ??
+    safe(() => sessionStorage.getItem(ACCESS_KEY)) ??
+    null
+  )
 }
 
 export function getStoredRefreshToken() {
-  return safe(() => localStorage.getItem(REFRESH_KEY)) ?? safe(() => sessionStorage.getItem(REFRESH_KEY)) ?? null
+  return (
+    safe(() => localStorage.getItem(REFRESH_KEY)) ??
+    safe(() => sessionStorage.getItem(REFRESH_KEY)) ??
+    null
+  )
 }
 
 function isPersisted() {
@@ -90,7 +98,7 @@ async function refreshTokensOnce() {
       if (!data?.accessToken || !data?.refreshToken) return null
       setStoredTokens(
         { accessToken: data.accessToken, refreshToken: data.refreshToken },
-        { persist: isPersisted() },
+        { persist: isPersisted() }
       )
       return data
     } catch {

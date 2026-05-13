@@ -232,7 +232,10 @@ function deepMergeProfile(base, edit) {
   return {
     ...base,
     ...edit,
-    contacts: { ...base.contacts, ...(edit.contacts && typeof edit.contacts === 'object' ? edit.contacts : {}) },
+    contacts: {
+      ...base.contacts,
+      ...(edit.contacts && typeof edit.contacts === 'object' ? edit.contacts : {}),
+    },
     form: { ...base.form, ...(edit.form && typeof edit.form === 'object' ? edit.form : {}) },
     statsCards: Array.isArray(edit.statsCards) ? edit.statsCards : base.statsCards,
     achievements: Array.isArray(edit.achievements) ? edit.achievements : base.achievements,
@@ -470,9 +473,7 @@ function hallPayload() {
           acceptanceTitle: 'Критерии приёмки',
           acceptanceItems: [
             {
-              parts: [
-                'Главное — соответствие макету. Чем точнее, тем выше оценка наставника.',
-              ],
+              parts: ['Главное — соответствие макету. Чем точнее, тем выше оценка наставника.'],
             },
             {
               parts: [
@@ -521,7 +522,9 @@ function hallPayload() {
           acceptanceTitle: 'Критерии приёмки',
           acceptanceItems: [
             {
-              parts: ['Соответствие ТЗ, устойчивый UI и работающий фронтенд без обязательной привязки к прод-бэку.'],
+              parts: [
+                'Соответствие ТЗ, устойчивый UI и работающий фронтенд без обязательной привязки к прод-бэку.',
+              ],
             },
           ],
           resourceLinks: [],
@@ -609,7 +612,7 @@ function userAggregatePayload(userId) {
   const mergedProfile = mergedProfileForUser(user.id)
   const statsCards = Array.isArray(mergedProfile.statsCards) ? mergedProfile.statsCards : []
   const hall = hallPayload()
-  const activeHallSprint = Array.isArray(hall.sprints) ? hall.sprints[0] ?? null : null
+  const activeHallSprint = Array.isArray(hall.sprints) ? (hall.sprints[0] ?? null) : null
 
   const stats = {
     points: Number(statsCards.find((c) => c?.key === 'points')?.value ?? 0) || 0,
@@ -687,9 +690,7 @@ export function createMockApiRouter() {
       return res.status(400).json({ ok: false, error: 'Пароль не короче 6 символов' })
     }
     if (h.length < 2 || !/^[a-zA-Z0-9_]+$/.test(h)) {
-      return res
-        .status(400)
-        .json({ ok: false, error: 'Ник: латиница, цифры и _, от 2 символов' })
+      return res.status(400).json({ ok: false, error: 'Ник: латиница, цифры и _, от 2 символов' })
     }
     if (MOCK_USERS.some((u) => u.email === e)) {
       return res.status(409).json({ ok: false, error: 'Этот email уже занят' })
@@ -747,7 +748,9 @@ export function createMockApiRouter() {
   router.get('/v2/sprints/:id', requireAuth, (req, res) => {
     const sprintId = String(req.params.id ?? '')
     const hall = hallPayload()
-    const sprint = (Array.isArray(hall.sprints) ? hall.sprints : []).find((s) => String(s?.id) === sprintId)
+    const sprint = (Array.isArray(hall.sprints) ? hall.sprints : []).find(
+      (s) => String(s?.id) === sprintId
+    )
     if (!sprint) {
       return res.status(404).json({ ok: false, error: 'Sprint not found' })
     }
@@ -759,7 +762,9 @@ export function createMockApiRouter() {
   router.get('/v2/sprints/:id/solutions', requireAuth, (req, res) => {
     const sprintId = String(req.params.id ?? '')
     const hall = hallPayload()
-    const sprint = (Array.isArray(hall.sprints) ? hall.sprints : []).find((s) => String(s?.id) === sprintId)
+    const sprint = (Array.isArray(hall.sprints) ? hall.sprints : []).find(
+      (s) => String(s?.id) === sprintId
+    )
     if (!sprint) {
       return res.status(404).json({ ok: false, error: 'Sprint not found' })
     }
@@ -813,7 +818,7 @@ export function createMockApiRouter() {
     const sprintId = String(req.params.id ?? '')
     const hall = hallPayload()
     const sprintExists = (Array.isArray(hall.sprints) ? hall.sprints : []).some(
-      (s) => String(s?.id) === sprintId,
+      (s) => String(s?.id) === sprintId
     )
     if (!sprintExists) {
       return res.status(404).json({ ok: false, error: 'Sprint not found' })

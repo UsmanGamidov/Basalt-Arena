@@ -7,7 +7,13 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../compon
 import { HintRow } from '../components/ui/hint-row.jsx'
 import { Input } from '../components/ui/input.jsx'
 import { Label } from '../components/ui/label.jsx'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select.jsx'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select.jsx'
 import { Skeleton } from '../components/ui/skeleton.jsx'
 
 /** Пресеты значков для карточки награды. */
@@ -37,7 +43,9 @@ function AchievementCardIcon({ icon }) {
   if (!raw) {
     return (
       <div className={iconShellClass} aria-hidden>
-        <span className="material-symbols-outlined text-[2rem] text-turquoise/85">{DEFAULT_MATERIAL_ICON}</span>
+        <span className="material-symbols-outlined text-[2rem] text-turquoise/85">
+          {DEFAULT_MATERIAL_ICON}
+        </span>
       </div>
     )
   }
@@ -124,8 +132,12 @@ export function AchievementsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">Ачивки</h1>
-          <p className="mt-2 text-sm text-gull">Конструктор, иконки и массовая выдача по спринту.</p>
+          <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">
+            Ачивки
+          </h1>
+          <p className="mt-2 text-sm text-gull">
+            Конструктор, иконки и массовая выдача по спринту.
+          </p>
         </div>
         <Button variant="gradient" onClick={openNew}>
           + Добавить ачивку
@@ -139,8 +151,9 @@ export function AchievementsPage() {
             Форма награды: служебный ключ, заголовок, описание и значок.
           </DialogDescription>
           <HintRow className="mt-2" icon="tips_and_updates">
-            Участники видят только заголовок, описание и значок. Короткий ключ нужен системе и не выводится на сайте.
-            Значок — из набора иконок арены (латинское имя или эмодзи); ниже можно вписать код вручную.
+            Участники видят только заголовок, описание и значок. Короткий ключ нужен системе и не
+            выводится на сайте. Значок — из набора иконок арены (латинское имя или эмодзи); ниже
+            можно вписать код вручную.
           </HintRow>
           <form
             className="mt-4 space-y-4"
@@ -158,18 +171,30 @@ export function AchievementsPage() {
           >
             <div>
               <Label>Служебный ключ</Label>
-              <Input className="mt-1 font-mono text-xs" value={form.slug} onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} />
+              <Input
+                className="mt-1 font-mono text-xs"
+                value={form.slug}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+              />
               <HintRow className="mt-1.5" icon="tag">
                 Латиница без пробелов — так награда связывается с выдачами и логами.
               </HintRow>
             </div>
             <div>
               <Label>Заголовок</Label>
-              <Input className="mt-1" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} />
+              <Input
+                className="mt-1"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              />
             </div>
             <div>
               <Label>Описание</Label>
-              <Input className="mt-1" value={form.subtitle} onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))} />
+              <Input
+                className="mt-1"
+                value={form.subtitle}
+                onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
+              />
             </div>
             <div>
               <Label>Значок</Label>
@@ -186,11 +211,16 @@ export function AchievementsPage() {
                       title={name}
                       aria-label={`Иконка ${name}`}
                       className={`flex h-11 w-11 items-center justify-center justify-self-center rounded-xl border transition ${
-                        selected ? 'border-turquoise bg-turquoise/15' : 'border-plantation hover:border-turquoise/40'
+                        selected
+                          ? 'border-turquoise bg-turquoise/15'
+                          : 'border-plantation hover:border-turquoise/40'
                       }`}
                       onClick={() => setForm((f) => ({ ...f, icon: name }))}
                     >
-                      <span className="material-symbols-outlined text-[22px] text-catskill" aria-hidden>
+                      <span
+                        className="material-symbols-outlined text-[22px] text-catskill"
+                        aria-hidden
+                      >
                         {name}
                       </span>
                     </button>
@@ -232,10 +262,16 @@ export function AchievementsPage() {
                 className="group flex flex-col rounded-2xl border border-plantation bg-gradient-to-br from-timber/80 to-aztec p-5 shadow-lg transition hover:border-turquoise/30"
               >
                 <AchievementCardIcon icon={a.icon} />
-                <h2 className="mt-4 font-sans text-lg font-semibold leading-snug tracking-tight text-catskill">{a.title}</h2>
+                <h2 className="mt-4 font-sans text-lg font-semibold leading-snug tracking-tight text-catskill">
+                  {a.title}
+                </h2>
                 <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-gull">{a.subtitle}</p>
                 <div className="mt-auto flex flex-wrap gap-2 pt-4">
-                  <Button variant="outline" className="flex-1 py-2 text-[10px]" onClick={() => openEdit(a)}>
+                  <Button
+                    variant="outline"
+                    className="flex-1 py-2 text-[10px]"
+                    onClick={() => openEdit(a)}
+                  >
                     Изменить
                   </Button>
                   <Button
@@ -256,10 +292,12 @@ export function AchievementsPage() {
       <Dialog open={!!grant} onOpenChange={(o) => !o && setGrant(null)}>
         <DialogContent>
           <DialogTitle>Всем участникам спринта</DialogTitle>
-          <DialogDescription className="sr-only">Массовая выдача награды по выбранному спринту.</DialogDescription>
+          <DialogDescription className="sr-only">
+            Массовая выдача награды по выбранному спринту.
+          </DialogDescription>
           <HintRow className="mt-2" icon="groups">
-            Награда попадёт всем, у кого есть отправленная работа или отдельно выданный доступ к этому спринту
-            (без дублей).
+            Награда попадёт всем, у кого есть отправленная работа или отдельно выданный доступ к
+            этому спринту (без дублей).
           </HintRow>
           <div className="mt-4 space-y-4">
             <div>
@@ -285,7 +323,9 @@ export function AchievementsPage() {
               variant="gradient"
               className="w-full"
               disabled={!sprintId || !grant || grantMut.isPending}
-              onClick={() => grant && sprintId && grantMut.mutate({ sprintId, achievementId: grant.id })}
+              onClick={() =>
+                grant && sprintId && grantMut.mutate({ sprintId, achievementId: grant.id })
+              }
             >
               Выдать «{grant?.title ?? ''}»
             </Button>

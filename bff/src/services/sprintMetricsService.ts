@@ -32,7 +32,8 @@ export function createSprintMetricsService(prisma: PrismaClient) {
       const totalLikes = likesSum._sum.likesCount ?? 0
 
       const successRate = total === 0 ? '—' : formatPct((accepted / total) * 100)
-      const submissionsBarPct = total === 0 ? 0 : Math.min(100, Math.round((total / Math.max(total, 50)) * 100))
+      const submissionsBarPct =
+        total === 0 ? 0 : Math.min(100, Math.round((total / Math.max(total, 50)) * 100))
       const metrics: SprintMetricsJson = {
         submissions: total,
         submissionsBarPct,

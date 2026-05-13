@@ -12,13 +12,13 @@
      ──────────────────────────────────────────────────────────── */
 
   /* Поверхности */
-  --color-aztec: #0c0c0e;        /* base — почти чёрный, нейтральный  */
-  --color-timber: #111115;       /* surface — карточки                */
-  --color-plantation: #1f1f24;   /* surface-2 / borders               */
+  --color-aztec: #0c0c0e; /* base — почти чёрный, нейтральный  */
+  --color-timber: #111115; /* surface — карточки                */
+  --color-plantation: #1f1f24; /* surface-2 / borders               */
 
   /* Акцентный фиолетовый (вместо cyan) */
   --color-turquoise: #7c5cfc;
-  --color-half-baked: #a78bfa;   /* lighter accent для лейблов кода   */
+  --color-half-baked: #a78bfa; /* lighter accent для лейблов кода   */
 
   /* Success/positive — спокойный зелёный (вместо неонового spring) */
   --color-spring: #22c55e;
@@ -78,6 +78,13 @@
     @apply m-0 min-h-screen bg-aztec font-sans text-catskill/92;
     font-synthesis: none;
     letter-spacing: -0.005em;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   }
 
   a,

@@ -13,7 +13,10 @@ export interface SprintAccessRepository {
   listByUser(userId: string): Promise<SprintAccess[]>
   grantNewMemberActiveSprint(userId: string): Promise<void>
   /** Resolve role + effective flags (ADMIN/MENTOR bypass). */
-  effectiveRights(userId: string, sprintId: string): Promise<{
+  effectiveRights(
+    userId: string,
+    sprintId: string
+  ): Promise<{
     user: User
     canSubmit: boolean
     canView: boolean
@@ -61,7 +64,7 @@ export function createSprintAccessRepository(prisma: PrismaClient): SprintAccess
 /** Default when no row: view yes, submit no. ADMIN/MENTOR bypass. */
 export function effectiveAccess(
   role: UserRole,
-  row: SprintAccess | null,
+  row: SprintAccess | null
 ): { canSubmit: boolean; canView: boolean } {
   if (role === 'ADMIN' || role === 'MENTOR') return { canSubmit: true, canView: true }
   if (!row) return { canSubmit: false, canView: true }

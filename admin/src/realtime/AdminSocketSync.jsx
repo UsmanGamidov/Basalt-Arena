@@ -6,6 +6,7 @@ import { getAdminAccessToken } from '../api.js'
 
 /** Must match `bff/src/realtime/socketServer.ts` */
 const DATA_UPDATED = 'DATA_UPDATED'
+/** @typedef {import('../../../shared/types/contracts').DataUpdatedPayload} DataUpdatedPayload */
 
 function socketBaseUrl() {
   const raw = String(import.meta.env.VITE_API_BASE_URL ?? '').trim()
@@ -45,7 +46,8 @@ export function AdminSocketSync() {
     })
     socketRef.current = socket
 
-    const onDataUpdated = () => {
+    /** @param {DataUpdatedPayload} _payload */
+    const onDataUpdated = (_payload) => {
       void qc.invalidateQueries({
         predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === 'admin',
       })

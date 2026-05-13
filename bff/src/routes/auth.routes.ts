@@ -1,12 +1,9 @@
 import { Router } from 'express'
+import { respondCreated, respondSuccess } from '../api/http/respond.js'
 import type { Container } from '../container.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
-import {
-  loginLimiter,
-  refreshLimiter,
-  registerLimiter,
-} from '../middleware/rateLimit.js'
+import { loginLimiter, refreshLimiter, registerLimiter } from '../middleware/rateLimit.js'
 import { authLoginBody, authRefreshBody, authRegisterBody } from '../validation/schemas.js'
 
 export function authRouter(container: Container) {
@@ -18,8 +15,8 @@ export function authRouter(container: Container) {
     asyncHandler(async (req, res) => {
       const { email, password } = authLoginBody.parse(req.body)
       const result = await container.auth.login({ loginOrEmail: email, password })
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.post(
@@ -32,8 +29,8 @@ export function authRouter(container: Container) {
         ...data,
         devKey: typeof devKey === 'string' ? devKey : undefined,
       })
-      res.status(201).json(result)
-    }),
+      return respondCreated(res, result)
+    })
   )
 
   router.post(
@@ -42,8 +39,8 @@ export function authRouter(container: Container) {
     asyncHandler(async (req, res) => {
       const { refreshToken } = authRefreshBody.parse(req.body)
       const result = await container.auth.refresh({ refreshToken })
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.post(
@@ -51,8 +48,8 @@ export function authRouter(container: Container) {
     requireAuth,
     asyncHandler(async (req, res) => {
       await container.auth.logout(req.auth!.jti)
-      res.json({ ok: true })
-    }),
+      return respondSuccess(res, { ok: true })
+    })
   )
 
   return router

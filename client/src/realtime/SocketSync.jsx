@@ -7,6 +7,7 @@ import { queryKeys } from '../lib/queryKeys.js'
 
 /** Must match `bff/src/realtime/socketServer.ts` */
 const DATA_UPDATED = 'DATA_UPDATED'
+/** @typedef {import('../../../shared/types/contracts').DataUpdatedPayload} DataUpdatedPayload */
 
 function socketBaseUrl() {
   const raw = String(import.meta.env.VITE_API_BASE_URL ?? '').trim()
@@ -50,7 +51,8 @@ export function SocketSync() {
     })
     socketRef.current = socket
 
-    const onDataUpdated = () => {
+    /** @param {DataUpdatedPayload} _payload */
+    const onDataUpdated = (_payload) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.me() })
       void queryClient.invalidateQueries({
         predicate: (q) => Array.isArray(q.queryKey) && q.queryKey[0] === 'hall',
@@ -64,7 +66,7 @@ export function SocketSync() {
       lastConnectErrorAt.current = now
       console.warn(
         '[SocketSync] socket.io: нет соединения с BFF (проверьте, что API на :3001 запущен и Vite проксирует /socket.io).',
-        err?.message ?? err,
+        err?.message ?? err
       )
     }
 

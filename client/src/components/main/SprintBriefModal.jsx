@@ -30,7 +30,7 @@ function RichLine({ parts }) {
           <span key={i} className="text-spring">
             {p.h}
           </span>
-        ),
+        )
       )}
     </span>
   )
@@ -47,7 +47,7 @@ function TaskParagraph({ chunks }) {
             <span className="text-turquoise">{c.code}</span>
             {c.after ? <span>{c.after}</span> : null}
           </span>
-        ),
+        )
       )}
     </p>
   )
@@ -105,8 +105,7 @@ export function SprintBriefModal({ open, onClose, sprint }) {
 
   if (!rendered || !sprint) return null
 
-  const brief =
-    sprint.brief && typeof sprint.brief === 'object' ? sprint.brief : FALLBACK_BRIEF
+  const brief = sprint.brief && typeof sprint.brief === 'object' ? sprint.brief : FALLBACK_BRIEF
 
   const title = String(sprint.heroTitle ?? '')
   const tags = Array.isArray(sprint.tags) ? sprint.tags : []
@@ -175,9 +174,7 @@ export function SprintBriefModal({ open, onClose, sprint }) {
                 {tag}
               </span>
             ))}
-            <span
-              className="inline-flex items-center gap-1 rounded-md border border-[#334155] bg-aztec px-2.5 py-1 font-mono text-xs font-normal leading-4 text-gull"
-            >
+            <span className="inline-flex items-center gap-1 rounded-md border border-[#334155] bg-aztec px-2.5 py-1 font-mono text-xs font-normal leading-4 text-gull">
               <MaterialIcon name="event" size={12} className="text-gull" />
               {completed}
             </span>
@@ -196,7 +193,9 @@ export function SprintBriefModal({ open, onClose, sprint }) {
           ) : null}
 
           {Array.isArray(brief.taskParagraphs)
-            ? brief.taskParagraphs.map((para, idx) => <TaskParagraph key={idx} chunks={para.chunks} />)
+            ? brief.taskParagraphs.map((para, idx) => (
+                <TaskParagraph key={idx} chunks={para.chunks} />
+              ))
             : null}
 
           {brief.acceptanceTitle ? (

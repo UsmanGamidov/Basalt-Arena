@@ -10,7 +10,7 @@ export function TabsList({ className, ...props }) {
     <TabsPrimitive.List
       className={cn(
         'inline-flex h-10 w-full items-center justify-stretch gap-1 rounded-xl border border-plantation bg-timber/40 p-1 text-gull',
-        className,
+        className
       )}
       {...props}
     />
@@ -22,7 +22,7 @@ export function TabsTrigger({ className, ...props }) {
     <TabsPrimitive.Trigger
       className={cn(
         'flex-1 rounded-lg px-3 py-1.5 font-sans text-xs font-semibold transition-all data-[state=active]:bg-aztec data-[state=active]:text-turquoise data-[state=active]:shadow-sm',
-        className,
+        className
       )}
       {...props}
     />
@@ -30,5 +30,10 @@ export function TabsTrigger({ className, ...props }) {
 }
 
 export function TabsContent({ className, ...props }) {
-  return <TabsPrimitive.Content className={cn('mt-4 min-h-[200px] outline-none', className)} {...props} />
+  return (
+    <TabsPrimitive.Content
+      className={cn('mt-4 min-h-[200px] outline-none', className)}
+      {...props}
+    />
+  )
 }

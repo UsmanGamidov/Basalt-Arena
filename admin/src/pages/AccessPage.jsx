@@ -7,7 +7,13 @@ import { Checkbox } from '../components/ui/checkbox.jsx'
 import { HintRow } from '../components/ui/hint-row.jsx'
 import { Input } from '../components/ui/input.jsx'
 import { Label } from '../components/ui/label.jsx'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select.jsx'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select.jsx'
 import { Skeleton } from '../components/ui/skeleton.jsx'
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js'
 
@@ -48,7 +54,7 @@ export function AccessPage() {
 
   const accessFingerprint = useMemo(
     () => rows.map((r) => `${r.userId}:${r.canSubmit}:${r.canView}`).join('|'),
-    [rows],
+    [rows]
   )
 
   const [drafts, setDrafts] = useState({})
@@ -93,9 +99,12 @@ export function AccessPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">Доступы</h1>
+        <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">
+          Доступы
+        </h1>
         <p className="mt-2 text-sm text-gull">
-          Выдача прав на выбранный спринт. Изменения подтягиваются у всех открытых экранов без перезагрузки.
+          Выдача прав на выбранный спринт. Изменения подтягиваются у всех открытых экранов без
+          перезагрузки.
         </p>
       </div>
 
@@ -115,15 +124,17 @@ export function AccessPage() {
             </SelectContent>
           </Select>
         ) : (
-          <p className="mt-2 font-sans text-sm text-gull">Спринтов пока нет — добавьте их в разделе «Спринты».</p>
+          <p className="mt-2 font-sans text-sm text-gull">
+            Спринтов пока нет — добавьте их в разделе «Спринты».
+          </p>
         )}
       </div>
 
       <div className="rounded-2xl border border-plantation bg-timber/30 p-5">
         <Label>Выдать или обновить доступ одному пользователю</Label>
         <HintRow className="mt-1 max-w-xl" icon="person_search">
-          Введите начало ника — покажем до 10 совпадений. Выберите человека из списка, отметьте права и нажмите
-          «Сохранить».
+          Введите начало ника — покажем до 10 совпадений. Выберите человека из списка, отметьте
+          права и нажмите «Сохранить».
         </HintRow>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <div ref={pickerWrapRef} className="relative min-w-[220px] flex-1">
@@ -230,7 +241,10 @@ export function AccessPage() {
                   </tr>
                 ))
               : rows.map((r) => {
-                  const resolved = drafts[r.userId] ?? { canSubmit: r.canSubmit, canView: r.canView }
+                  const resolved = drafts[r.userId] ?? {
+                    canSubmit: r.canSubmit,
+                    canView: r.canView,
+                  }
                   const dirty = resolved.canSubmit !== r.canSubmit || resolved.canView !== r.canView
                   return (
                     <tr key={r.id} className="border-b border-plantation/40">
@@ -279,7 +293,11 @@ export function AccessPage() {
                             if (!sid) return
                             setSavingRowUserId(r.userId)
                             try {
-                              await saveAccessForUser(r.userId, resolved.canSubmit, resolved.canView)
+                              await saveAccessForUser(
+                                r.userId,
+                                resolved.canSubmit,
+                                resolved.canView
+                              )
                             } catch (e) {
                               toast.error(e instanceof Error ? e.message : 'Ошибка')
                             } finally {

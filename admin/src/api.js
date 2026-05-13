@@ -95,7 +95,8 @@ export function formatApiErrorMessage(status, body) {
     }
     if (typeof body.message === 'string' && body.message.trim()) return body.message.trim()
   }
-  if (status === 409) return 'Конфликт данных (запись уже существует или нарушено уникальное ограничение).'
+  if (status === 409)
+    return 'Конфликт данных (запись уже существует или нарушено уникальное ограничение).'
   if (status === 400) return 'Некорректный запрос. Проверьте поля формы.'
   return `Запрос не выполнен (HTTP ${status})`
 }
@@ -107,7 +108,9 @@ export async function api(path, opts = {}) {
     headers: {
       Accept: 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(opts.body && !opts.headers?.['Content-Type'] ? { 'Content-Type': 'application/json' } : {}),
+      ...(opts.body && !opts.headers?.['Content-Type']
+        ? { 'Content-Type': 'application/json' }
+        : {}),
       ...opts.headers,
     },
   })
@@ -120,7 +123,9 @@ export async function api(path, opts = {}) {
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${token}`,
-          ...(opts.body && !opts.headers?.['Content-Type'] ? { 'Content-Type': 'application/json' } : {}),
+          ...(opts.body && !opts.headers?.['Content-Type']
+            ? { 'Content-Type': 'application/json' }
+            : {}),
           ...opts.headers,
         },
       })

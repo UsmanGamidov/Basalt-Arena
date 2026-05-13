@@ -1,5 +1,6 @@
 import type { Request } from 'express'
 import { Router } from 'express'
+import { respondCreated, respondSuccess } from '../api/http/respond.js'
 import { AppError } from '../errors/AppError.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requireAdminArea } from '../middleware/adminAccess.js'
@@ -41,8 +42,8 @@ export function adminRouter(admin: AdminService) {
   router.get(
     '/metrics',
     asyncHandler(async (_req, res) => {
-      res.json(await admin.getDashboardStats())
-    }),
+      return respondSuccess(res, await admin.getDashboardStats())
+    })
   )
 
   router.get(
@@ -54,8 +55,8 @@ export function adminRouter(admin: AdminService) {
         take: q.take,
         subjectUserId: q.userId,
       })
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.get(
@@ -63,8 +64,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const q = adminUsersQuery.parse(req.query)
       const result = await admin.listUsers({ search: q.search, skip: q.skip, take: q.take })
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.get(
@@ -72,8 +73,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const { userId } = adminUserAchievementsCollectionParams.parse(req.params)
       const items = await admin.listUserAchievements(userId)
-      res.json({ items })
-    }),
+      return respondSuccess(res, { items })
+    })
   )
 
   router.get(
@@ -81,8 +82,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const { userId } = adminUserSprintsCollectionParams.parse(req.params)
       const result = await admin.listUserSprintActivity(userId)
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.patch(
@@ -91,15 +92,15 @@ export function adminRouter(admin: AdminService) {
       const { id } = adminUserIdParams.parse(req.params)
       const body = adminPatchUserBody.parse(req.body)
       const updated = await admin.patchUser(actorId(req), id, body)
-      res.json({ user: updated })
-    }),
+      return respondSuccess(res, { user: updated })
+    })
   )
 
   router.get(
     '/sprints',
     asyncHandler(async (_req, res) => {
-      res.json({ sprints: await admin.listSprints() })
-    }),
+      return respondSuccess(res, { sprints: await admin.listSprints() })
+    })
   )
 
   router.post(
@@ -118,11 +119,21 @@ export function adminRouter(admin: AdminService) {
         archived: body.archived ?? false,
         brief: body.brief as never,
         metrics: body.metrics as never,
-        startsAt: body.startsAt === undefined ? undefined : body.startsAt === null ? null : new Date(body.startsAt),
-        endsAt: body.endsAt === undefined ? undefined : body.endsAt === null ? null : new Date(body.endsAt),
+        startsAt:
+          body.startsAt === undefined
+            ? undefined
+            : body.startsAt === null
+              ? null
+              : new Date(body.startsAt),
+        endsAt:
+          body.endsAt === undefined
+            ? undefined
+            : body.endsAt === null
+              ? null
+              : new Date(body.endsAt),
       })
-      res.status(201).json({ sprint })
-    }),
+      return respondCreated(res, { sprint })
+    })
   )
 
   router.post(
@@ -130,8 +141,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const { id } = adminSprintIdParams.parse(req.params)
       const sprint = await admin.duplicateSprint(actorId(req), id)
-      res.status(201).json({ sprint })
-    }),
+      return respondCreated(res, { sprint })
+    })
   )
 
   router.patch(
@@ -147,8 +158,8 @@ export function adminRouter(admin: AdminService) {
         data.endsAt = body.endsAt === null ? null : new Date(body.endsAt)
       }
       const sprint = await admin.patchSprint(actorId(req), id, data as never)
-      res.json({ sprint })
-    }),
+      return respondSuccess(res, { sprint })
+    })
   )
 
   router.post(
@@ -156,8 +167,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const { id } = adminSprintIdParams.parse(req.params)
       const sprint = await admin.setActiveSprint(actorId(req), id)
-      res.json({ sprint })
-    }),
+      return respondSuccess(res, { sprint })
+    })
   )
 
   router.get(
@@ -165,8 +176,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const { id } = adminSprintIdParams.parse(req.params)
       const rows = await admin.listSprintAccess(id)
-      res.json({ access: rows })
-    }),
+      return respondSuccess(res, { access: rows })
+    })
   )
 
   router.put(
@@ -180,8 +191,8 @@ export function adminRouter(admin: AdminService) {
         canSubmit: body.canSubmit,
         canView: body.canView,
       })
-      res.json({ access: row })
-    }),
+      return respondSuccess(res, { access: row })
+    })
   )
 
   router.put(
@@ -195,8 +206,8 @@ export function adminRouter(admin: AdminService) {
         canSubmit: body.canSubmit,
         canView: body.canView,
       })
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.delete(
@@ -204,8 +215,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const p = adminSprintAccessUserParams.parse(req.params)
       await admin.deleteSprintAccess(actorId(req), p.userId, p.sprintId)
-      res.json({ ok: true })
-    }),
+      return respondSuccess(res, { ok: true })
+    })
   )
 
   router.get(
@@ -219,8 +230,8 @@ export function adminRouter(admin: AdminService) {
         skip: q.skip,
         take: q.take,
       })
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.patch(
@@ -229,8 +240,8 @@ export function adminRouter(admin: AdminService) {
       const { id } = adminSubmissionIdParams.parse(req.params)
       const body = adminPatchSubmissionBody.parse(req.body)
       const row = await admin.patchSubmission(actorId(req), id, body)
-      res.json({ submission: row })
-    }),
+      return respondSuccess(res, { submission: row })
+    })
   )
 
   router.post(
@@ -238,15 +249,15 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const body = adminBatchSubmissionIdsBody.parse(req.body)
       const result = await admin.batchAcceptSubmissions(actorId(req), body.ids)
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.get(
     '/achievements',
     asyncHandler(async (_req, res) => {
-      res.json({ achievements: await admin.listAchievements() })
-    }),
+      return respondSuccess(res, { achievements: await admin.listAchievements() })
+    })
   )
 
   router.put(
@@ -254,8 +265,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const body = adminUpsertAchievementBody.parse(req.body)
       const row = await admin.upsertAchievement(actorId(req), body)
-      res.json({ achievement: row })
-    }),
+      return respondSuccess(res, { achievement: row })
+    })
   )
 
   router.delete(
@@ -263,17 +274,21 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const { id } = adminAchievementIdParams.parse(req.params)
       await admin.deleteAchievement(actorId(req), id)
-      res.json({ ok: true })
-    }),
+      return respondSuccess(res, { ok: true })
+    })
   )
 
   router.post(
     '/sprints/:sprintId/achievements/:achievementId/grant-sprint',
     asyncHandler(async (req, res) => {
       const p = adminSprintAchievementGrantParams.parse(req.params)
-      const result = await admin.grantAchievementToSprintParticipants(actorId(req), p.sprintId, p.achievementId)
-      res.json(result)
-    }),
+      const result = await admin.grantAchievementToSprintParticipants(
+        actorId(req),
+        p.sprintId,
+        p.achievementId
+      )
+      return respondSuccess(res, result)
+    })
   )
 
   router.post(
@@ -281,8 +296,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const p = adminUserAchievementParams.parse(req.params)
       await admin.grantAchievement(actorId(req), p.userId, p.achievementId)
-      res.status(201).json({ ok: true })
-    }),
+      return respondCreated(res, { ok: true })
+    })
   )
 
   router.delete(
@@ -290,8 +305,8 @@ export function adminRouter(admin: AdminService) {
     asyncHandler(async (req, res) => {
       const p = adminUserAchievementParams.parse(req.params)
       await admin.revokeAchievement(actorId(req), p.userId, p.achievementId)
-      res.json({ ok: true })
-    }),
+      return respondSuccess(res, { ok: true })
+    })
   )
 
   return router

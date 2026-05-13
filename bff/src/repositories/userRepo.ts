@@ -11,7 +11,8 @@ export interface UserRepository {
 export function createUserRepository(prisma: PrismaClient): UserRepository {
   return {
     findById: (id) => prisma.user.findUnique({ where: { id } }),
-    findByEmail: (email) => prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } }),
+    findByEmail: (email) =>
+      prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } }),
     findByEmailOrHandle: (loginOrEmail) => {
       const value = loginOrEmail.trim().toLowerCase()
       const handle = value.replace(/^@/, '')

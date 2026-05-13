@@ -28,8 +28,12 @@ export function LoginPage() {
         className="w-full max-w-md space-y-5 rounded-2xl border border-plantation bg-gradient-to-b from-timber to-aztec p-8 shadow-2xl shadow-black/40"
       >
         <div>
-          <h1 className="font-mono text-sm font-bold uppercase tracking-widest text-turquoise">Basalt Admin</h1>
-          <p className="mt-2 text-sm text-gull">Доступны учётные записи с ролью администратора или ментора.</p>
+          <h1 className="font-mono text-sm font-bold uppercase tracking-widest text-turquoise">
+            Basalt Admin
+          </h1>
+          <p className="mt-2 text-sm text-gull">
+            Доступны учётные записи с ролью администратора или ментора.
+          </p>
         </div>
         {err ? <p className="text-sm text-red-400">{err}</p> : null}
         <div>

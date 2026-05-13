@@ -12,7 +12,10 @@ function cleanupMemorySessions() {
   }
 }
 
-export async function registerSession(jti: string, ttlSeconds = env.JWT_REFRESH_TTL_SECONDS): Promise<void> {
+export async function registerSession(
+  jti: string,
+  ttlSeconds = env.JWT_REFRESH_TTL_SECONDS
+): Promise<void> {
   const redis = getRedis()
   if (redis) {
     await redis.set(sessionKey(jti), '1', 'EX', ttlSeconds)

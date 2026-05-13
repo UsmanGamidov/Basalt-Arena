@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 services:
   postgres:
@@ -8,11 +8,11 @@ services:
       POSTGRES_USER: basalt
       POSTGRES_PASSWORD: basalt
     ports:
-      - "5433:5432"
+      - '5433:5432'
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U basalt -d basalt"]
+      test: ['CMD-SHELL', 'pg_isready -U basalt -d basalt']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -20,13 +20,13 @@ services:
 
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
+    command: ['redis-server', '--appendonly', 'yes']
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -45,7 +45,7 @@ services:
       DATABASE_NAME: basalt
       DATABASE_USERNAME: basalt
       DATABASE_PASSWORD: basalt
-      DATABASE_SSL: "false"
+      DATABASE_SSL: 'false'
       HOST: 0.0.0.0
       PORT: 1337
       APP_KEYS: basalt-app-key-1,basalt-app-key-2
@@ -57,7 +57,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "1337:1337"
+      - '1337:1337'
     restart: unless-stopped
 
   bff:
@@ -81,9 +81,15 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "3001:3001"
+      - '3001:3001'
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

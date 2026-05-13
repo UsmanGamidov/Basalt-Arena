@@ -128,7 +128,7 @@ function describeSubmissionPatch(patch) {
     bits.push(
       patch.mentorComment == null || String(patch.mentorComment).trim() === ''
         ? 'комментарий ментора сброшен'
-        : 'обновлён комментарий ментора',
+        : 'обновлён комментарий ментора'
     )
   }
   return bits.length ? bits.join('; ') + '.' : 'Данные работы обновлены.'
@@ -146,7 +146,9 @@ export function auditLogDescription(action, details) {
     case 'USER_PATCH': {
       const lines = collectUserPatchLines(d)
       const target = d.targetUserId
-      const head = target ? `Правки по пользователю ${formatId(String(target))}.` : 'Изменение пользователя.'
+      const head = target
+        ? `Правки по пользователю ${formatId(String(target))}.`
+        : 'Изменение пользователя.'
       if (lines.length === 0) return `${head} Подробный список полей в записи не сохранён.`
       return `${head}\n${lines.map((x) => `· ${x}`).join('\n')}`
     }
@@ -154,7 +156,9 @@ export function auditLogDescription(action, details) {
       const title = typeof d.title === 'string' ? d.title : 'без названия'
       const slug = typeof d.slug === 'string' ? d.slug : ''
       const active = d.active === true ? ' Сразу назначен текущим боем на арене.' : ''
-      const base = slug ? `Создан спринт «${title}», короткий адрес: ${slug}.` : `Создан спринт «${title}».`
+      const base = slug
+        ? `Создан спринт «${title}», короткий адрес: ${slug}.`
+        : `Создан спринт «${title}».`
       return `${base}${active}`.trim()
     }
     case 'SPRINT_PATCH': {

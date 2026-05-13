@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { respondSuccess } from '../api/http/respond.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
 import { likeLimiter } from '../middleware/rateLimit.js'
@@ -15,8 +16,8 @@ export function solutionRouter(container: Container) {
     asyncHandler(async (req, res) => {
       const { id } = solutionIdParams.parse(req.params)
       const result = await container.likes.like(req.auth!.sub, id)
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.delete(
@@ -26,8 +27,8 @@ export function solutionRouter(container: Container) {
     asyncHandler(async (req, res) => {
       const { id } = solutionIdParams.parse(req.params)
       const result = await container.likes.unlike(req.auth!.sub, id)
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   return router

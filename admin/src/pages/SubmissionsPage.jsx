@@ -1,7 +1,12 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { api } from '../api.js'
 import { Button } from '../components/ui/button.jsx'
@@ -10,10 +15,17 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../compon
 import { HintRow } from '../components/ui/hint-row.jsx'
 import { Input } from '../components/ui/input.jsx'
 import { Label } from '../components/ui/label.jsx'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select.jsx'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select.jsx'
 import { Skeleton } from '../components/ui/skeleton.jsx'
 import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs.jsx'
 import { Textarea } from '../components/ui/textarea.jsx'
+import { useAdminTable } from '../hooks/useAdminTable.js'
 import { cn } from '../lib/cn.js'
 import { submissionStatusLabel } from '../lib/copy.js'
 
@@ -71,8 +83,16 @@ async function patchSubmission(id, body) {
 
 export function SubmissionsPage() {
   const qc = useQueryClient()
-  const [pageIndex, setPageIndex] = useState(0)
-  const pageSize = 25
+  const tableState = useAdminTable({ pageSize: 25, withRowSelection: true })
+  const {
+    pageIndex,
+    pageSize,
+    pageOffset,
+    rowSelection,
+    setRowSelection,
+    clearSelection,
+    pageCount,
+  } = tableState
   /** @type {keyof typeof STATUS_TAB} */
   const [statusTab, setStatusTab] = useState('pending')
   const [review, setReview] = useState(null)
@@ -80,7 +100,6 @@ export function SubmissionsPage() {
   const [status, setStatus] = useState('REVIEWED')
   const [mentorComment, setMentorComment] = useState('')
   const [iframeBlocked, setIframeBlocked] = useState(false)
-  const [rowSelection, setRowSelection] = useState({})
 
   const statusQuery = STATUS_TAB[statusTab]
 
@@ -89,7 +108,7 @@ export function SubmissionsPage() {
     queryFn: () => {
       const q = new URLSearchParams({
         take: String(pageSize),
-        skip: String(pageIndex * pageSize),
+        skip: String(pageOffset),
         status: statusQuery,
       })
       return api(`/admin/submissions?${q.toString()}`)
@@ -99,11 +118,7 @@ export function SubmissionsPage() {
 
   const items = data?.items ?? []
   const total = data?.total ?? 0
-  const pageCount = Math.max(1, Math.ceil(total / pageSize))
-
-  useEffect(() => {
-    setRowSelection({})
-  }, [pageIndex, statusTab])
+  const totalPages = pageCount(total)
 
   const patchMut = useMutation({
     mutationFn: ({ id, body }) => patchSubmission(id, body),
@@ -116,10 +131,13 @@ export function SubmissionsPage() {
   })
 
   const batchMut = useMutation({
-    mutationFn: (ids) => api('/admin/submissions/batch-accept', { method: 'POST', body: JSON.stringify({ ids }) }),
+    mutationFn: (ids) =>
+      api('/admin/submissions/batch-accept', { method: 'POST', body: JSON.stringify({ ids }) }),
     onSuccess: (res) => {
-      toast.success(`В зал славы: ${res.updated ?? 0} решений`, { description: 'Статус «принято», 100 баллов' })
-      setRowSelection({})
+      toast.success(`В зал славы: ${res.updated ?? 0} решений`, {
+        description: 'Статус «принято», 100 баллов',
+      })
+      clearSelection()
       void qc.invalidateQueries({ queryKey: ['admin', 'submissions'] })
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Ошибка'),
@@ -204,14 +222,18 @@ export function SubmissionsPage() {
         cell: ({ row }) => {
           const st = row.original.status
           return (
-            <Button variant="gradient" className="py-1 text-[10px]" onClick={() => openReview(row.original)}>
+            <Button
+              variant="gradient"
+              className="py-1 text-[10px]"
+              onClick={() => openReview(row.original)}
+            >
               {reviewOpenButtonLabel(st)}
             </Button>
           )
         },
       }),
     ],
-    [],
+    []
   )
 
   const table = useReactTable({
@@ -238,13 +260,16 @@ export function SubmissionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">Решения</h1>
+        <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">
+          Решения
+        </h1>
         <p className="mt-2 text-sm text-gull">
-          Фильтры по статусу, карточка проверки с превью и комментарием. Массовая публикация — только для работ в
-          очереди (ожидают проверки / проверено).
+          Фильтры по статусу, карточка проверки с превью и комментарием. Массовая публикация —
+          только для работ в очереди (ожидают проверки / проверено).
         </p>
         <HintRow className="mt-2 max-w-2xl" icon="grading">
-          Оценка и статус сохраняются отдельной кнопкой; быстрые кнопки сверху подставляют типовые сочетания.
+          Оценка и статус сохраняются отдельной кнопкой; быстрые кнопки сверху подставляют типовые
+          сочетания.
         </HintRow>
       </div>
 
@@ -253,8 +278,8 @@ export function SubmissionsPage() {
         onValueChange={(v) => {
           if (v === 'pending' || v === 'reviewed' || v === 'accepted' || v === 'rejected') {
             setStatusTab(v)
-            setPageIndex(0)
-            setRowSelection({})
+            tableState.setPageIndex(0)
+            clearSelection()
           }
         }}
       >
@@ -328,22 +353,22 @@ export function SubmissionsPage() {
 
       <div className="flex items-center justify-between gap-4">
         <p className="text-xs text-gull">
-          Стр. {pageIndex + 1} / {pageCount} · всего решений: {total}
+          Стр. {pageIndex + 1} / {totalPages} · всего решений: {total}
         </p>
         <div className="flex gap-2">
           <Button
             variant="outline"
             className="flex items-center gap-1 py-2"
             disabled={pageIndex <= 0}
-            onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+            onClick={() => tableState.setPageIndex((p) => Math.max(0, p - 1))}
           >
             <ChevronLeft className="h-4 w-4" /> Назад
           </Button>
           <Button
             variant="outline"
             className="flex items-center gap-1 py-2"
-            disabled={pageIndex + 1 >= pageCount}
-            onClick={() => setPageIndex((p) => p + 1)}
+            disabled={pageIndex + 1 >= totalPages}
+            onClick={() => tableState.setPageIndex((p) => p + 1)}
           >
             Вперёд <ChevronRight className="h-4 w-4" />
           </Button>
@@ -370,14 +395,20 @@ export function SubmissionsPage() {
                   Статус: {submissionStatusLabel(originalStatus)}
                 </p>
                 {originalStatus === 'REJECTED' ? (
-                  <p className="text-xs text-gull">Решение отклонено — повторно отклонять не нужно; можно вернуть в очередь или изменить оценку.</p>
+                  <p className="text-xs text-gull">
+                    Решение отклонено — повторно отклонять не нужно; можно вернуть в очередь или
+                    изменить оценку.
+                  </p>
                 ) : null}
                 {originalStatus === 'ACCEPTED' ? (
-                  <p className="text-xs text-gull">Уже в зале славы — повторная публикация не требуется.</p>
+                  <p className="text-xs text-gull">
+                    Уже в зале славы — повторная публикация не требуется.
+                  </p>
                 ) : null}
                 {originalStatus === 'PENDING' ? (
                   <p className="text-xs text-gull">
-                    В очереди на проверку — кнопка «На доработку» недоступна, пока статус не изменится.
+                    В очереди на проверку — кнопка «На доработку» недоступна, пока статус не
+                    изменится.
                   </p>
                 ) : null}
               </div>
@@ -526,7 +557,11 @@ export function SubmissionsPage() {
                     onClick={() =>
                       patchMut.mutate({
                         id: review.id,
-                        body: { mentorScore: 100, status: 'ACCEPTED', mentorComment: normalizedMentorComment() },
+                        body: {
+                          mentorScore: 100,
+                          status: 'ACCEPTED',
+                          mentorComment: normalizedMentorComment(),
+                        },
                       })
                     }
                   >
@@ -580,7 +615,11 @@ export function SubmissionsPage() {
                   onClick={() =>
                     patchMut.mutate({
                       id: review.id,
-                      body: { mentorScore: score, status, mentorComment: normalizedMentorComment() },
+                      body: {
+                        mentorScore: score,
+                        status,
+                        mentorComment: normalizedMentorComment(),
+                      },
                     })
                   }
                 >

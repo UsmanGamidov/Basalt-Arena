@@ -13,7 +13,7 @@ export interface SprintRepository {
 /** Single active sprint: deactivate all, then create (when `data.active` is true). */
 export async function createSprintWithExclusiveActive(
   prisma: PrismaClient,
-  data: Prisma.SprintCreateInput,
+  data: Prisma.SprintCreateInput
 ): Promise<Sprint> {
   if (data.active !== true) {
     return prisma.sprint.create({ data })
@@ -28,7 +28,7 @@ export async function createSprintWithExclusiveActive(
 export async function updateSprintWithExclusiveActive(
   prisma: PrismaClient,
   id: string,
-  data: Prisma.SprintUpdateInput,
+  data: Prisma.SprintUpdateInput
 ): Promise<Sprint> {
   if (data.active !== true) {
     return prisma.sprint.update({ where: { id }, data })
@@ -56,7 +56,9 @@ export function createSprintRepository(prisma: PrismaClient): SprintRepository {
   }
 }
 
-export function sortOrderForSubmissions(sortBy: SortBy): Prisma.SubmissionOrderByWithRelationInput[] {
+export function sortOrderForSubmissions(
+  sortBy: SortBy
+): Prisma.SubmissionOrderByWithRelationInput[] {
   switch (sortBy) {
     case 'likes':
       return [{ likesCount: 'desc' }, { mentorScore: 'desc' }, { createdAt: 'asc' }]

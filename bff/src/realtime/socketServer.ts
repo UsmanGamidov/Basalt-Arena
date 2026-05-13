@@ -4,6 +4,7 @@ import { env } from '../config/env.js'
 import { verifyAccessToken } from '../middleware/auth.js'
 import { isSessionActive } from '../services/sessionStore.js'
 import { logger } from '../infra/logger.js'
+import type { DataUpdatedPayload } from '../shared/types/index.js'
 
 export const DATA_UPDATED_EVENT = 'DATA_UPDATED' as const
 
@@ -46,6 +47,7 @@ export function attachSocketIO(httpServer: HttpServer) {
   return io
 }
 
-export function emitDataUpdated(io: Server, detail: Record<string, unknown> = {}) {
-  io.emit(DATA_UPDATED_EVENT, { ...detail, at: new Date().toISOString() })
+export function emitDataUpdated(io: Server, detail: Omit<DataUpdatedPayload, 'at'> = {}) {
+  const payload: DataUpdatedPayload = { ...detail, at: new Date().toISOString() }
+  io.emit(DATA_UPDATED_EVENT, payload)
 }

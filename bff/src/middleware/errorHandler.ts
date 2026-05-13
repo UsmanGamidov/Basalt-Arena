@@ -85,7 +85,8 @@ function mapError(error: unknown, req: Request): { status: number; body: ErrorBo
       status: 400,
       body: {
         code: 'DATABASE_ERROR',
-        message: 'Не удалось выполнить запрос к базе данных. Проверьте логи сервера и состояние БД.',
+        message:
+          'Не удалось выполнить запрос к базе данных. Проверьте логи сервера и состояние БД.',
         requestId,
       },
     }
@@ -123,7 +124,12 @@ function mapError(error: unknown, req: Request): { status: number; body: ErrorBo
 }
 
 export function errorHandler() {
-  return function errorMiddleware(error: unknown, req: Request, res: Response, _next: NextFunction) {
+  return function errorMiddleware(
+    error: unknown,
+    req: Request,
+    res: Response,
+    _next: NextFunction
+  ) {
     try {
       const mapped = mapError(error, req)
       if (mapped) {
@@ -133,7 +139,7 @@ export function errorHandler() {
       const isError = error instanceof Error
       req.log?.error(
         { err: isError ? { message: error.message, stack: error.stack } : error },
-        'Unhandled error',
+        'Unhandled error'
       )
       const body: ErrorBody = {
         code: 'INTERNAL_ERROR',
@@ -146,7 +152,9 @@ export function errorHandler() {
       const log = req.log ?? console
       log.error({ err: fatal }, 'Error handler failed')
       if (!res.headersSent) {
-        res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Internal server error', requestId: rid })
+        res
+          .status(500)
+          .json({ code: 'INTERNAL_ERROR', message: 'Internal server error', requestId: rid })
       }
     }
   }

@@ -1,13 +1,15 @@
 import { MaterialIcon } from '../ui/MaterialIcon.jsx'
 
-export function PageTitleRow({
-  title = '#2 BASALT ARENA (FRONTEND)',
-  systemActive = true,
-}) {
+export function PageTitleRow({ title = '#2 BASALT ARENA (FRONTEND)', systemActive = true }) {
   return (
     <div className="flex w-full flex-row flex-nowrap items-center justify-between gap-2 max-[360px]:gap-1 md:gap-4">
       <div className="flex min-w-0 flex-1 items-center gap-3 max-[360px]:gap-2 md:gap-4">
-        <MaterialIcon name="sensors" size={20} opticalSize={20} className="shrink-0 text-turquoise" />
+        <MaterialIcon
+          name="sensors"
+          size={20}
+          opticalSize={20}
+          className="shrink-0 text-turquoise"
+        />
         <h1 className="max-w-[198px] text-balance text-[22px] font-semibold leading-[28px] tracking-[-0.5px] text-catskill max-[360px]:max-w-[170px] max-[360px]:text-[18px] max-[360px]:leading-[24px] sm:max-w-[220px] md:max-w-[276px] lg:max-w-none">
           {title}
         </h1>
@@ -15,9 +17,7 @@ export function PageTitleRow({
       <div
         className={[
           'box-border flex shrink-0 flex-row items-center gap-2 rounded-full border px-3 py-1 max-[360px]:gap-1 max-[360px]:px-2 max-[360px]:py-[3px] md:h-[25px] md:gap-2',
-          systemActive
-            ? 'border-spring/30 bg-spring/10'
-            : 'border-gull/30 bg-gull/10',
+          systemActive ? 'border-spring/30 bg-spring/10' : 'border-gull/30 bg-gull/10',
         ].join(' ')}
       >
         <span

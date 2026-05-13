@@ -106,9 +106,19 @@ const FALLBACK_PROFILE = {
 
 const SIDEBAR_NAV = [
   { key: 'overview', label: 'Обзор', icon: 'person', sectionId: 'profile-hero' },
-  { key: 'badges', label: 'Бейджи и достижения', icon: 'workspace_premium', sectionId: 'profile-achievements' },
+  {
+    key: 'badges',
+    label: 'Бейджи и достижения',
+    icon: 'workspace_premium',
+    sectionId: 'profile-achievements',
+  },
   { key: 'stats', label: 'Статистика', icon: 'query_stats', sectionId: 'profile-stats' },
-  { key: 'history', label: 'История спринтов', icon: 'history', sectionId: 'profile-sprint-history' },
+  {
+    key: 'history',
+    label: 'История спринтов',
+    icon: 'history',
+    sectionId: 'profile-sprint-history',
+  },
   { key: 'settings', label: 'Настройки', icon: 'settings', sectionId: 'profile-settings' },
 ]
 
@@ -217,14 +227,15 @@ function AchievementTile({ achievement }) {
       </div>
       <div className="relative z-[2] flex min-w-[110px] max-w-[180px] flex-col items-center gap-1 text-center">
         <p
-          className={[
-            'text-sm font-bold leading-5',
-            locked ? 'text-[#FCA5A5]' : 'text-white',
-          ].join(' ')}
+          className={['text-sm font-bold leading-5', locked ? 'text-[#FCA5A5]' : 'text-white'].join(
+            ' '
+          )}
         >
           {achievement.title}
         </p>
-        <p className="font-mono text-[10px] font-normal leading-[15px] text-slate-arena">{achievement.subtitle}</p>
+        <p className="font-mono text-[10px] font-normal leading-[15px] text-slate-arena">
+          {achievement.subtitle}
+        </p>
       </div>
     </div>
   )
@@ -279,7 +290,7 @@ export function ProfilePage() {
           setActiveNav(SECTION_TO_NAV[id])
         }
       },
-      { root: null, rootMargin: '-96px 0px -48% 0px', threshold: [0, 0.05, 0.1] },
+      { root: null, rootMargin: '-96px 0px -48% 0px', threshold: [0, 0.05, 0.1] }
     )
     for (const id of ids) {
       const el = document.getElementById(id)
@@ -288,9 +299,7 @@ export function ProfilePage() {
     return () => obs.disconnect()
   }, [])
 
-  const avatarSrc =
-    user?.avatarUrl?.trim() ||
-    dicebearAvatar(user?.handle ?? user?.id ?? 'user')
+  const avatarSrc = user?.avatarUrl?.trim() || dicebearAvatar(user?.handle ?? user?.id ?? 'user')
 
   const scrollToSection = useCallback((navKey, sectionId) => {
     scrollSuppressRef.current = Date.now() + 800
@@ -347,7 +356,9 @@ export function ProfilePage() {
 
               <div className="flex flex-col gap-4 rounded-xl border border-plantation bg-timber/20 p-5 max-[360px]:gap-3 max-[360px]:p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-slate-arena">Контакты</p>
+                  <p className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-slate-arena">
+                    Контакты
+                  </p>
                   <button
                     type="button"
                     className="rounded p-1 text-slate-arena transition-colors hover:text-white"
@@ -367,7 +378,9 @@ export function ProfilePage() {
                       />
                       Telegram
                     </span>
-                    <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.telegram}</span>
+                    <span className="text-sm text-turquoise max-[360px]:text-xs">
+                      {profile.contacts.telegram}
+                    </span>
                   </div>
                   <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
                     <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
@@ -379,7 +392,9 @@ export function ProfilePage() {
                       />
                       Email
                     </span>
-                    <span className="truncate text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.email}</span>
+                    <span className="truncate text-sm text-turquoise max-[360px]:text-xs">
+                      {profile.contacts.email}
+                    </span>
                   </div>
                   <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
                     <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
@@ -391,7 +406,9 @@ export function ProfilePage() {
                       />
                       GitHub
                     </span>
-                    <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.github}</span>
+                    <span className="text-sm text-turquoise max-[360px]:text-xs">
+                      {profile.contacts.github}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -421,25 +438,48 @@ export function ProfilePage() {
                     </p>
                     <div className="flex w-full flex-wrap justify-center gap-2 pt-4 md:justify-start">
                       <div className="inline-flex items-center gap-2 rounded border border-plantation bg-aztec/80 px-3 py-1.5">
-                        <MaterialIcon name="code" size={14} opticalSize={14} className="text-[#4ADE80]" />
-                        <span className="text-xs font-medium leading-4 text-mystic">{profile.skillsLabel}</span>
-                        <MaterialIcon name="edit" size={12} opticalSize={12} className="text-slate-arena" />
+                        <MaterialIcon
+                          name="code"
+                          size={14}
+                          opticalSize={14}
+                          className="text-[#4ADE80]"
+                        />
+                        <span className="text-xs font-medium leading-4 text-mystic">
+                          {profile.skillsLabel}
+                        </span>
+                        <MaterialIcon
+                          name="edit"
+                          size={12}
+                          opticalSize={12}
+                          className="text-slate-arena"
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <section id="profile-stats" className="scroll-mt-[88px] grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <section
+                id="profile-stats"
+                className="scroll-mt-[88px] grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+              >
                 {profile.statsCards.map((c) => (
                   <StatMetricCard key={String(c.key)} card={c} />
                 ))}
               </section>
 
-              <section id="profile-achievements" className="scroll-mt-[88px] flex flex-col gap-6 max-[360px]:gap-4">
+              <section
+                id="profile-achievements"
+                className="scroll-mt-[88px] flex flex-col gap-6 max-[360px]:gap-4"
+              >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:pb-2">
                   <h2 className="inline-flex items-center gap-2 text-lg font-bold leading-7 text-white">
-                    <MaterialIcon name="military_tech" size={24} opticalSize={24} className="text-turquoise" />
+                    <MaterialIcon
+                      name="military_tech"
+                      size={24}
+                      opticalSize={24}
+                      className="text-turquoise"
+                    />
                     Галерея достижений
                   </h2>
                   <Link
@@ -467,7 +507,12 @@ export function ProfilePage() {
                 className="scroll-mt-[88px] flex flex-col gap-6 max-[360px]:gap-4"
               >
                 <h2 className="inline-flex items-center gap-2 text-lg font-bold leading-7 text-white">
-                  <MaterialIcon name="history" size={24} opticalSize={24} className="text-turquoise" />
+                  <MaterialIcon
+                    name="history"
+                    size={24}
+                    opticalSize={24}
+                    className="text-turquoise"
+                  />
                   История спринтов
                 </h2>
                 <ProfileSprintHistory items={sprintHistory?.items} />
@@ -478,7 +523,12 @@ export function ProfilePage() {
                 className="scroll-mt-[88px] flex flex-col gap-6 rounded-xl border border-plantation bg-timber/10 px-8 pb-12 pt-8 max-[360px]:gap-4 max-[360px]:px-4 max-[360px]:pb-6 max-[360px]:pt-5"
               >
                 <div className="flex items-center gap-3 pb-2">
-                  <MaterialIcon name="manage_accounts" size={24} opticalSize={24} className="text-turquoise" />
+                  <MaterialIcon
+                    name="manage_accounts"
+                    size={24}
+                    opticalSize={24}
+                    className="text-turquoise"
+                  />
                   <h2 className="text-lg font-bold leading-7 text-white">Настройки профиля</h2>
                 </div>
 
@@ -542,7 +592,9 @@ export function ProfilePage() {
 
                   <div className="grid grid-cols-1 gap-6 max-[360px]:gap-4 xl:grid-cols-2">
                     <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">Telegram</label>
+                      <label className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">
+                        Telegram
+                      </label>
                       <div className="relative isolate">
                         <MaterialIcon
                           name="send"
@@ -561,7 +613,9 @@ export function ProfilePage() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">О себе</label>
+                    <label className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">
+                      О себе
+                    </label>
                     <textarea
                       value={form.about}
                       onChange={(e) => setForm((f) => ({ ...f, about: e.target.value }))}
@@ -573,10 +627,14 @@ export function ProfilePage() {
                   <div className="flex flex-col gap-2 border-t border-plantation pt-4">
                     <div className="flex min-h-6 w-full flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-end">
                       {saveState === 'saved' ? (
-                        <span className="font-mono text-xs text-spring md:mr-auto">Изменения сохранены</span>
+                        <span className="font-mono text-xs text-spring md:mr-auto">
+                          Изменения сохранены
+                        </span>
                       ) : null}
                       {saveState === 'error' ? (
-                        <span className="font-mono text-xs text-[#FCA5A5] md:mr-auto">Не удалось сохранить</span>
+                        <span className="font-mono text-xs text-[#FCA5A5] md:mr-auto">
+                          Не удалось сохранить
+                        </span>
                       ) : null}
                       <div className="flex w-full min-w-0 flex-row items-stretch gap-3 md:w-auto md:justify-end">
                         <button

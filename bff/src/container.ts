@@ -72,12 +72,18 @@ export function buildContainer(prisma: PrismaClient, opts?: BuildContainerOption
     }),
     profiles: createProfileService({ users }),
     hall: createHallService({ prisma, sprints, submissions, likes, sprintAccess }),
-    userView: createUserViewService({ prisma, users, sprints, achievements, notifications: memberNotifications }),
+    userView: createUserViewService({
+      prisma,
+      users,
+      sprints,
+      achievements,
+      notifications: memberNotifications,
+    }),
     admin: createAdminService(
       createAdminRepository(prisma),
       metrics,
       opts?.notifyDataUpdated,
-      memberNotifications,
+      memberNotifications
     ),
   }
 }

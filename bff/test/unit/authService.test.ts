@@ -50,7 +50,7 @@ describe('authService.register', () => {
         handle: 'fresh',
         password: 'password123',
         devKey: undefined,
-      }),
+      })
     ).rejects.toMatchObject({ code: 'CONFLICT' })
   })
 
@@ -69,7 +69,7 @@ describe('authService.register', () => {
         handle: 'hh',
         password: 'password123',
         devKey: 'wrong',
-      }),
+      })
     ).rejects.toMatchObject({ code: 'FORBIDDEN' })
 
     await expect(
@@ -78,7 +78,7 @@ describe('authService.register', () => {
         handle: 'hh',
         password: 'password123',
         devKey: 'secret-key',
-      }),
+      })
     ).resolves.toBeTruthy()
   })
 })
@@ -107,10 +107,10 @@ describe('authService.login', () => {
     const users = makeInMemoryUserRepo()
     const service = createAuthService({ users, hashPassword: fakeHash, verifyPassword: fakeVerify })
     await expect(
-      service.login({ loginOrEmail: 'ghost@example.com', password: 'whatever' }),
+      service.login({ loginOrEmail: 'ghost@example.com', password: 'whatever' })
     ).rejects.toBeInstanceOf(AppError)
     await expect(
-      service.login({ loginOrEmail: 'ghost@example.com', password: 'whatever' }),
+      service.login({ loginOrEmail: 'ghost@example.com', password: 'whatever' })
     ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' })
   })
 
@@ -119,9 +119,9 @@ describe('authService.login', () => {
       makeUser({ email: 'a@b.c', passwordHash: `${FAKE_HASH}:right` }),
     ])
     const service = createAuthService({ users, hashPassword: fakeHash, verifyPassword: fakeVerify })
-    await expect(
-      service.login({ loginOrEmail: 'a@b.c', password: 'wrong' }),
-    ).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' })
+    await expect(service.login({ loginOrEmail: 'a@b.c', password: 'wrong' })).rejects.toMatchObject(
+      { code: 'INVALID_CREDENTIALS' }
+    )
   })
 })
 

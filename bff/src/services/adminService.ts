@@ -37,7 +37,7 @@ function accountAuditShape(row: AdminUserListRow) {
 function diffAudit(
   before: Record<string, unknown>,
   after: Record<string, unknown>,
-  keys: readonly string[],
+  keys: readonly string[]
 ): Record<string, { from: unknown; to: unknown }> {
   const out: Record<string, { from: unknown; to: unknown }> = {}
   for (const k of keys) {
@@ -52,14 +52,21 @@ function diffAudit(
   return out
 }
 
-const PROFILE_AUDIT_KEYS = ['bio', 'telegram', 'github', 'realName', 'stack', 'moneyEarned'] as const
+const PROFILE_AUDIT_KEYS = [
+  'bio',
+  'telegram',
+  'github',
+  'realName',
+  'stack',
+  'moneyEarned',
+] as const
 const ACCOUNT_AUDIT_KEYS = ['role', 'points', 'handle'] as const
 
 async function safeAudit(
   db: AdminRepository,
   actorId: string,
   action: string,
-  details: Record<string, unknown>,
+  details: Record<string, unknown>
 ) {
   try {
     await db.appendAuditLog({
@@ -81,7 +88,7 @@ export function createAdminService(
   memberNotifications?: Pick<
     MemberNotificationService,
     'notifySubmissionFieldsChanged' | 'notifyBatchAcceptedToHall'
-  >,
+  >
 ) {
   const fire = (entity: AdminDataChangeDetail['entity']) => {
     try {
@@ -115,12 +122,12 @@ export function createAdminService(
       const profileChanges = diffAudit(
         profileAuditShape(before) as Record<string, unknown>,
         profileAuditShape(row) as Record<string, unknown>,
-        [...PROFILE_AUDIT_KEYS],
+        [...PROFILE_AUDIT_KEYS]
       )
       const accountChanges = diffAudit(
         accountAuditShape(before) as Record<string, unknown>,
         accountAuditShape(row) as Record<string, unknown>,
-        [...ACCOUNT_AUDIT_KEYS],
+        [...ACCOUNT_AUDIT_KEYS]
       )
 
       const auditDetails: Record<string, unknown> = { targetUserId: id }
@@ -141,6 +148,9 @@ export function createAdminService(
     listSprints: db.listSprints,
 
     async createSprint(actorId: string, data: Prisma.SprintCreateInput) {
+      if (data.active === true && data.archived === true) {
+        throw AppError.validation('Активный спринт не может быть в архиве')
+      }
       const row = await db.createSprint(data)
       await safeAudit(db, actorId, 'SPRINT_CREATE', {
         sprintId: row.id,
@@ -171,14 +181,24 @@ export function createAdminService(
         const existing = await db.findSprintById(id)
         if (!existing) throw AppError.notFound('Sprint not found')
         const prev =
-          existing.brief != null && typeof existing.brief === 'object' && !Array.isArray(existing.brief)
+          existing.brief != null &&
+          typeof existing.brief === 'object' &&
+          !Array.isArray(existing.brief)
             ? { ...(existing.brief as Record<string, unknown>) }
             : {}
         const incoming =
-          data.brief != null && typeof data.brief === 'object' && !Array.isArray(data.brief as unknown)
+          data.brief != null &&
+          typeof data.brief === 'object' &&
+          !Array.isArray(data.brief as unknown)
             ? { ...(data.brief as Record<string, unknown>) }
             : {}
         payload = { ...payload, brief: { ...prev, ...incoming } as Prisma.InputJsonValue }
+      }
+      if (payload.archived === true && payload.active === undefined) {
+        payload = { ...payload, active: false }
+      }
+      if (payload.active === true && payload.archived === true) {
+        throw AppError.validation('Активный спринт не может быть в архиве')
       }
       const row = await db.patchSprint(id, payload)
       await safeAudit(db, actorId, 'SPRINT_PATCH', {
@@ -198,7 +218,10 @@ export function createAdminService(
 
     listSprintAccess: db.listSprintAccess,
 
-    async upsertSprintAccess(actorId: string, input: Parameters<AdminRepository['upsertSprintAccess']>[0]) {
+    async upsertSprintAccess(
+      actorId: string,
+      input: Parameters<AdminRepository['upsertSprintAccess']>[0]
+    ) {
       const row = await db.upsertSprintAccess(input)
       await safeAudit(db, actorId, 'SPRINT_ACCESS_UPSERT', {
         sprintId: input.sprintId,
@@ -220,12 +243,13 @@ export function createAdminService(
 
     getDashboardStats: db.getDashboardStats,
 
-    listAuditLogs: (input: Parameters<AdminRepository['listAuditLogs']>[0]) => db.listAuditLogs(input),
+    listAuditLogs: (input: Parameters<AdminRepository['listAuditLogs']>[0]) =>
+      db.listAuditLogs(input),
 
     /** Участник отправил/обновил решение с клиента арены (не админка). */
     async recordMemberSubmission(
       actorId: string,
-      input: { sprintId: string; submissionId: string; repoUrl: string; demoUrl?: string | null },
+      input: { sprintId: string; submissionId: string; repoUrl: string; demoUrl?: string | null }
     ) {
       await safeAudit(db, actorId, 'SUBMISSION_SUBMIT', {
         userId: actorId,
@@ -243,7 +267,7 @@ export function createAdminService(
 
     async batchUpsertSprintAccess(
       actorId: string,
-      input: { sprintId: string; userIds: string[]; canSubmit: boolean; canView: boolean },
+      input: { sprintId: string; userIds: string[]; canSubmit: boolean; canView: boolean }
     ) {
       const r = await db.batchUpsertSprintAccess(input)
       await safeAudit(db, actorId, 'SPRINT_ACCESS_BATCH', {
@@ -274,9 +298,17 @@ export function createAdminService(
       return r
     },
 
-    async grantAchievementToSprintParticipants(actorId: string, sprintId: string, achievementId: string) {
+    async grantAchievementToSprintParticipants(
+      actorId: string,
+      sprintId: string,
+      achievementId: string
+    ) {
       const r = await db.grantAchievementToSprintParticipants(sprintId, achievementId)
-      await safeAudit(db, actorId, 'ACHIEVEMENT_GRANT_SPRINT', { sprintId, achievementId, granted: r.granted })
+      await safeAudit(db, actorId, 'ACHIEVEMENT_GRANT_SPRINT', {
+        sprintId,
+        achievementId,
+        granted: r.granted,
+      })
       fire('user')
       return r
     },
@@ -290,7 +322,7 @@ export function createAdminService(
         repoUrl?: string
         demoUrl?: string | null
         mentorComment?: string | null
-      },
+      }
     ) {
       const result = await db.patchSubmission(id, data)
       if (!result) throw AppError.notFound('Submission not found')
@@ -333,7 +365,10 @@ export function createAdminService(
 
     listAchievements: db.listAchievements,
 
-    async upsertAchievement(actorId: string, input: Parameters<AdminRepository['upsertAchievement']>[0]) {
+    async upsertAchievement(
+      actorId: string,
+      input: Parameters<AdminRepository['upsertAchievement']>[0]
+    ) {
       const row = await db.upsertAchievement(input)
       await safeAudit(db, actorId, 'ACHIEVEMENT_UPSERT', {
         achievementId: row.id,

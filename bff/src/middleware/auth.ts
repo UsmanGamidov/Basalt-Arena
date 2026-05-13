@@ -20,7 +20,9 @@ declare module 'express-serve-static-core' {
 
 export function verifyAccessToken(token: string): AuthClaims {
   try {
-    const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] }) as AuthClaims
+    const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET, {
+      algorithms: ['HS256'],
+    }) as AuthClaims
     if (!decoded.sub || !decoded.jti) throw new Error('Malformed token')
     if (decoded.typ && decoded.typ !== 'access') throw new Error('Wrong token type')
     return decoded

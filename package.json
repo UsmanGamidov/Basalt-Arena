@@ -42,7 +42,7 @@
     "typescript-eslint": "^8.46.0"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
+    "{bff/src,client/src,admin/src}/**/*.{js,jsx,ts,tsx}": [
       "prettier --write",
       "eslint --fix"
     ],

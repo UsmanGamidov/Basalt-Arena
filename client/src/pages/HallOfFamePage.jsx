@@ -45,7 +45,6 @@ function SolutionCard({ solution, isWinner }) {
           : 'border border-plantation hover:border-fiord',
       ].join(' ')}
     >
-
       <div className="relative z-[1] flex flex-col gap-6 max-[360px]:gap-4 md:flex-row md:items-center md:justify-between md:gap-6">
         <div className="flex min-w-0 items-center gap-5 max-[360px]:gap-3">
           <div className="relative shrink-0">
@@ -96,15 +95,11 @@ function SolutionCard({ solution, isWinner }) {
                 className={`size-1 shrink-0 rounded-full ${rank === 1 ? 'bg-fiord' : 'bg-[#334155]'}`}
                 aria-hidden
               />
-              <span className="font-mono text-[#FACC15]">
-                Оценка наставника: {s.mentorScore}
-              </span>
+              <span className="font-mono text-[#FACC15]">Оценка наставника: {s.mentorScore}</span>
             </div>
-            <a
-              className="mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-turquoise hover:underline"
-            >
-              <MaterialIcon name="send" size={12} opticalSize={12} className="text-turquoise" />
-              @{s.handle}
+            <a className="mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-turquoise hover:underline">
+              <MaterialIcon name="send" size={12} opticalSize={12} className="text-turquoise" />@
+              {s.handle}
             </a>
           </div>
         </div>
@@ -138,10 +133,9 @@ function SolutionCard({ solution, isWinner }) {
             >
               <MaterialIcon name="code" size={18} />
               <span
-                className={[
-                  'font-mono text-xs font-bold',
-                  isWinner ? 'inline' : 'hidden',
-                ].join(' ')}
+                className={['font-mono text-xs font-bold', isWinner ? 'inline' : 'hidden'].join(
+                  ' '
+                )}
               >
                 КОД
               </span>
@@ -162,10 +156,9 @@ function SolutionCard({ solution, isWinner }) {
             >
               <MaterialIcon name="rocket_launch" size={18} />
               <span
-                className={[
-                  'font-mono text-xs font-bold',
-                  isWinner ? 'inline' : 'hidden',
-                ].join(' ')}
+                className={['font-mono text-xs font-bold', isWinner ? 'inline' : 'hidden'].join(
+                  ' '
+                )}
               >
                 ДЕМО
               </span>
@@ -181,7 +174,11 @@ function SolutionCard({ solution, isWinner }) {
                 : 'border-plantation bg-aztec text-gull hover:border-fiord hover:text-catskill',
             ].join(' ')}
           >
-            <MaterialIcon name="favorite" size={18} className={likesActive ? 'text-turquoise' : ''} />
+            <MaterialIcon
+              name="favorite"
+              size={18}
+              className={likesActive ? 'text-turquoise' : ''}
+            />
             {s.likes}
           </button>
         </div>
@@ -202,11 +199,15 @@ function SprintMetrics({ metrics }) {
       <div className="space-y-4 max-[360px]:space-y-3">
         <div className="flex flex-col gap-2 rounded-xl border border-plantation bg-timber px-5 py-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)] max-[360px]:px-4 max-[360px]:py-4">
           <div className="flex items-start justify-between gap-4">
-            <span className="font-sans text-xs font-medium leading-4 text-gull">Всего отправок</span>
+            <span className="font-sans text-xs font-medium leading-4 text-gull">
+              Всего отправок
+            </span>
             <MaterialIcon name="dataset" size={18} opticalSize={18} className="text-gull" />
           </div>
           <p className="font-mono text-[30px] font-extrabold leading-9 text-white max-[360px]:text-[26px] max-[360px]:leading-8">
-            {Number(m.submissions).toLocaleString('ru-RU').replace(/\u00a0/g, ' ')}
+            {Number(m.submissions)
+              .toLocaleString('ru-RU')
+              .replace(/\u00a0/g, ' ')}
           </p>
           <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[#1E293B]">
             <div
@@ -284,7 +285,9 @@ function QuoteCard({ quote }) {
         size={96}
         className="pointer-events-none absolute -bottom-4 -right-1 rotate-12 text-turquoise/[0.05]"
       />
-      <p className="relative z-[1] text-[11.4px] font-medium leading-5 text-catskill">{quote.text}</p>
+      <p className="relative z-[1] text-[11.4px] font-medium leading-5 text-catskill">
+        {quote.text}
+      </p>
       <div className="relative z-[2] mt-3 flex items-center gap-2">
         <div className="size-5 shrink-0 rounded-full bg-[#334155]" aria-hidden />
         <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25px] text-turquoise">
@@ -401,7 +404,9 @@ function HallSortDropdown({ value, onChange }) {
                   className={[
                     'flex w-full items-center px-3 py-2.5 text-left font-mono text-[10px] font-semibold uppercase tracking-[1px] transition max-[360px]:py-2',
                     isHi ? 'bg-turquoise/10 text-catskill' : 'text-gull',
-                    isSelected ? 'border-l-[3px] border-l-turquoise pl-[calc(0.75rem-3px)]' : 'border-l-[3px] border-l-transparent',
+                    isSelected
+                      ? 'border-l-[3px] border-l-turquoise pl-[calc(0.75rem-3px)]'
+                      : 'border-l-[3px] border-l-transparent',
                   ].join(' ')}
                   onMouseEnter={() => setHighlight(i)}
                   onClick={() => {
@@ -452,7 +457,11 @@ export function HallOfFamePage() {
     refetchOnWindowFocus: true,
   })
 
-  const error = isError ? (queryError instanceof Error ? queryError.message : 'Ошибка загрузки') : null
+  const error = isError
+    ? queryError instanceof Error
+      ? queryError.message
+      : 'Ошибка загрузки'
+    : null
 
   /** API отдаёт уже отфильтрованный список: арена первая, далее завершённые с решениями. В UI показываем только первый. */
   const activeSprint = data?.sprints?.[0] ?? null
@@ -538,7 +547,9 @@ export function HallOfFamePage() {
                   {activeSprint ? (
                     <>
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-                        <h2 className="text-lg font-bold leading-7 text-catskill">Лучшие решения</h2>
+                        <h2 className="text-lg font-bold leading-7 text-catskill">
+                          Лучшие решения
+                        </h2>
                         <HallSortDropdown value={hallSort} onChange={setHallSort} />
                       </div>
 
@@ -585,7 +596,11 @@ export function HallOfFamePage() {
           )}
         </div>
       </main>
-      <SprintBriefModal open={briefOpen} onClose={() => setBriefOpen(false)} sprint={activeSprint} />
+      <SprintBriefModal
+        open={briefOpen}
+        onClose={() => setBriefOpen(false)}
+        sprint={activeSprint}
+      />
       <AppFooter />
     </div>
   )

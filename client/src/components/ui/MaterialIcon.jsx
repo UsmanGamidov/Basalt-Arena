@@ -1,11 +1,4 @@
-export function MaterialIcon({
-  name,
-  size,
-  opticalSize,
-  className = '',
-  style,
-  ...props
-}) {
+export function MaterialIcon({ name, size, opticalSize, className = '', style, ...props }) {
   const opsz =
     opticalSize ?? (typeof size === 'number' ? Math.min(Math.round(size), 24) : undefined)
 
@@ -21,8 +14,7 @@ export function MaterialIcon({
         }
       : {}
 
-  const mergedStyle =
-    typeof size === 'number' ? { ...fixedSizeStyle, ...style } : style
+  const mergedStyle = typeof size === 'number' ? { ...fixedSizeStyle, ...style } : style
 
   return (
     <span

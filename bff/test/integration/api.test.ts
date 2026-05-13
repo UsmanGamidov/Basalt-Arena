@@ -19,7 +19,10 @@ const REGISTER_KEY = process.env.DEV_REGISTER_KEY ?? 'basalt-dev-register-key'
 const conditionalDescribe = RUN_INTEGRATION ? describe : describe.skip
 let testIpCounter = 10
 
-function registerMember(app: ReturnType<typeof createApp>, body: { email: string; handle: string; password: string }) {
+function registerMember(
+  app: ReturnType<typeof createApp>,
+  body: { email: string; handle: string; password: string }
+) {
   testIpCounter += 1
   return request(app)
     .post('/api/v1/auth/register')
@@ -95,7 +98,10 @@ conditionalDescribe('BFF integration', () => {
     expect(access).toBeTruthy()
     expect(refresh).toBeTruthy()
 
-    const me = await request(app).get('/api/v1/me').set('Authorization', `Bearer ${access}`).expect(200)
+    const me = await request(app)
+      .get('/api/v1/me')
+      .set('Authorization', `Bearer ${access}`)
+      .expect(200)
     expect(me.body.user.handle).toBe('alice')
 
     const sprint = await prisma.sprint.findFirstOrThrow()
@@ -138,10 +144,7 @@ conditionalDescribe('BFF integration', () => {
       .expect(200)
     expect(refreshed.body.accessToken).not.toBe(access)
 
-    await request(app)
-      .post('/api/v1/auth/refresh')
-      .send({ refreshToken: refresh })
-      .expect(401)
+    await request(app).post('/api/v1/auth/refresh').send({ refreshToken: refresh }).expect(401)
 
     await request(app)
       .post('/api/v1/auth/logout')
@@ -160,13 +163,19 @@ conditionalDescribe('BFF integration', () => {
       password: 'password123',
     }).expect(201)
     const token = registerRes.body.accessToken
-    const res = await request(app).get('/api/v1/admin/sprints').set('Authorization', `Bearer ${token}`)
+    const res = await request(app)
+      .get('/api/v1/admin/sprints')
+      .set('Authorization', `Bearer ${token}`)
     expect(res.status).toBe(403)
     expect(res.body.code).toBe('FORBIDDEN')
   })
 
   it('returns 409 CONFLICT on duplicate registration', async () => {
-    await registerMember(app, { email: 'bob@example.com', handle: 'bob', password: 'password123' }).expect(201)
+    await registerMember(app, {
+      email: 'bob@example.com',
+      handle: 'bob',
+      password: 'password123',
+    }).expect(201)
     const res = await registerMember(app, {
       email: 'bob@example.com',
       handle: 'bob_other',

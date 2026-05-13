@@ -2,7 +2,10 @@ import type { Submission, User } from '@prisma/client'
 import type { SprintAccessRepository } from '../../src/repositories/sprintAccessRepo.js'
 import type { UserRepository } from '../../src/repositories/userRepo.js'
 import type { LikeRepository } from '../../src/repositories/likeRepo.js'
-import type { SubmissionRepository, SubmissionWithAuthor } from '../../src/repositories/submissionRepo.js'
+import type {
+  SubmissionRepository,
+  SubmissionWithAuthor,
+} from '../../src/repositories/submissionRepo.js'
 import type { SprintRepository, SortBy } from '../../src/repositories/sprintRepo.js'
 
 let userIdCounter = 0
@@ -50,9 +53,7 @@ export function makeInMemoryUserRepo(initial: User[] = []): UserRepository & {
     async findByEmailOrHandle(loginOrEmail) {
       const value = loginOrEmail.trim().toLowerCase()
       const handle = value.replace(/^@/, '')
-      return (
-        Array.from(byId.values()).find((u) => u.email === value || u.handle === handle) ?? null
-      )
+      return Array.from(byId.values()).find((u) => u.email === value || u.handle === handle) ?? null
     },
     async create(input) {
       const id = String(input.id ?? `u_${byId.size + 100}`)
@@ -83,10 +84,11 @@ export function makeInMemoryLikeRepo(): LikeRepository & {
   const set = new Set<string>()
   const key = (a: string, b: string) => `${a}::${b}`
   return {
-    rows: () => Array.from(set).map((k) => {
-      const [userId, submissionId] = k.split('::')
-      return { userId, submissionId }
-    }),
+    rows: () =>
+      Array.from(set).map((k) => {
+        const [userId, submissionId] = k.split('::')
+        return { userId, submissionId }
+      }),
     async addLike(userId, submissionId) {
       const k = key(userId, submissionId)
       if (set.has(k)) return false
@@ -154,7 +156,7 @@ export function makeInMemorySubmissionRepo(initial: Submission[] = []): Submissi
     },
     async upsert({ userId, sprintId, repoUrl, demoUrl }) {
       const existing = Array.from(byId.values()).find(
-        (s) => s.userId === userId && s.sprintId === sprintId,
+        (s) => s.userId === userId && s.sprintId === sprintId
       )
       if (existing) {
         const updated: Submission = {
@@ -197,11 +199,13 @@ export function makeInMemorySubmissionRepo(initial: Submission[] = []): Submissi
   }
 }
 
-export function makeInMemorySprintRepo(initial: Array<{
-  id: string
-  active?: boolean
-  endsAt?: Date | null
-}>): SprintRepository {
+export function makeInMemorySprintRepo(
+  initial: Array<{
+    id: string
+    active?: boolean
+    endsAt?: Date | null
+  }>
+): SprintRepository {
   const items = initial.map((s) => ({
     id: s.id,
     slug: s.id,

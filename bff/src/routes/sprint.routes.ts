@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { respondCreated, respondSuccess } from '../api/http/respond.js'
 import { AppError } from '../errors/AppError.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
@@ -15,8 +16,8 @@ export function sprintRouter(container: Container) {
     asyncHandler(async (req, res) => {
       const { sortBy } = listSortQuery.parse(req.query)
       const result = await container.hall.sprintList(req.auth?.sub, sortBy)
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.get(
@@ -27,8 +28,8 @@ export function sprintRouter(container: Container) {
       const { sortBy } = listSortQuery.parse(req.query)
       const result = await container.hall.sprintById(req.auth?.sub, id, sortBy)
       if (!result) throw AppError.notFound('Sprint not found')
-      res.json(result)
-    }),
+      return respondSuccess(res, result)
+    })
   )
 
   router.get(
@@ -39,8 +40,10 @@ export function sprintRouter(container: Container) {
       const { sortBy } = listSortQuery.parse(req.query)
       const result = await container.hall.sprintById(req.auth?.sub, id, sortBy)
       if (!result) throw AppError.notFound('Sprint not found')
-      res.json({ solutions: (result as { sprint: { solutions: unknown } }).sprint.solutions })
-    }),
+      return respondSuccess(res, {
+        solutions: (result as { sprint: { solutions: unknown } }).sprint.solutions,
+      })
+    })
   )
 
   router.post(
@@ -62,14 +65,14 @@ export function sprintRouter(container: Container) {
         repoUrl: submission.repoUrl,
         demoUrl: submission.demoUrl,
       })
-      res.status(201).json({
+      return respondCreated(res, {
         ok: true,
         id: submission.id,
         receivedAt: submission.createdAt,
         repoUrl: submission.repoUrl,
         demoUrl: submission.demoUrl,
       })
-    }),
+    })
   )
 
   return router

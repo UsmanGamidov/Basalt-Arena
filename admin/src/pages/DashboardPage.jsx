@@ -9,7 +9,9 @@ function StatCard({ title, value, icon: Icon, loading }) {
       <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-turquoise/10 blur-2xl" />
       <div className="relative flex items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-slate-arena">{title}</p>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-slate-arena">
+            {title}
+          </p>
           {loading ? (
             <Skeleton className="mt-3 h-9 w-20" />
           ) : (
@@ -38,7 +40,9 @@ function ActivityChart({ points, loading }) {
     <div className="rounded-2xl border border-plantation bg-timber/30 p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-turquoise">Активность</h3>
+          <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-turquoise">
+            Активность
+          </h3>
           <p className="mt-1 text-sm text-gull">Новые решения по дням (30 дней)</p>
         </div>
         <Activity className="h-5 w-5 text-turquoise/70" />
@@ -48,7 +52,10 @@ function ActivityChart({ points, loading }) {
           <div key={p.date} className="group flex flex-1 flex-col items-center justify-end">
             <div
               className="w-full max-w-[10px] rounded-t-md bg-gradient-to-t from-turquoise/20 to-turquoise transition-all group-hover:from-turquoise/40 group-hover:to-half-baked sm:max-w-[14px]"
-              style={{ height: `${8 + (p.count / max) * 100}%`, minHeight: p.count ? '12px' : '4px' }}
+              style={{
+                height: `${8 + (p.count / max) * 100}%`,
+                minHeight: p.count ? '12px' : '4px',
+              }}
               title={`${p.date}: ${p.count}`}
             />
           </div>
@@ -71,9 +78,12 @@ export function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">Главная</h1>
+        <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">
+          Главная
+        </h1>
         <p className="mt-2 max-w-2xl text-sm text-gull">
-          Сводка по участникам, очереди проверки и потоку решений — чтобы держать Basalt Arena под контролем.
+          Сводка по участникам, очереди проверки и потоку решений — чтобы держать Basalt Arena под
+          контролем.
         </p>
       </div>
 

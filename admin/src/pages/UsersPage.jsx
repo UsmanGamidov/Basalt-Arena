@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table'
 import { ChevronLeft, ChevronRight, Code2, Send } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -9,8 +14,15 @@ import { Button } from '../components/ui/button.jsx'
 import { Checkbox } from '../components/ui/checkbox.jsx'
 import { Input } from '../components/ui/input.jsx'
 import { Label } from '../components/ui/label.jsx'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select.jsx'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select.jsx'
 import { Skeleton } from '../components/ui/skeleton.jsx'
+import { useAdminTable } from '../hooks/useAdminTable.js'
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js'
 import { roleLabel } from '../lib/copy.js'
 
@@ -35,13 +47,26 @@ export function UsersPage() {
   const qc = useQueryClient()
   const [searchInput, setSearchInput] = useState('')
   const debouncedSearch = useDebouncedValue(searchInput, 400)
-  const [pageIndex, setPageIndex] = useState(0)
-  const pageSize = 15
+  const tableState = useAdminTable({
+    pageSize: 15,
+    resetDeps: [searchInput],
+    withRowSelection: true,
+  })
+  const {
+    pageIndex,
+    pageSize,
+    pageOffset,
+    rowSelection,
+    setRowSelection,
+    pageCount,
+    onPaginationChange,
+    clearSelection,
+  } = tableState
 
   const { data, isPending } = useQuery({
     queryKey: ['admin', 'users', debouncedSearch, pageIndex, pageSize],
     queryFn: () => {
-      const q = new URLSearchParams({ take: String(pageSize), skip: String(pageIndex * pageSize) })
+      const q = new URLSearchParams({ take: String(pageSize), skip: String(pageOffset) })
       if (debouncedSearch.trim()) q.set('search', debouncedSearch.trim())
       return api(`/admin/users?${q}`)
     },
@@ -52,11 +77,11 @@ export function UsersPage() {
     queryFn: () => api('/admin/sprints'),
   })
 
-  const [rowSelection, setRowSelection] = useState({})
   const [sheetUser, setSheetUser] = useState(null)
 
   const patchMutation = useMutation({
-    mutationFn: ({ id, body }) => api(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+    mutationFn: ({ id, body }) =>
+      api(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () => {
       toast.success('Пользователь обновлён')
       void qc.invalidateQueries({ queryKey: ['admin', 'users'] })
@@ -73,7 +98,7 @@ export function UsersPage() {
       }),
     onSuccess: (_d, v) => {
       toast.success(`Доступ: ${v.userIds.length} пользователей`)
-      setRowSelection({})
+      clearSelection()
       void qc.invalidateQueries({ queryKey: ['admin'] })
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : 'Ошибка'),
@@ -81,7 +106,7 @@ export function UsersPage() {
 
   const items = data?.items ?? []
   const total = data?.total ?? 0
-  const pageCount = Math.max(1, Math.ceil(total / pageSize))
+  const totalPages = pageCount(total)
 
   const columns = useMemo(
     () => [
@@ -191,7 +216,7 @@ export function UsersPage() {
         ),
       }),
     ],
-    [qc],
+    [qc]
   )
 
   const table = useReactTable({
@@ -200,14 +225,11 @@ export function UsersPage() {
     state: { rowSelection, pagination: { pageIndex, pageSize } },
     onRowSelectionChange: setRowSelection,
     manualPagination: true,
-    pageCount,
+    pageCount: totalPages,
     getRowId: (row) => row.id,
     getCoreRowModel: getCoreRowModel(),
     enableRowSelection: true,
-    onPaginationChange: (updater) => {
-      const next = typeof updater === 'function' ? updater({ pageIndex, pageSize }) : updater
-      setPageIndex(next.pageIndex)
-    },
+    onPaginationChange,
   })
 
   const selectedIds = table.getSelectedRowModel().rows.map((r) => r.original.id)
@@ -216,10 +238,12 @@ export function UsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">Пользователи</h1>
+        <h1 className="font-mono text-2xl font-bold uppercase tracking-tight text-catskill">
+          Пользователи
+        </h1>
         <p className="mt-2 text-sm text-gull">
-          Поиск по почте и нику, карточка участника с вкладками. Ниже можно выдать доступ к спринту сразу нескольким
-          выбранным людям.
+          Поиск по почте и нику, карточка участника с вкладками. Ниже можно выдать доступ к спринту
+          сразу нескольким выбранным людям.
         </p>
       </div>
 
@@ -271,7 +295,7 @@ export function UsersPage() {
           value={searchInput}
           onChange={(e) => {
             setSearchInput(e.target.value)
-            setPageIndex(0)
+            tableState.setPageIndex(0)
           }}
         />
       </div>
@@ -335,22 +359,22 @@ export function UsersPage() {
 
       <div className="flex items-center justify-between gap-4">
         <p className="text-xs text-gull">
-          Стр. {pageIndex + 1} / {pageCount} · всего {total}
+          Стр. {pageIndex + 1} / {totalPages} · всего {total}
         </p>
         <div className="flex gap-2">
           <Button
             variant="outline"
             className="flex items-center gap-1 py-2"
             disabled={pageIndex <= 0}
-            onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+            onClick={() => tableState.setPageIndex((p) => Math.max(0, p - 1))}
           >
             <ChevronLeft className="h-4 w-4" /> Назад
           </Button>
           <Button
             variant="outline"
             className="flex items-center gap-1 py-2"
-            disabled={pageIndex + 1 >= pageCount}
-            onClick={() => setPageIndex((p) => p + 1)}
+            disabled={pageIndex + 1 >= totalPages}
+            onClick={() => tableState.setPageIndex((p) => p + 1)}
           >
             Вперёд <ChevronRight className="h-4 w-4" />
           </Button>

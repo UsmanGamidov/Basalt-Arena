@@ -49,7 +49,10 @@ export const meProfilePatchBody = z
       .strict(),
   })
   .strict()
-  .refine((b) => Object.keys(b.form).length > 0, { message: 'form must include at least one field to update', path: ['form'] })
+  .refine((b) => Object.keys(b.form).length > 0, {
+    message: 'form must include at least one field to update',
+    path: ['form'],
+  })
 
 export const submissionUpsertBody = z
   .object({
@@ -136,16 +139,19 @@ export const adminPatchUserBody = z
     moneyEarned: z.coerce.number().int().min(0).max(2_000_000_000).optional(),
   })
   .strict()
-  .refine(
-    (b) => adminPatchUserFieldKeys.some((k) => b[k as keyof typeof b] !== undefined),
-    { message: 'At least one field is required' },
-  )
+  .refine((b) => adminPatchUserFieldKeys.some((k) => b[k as keyof typeof b] !== undefined), {
+    message: 'At least one field is required',
+  })
 
 export type AdminPatchUserBody = z.infer<typeof adminPatchUserBody>
 
 export const adminCreateSprintBody = z
   .object({
-    slug: z.string().min(1).max(128).regex(/^[a-z0-9-]+$/),
+    slug: z
+      .string()
+      .min(1)
+      .max(128)
+      .regex(/^[a-z0-9-]+$/),
     title: z.string().min(1).max(256),
     tabLabel: z.string().min(1).max(128),
     tabIcon: z.union([z.string().max(64), z.null()]).optional(),
@@ -187,7 +193,12 @@ export const adminPatchSprintBody = z
     endsAt: z.union([z.string().datetime(), z.null()]).optional(),
     published: z.boolean().optional(),
     archived: z.boolean().optional(),
-    slug: z.string().min(1).max(128).regex(/^[a-z0-9-]+$/).optional(),
+    slug: z
+      .string()
+      .min(1)
+      .max(128)
+      .regex(/^[a-z0-9-]+$/)
+      .optional(),
     tabIcon: z.union([z.string().max(64), z.null()]).optional(),
   })
   .strict()
@@ -222,14 +233,17 @@ export const adminSubmissionsQuery = z
       .optional()
       .transform((raw) => {
         if (raw == null || !String(raw).trim()) return undefined
-        const uniq = [...new Set(String(raw).split(',').map((s) => s.trim()).filter(Boolean))]
+        const uniq = [
+          ...new Set(
+            String(raw)
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean)
+          ),
+        ]
         return uniq.length ? uniq : undefined
       })
-      .pipe(
-        z
-          .union([z.undefined(), z.array(submissionStatusEnum).min(1).max(4)])
-          .optional(),
-      ),
+      .pipe(z.union([z.undefined(), z.array(submissionStatusEnum).min(1).max(4)]).optional()),
     skip: z.coerce.number().int().min(0).default(0),
     take: z.coerce.number().int().min(1).max(100).default(25),
   })
@@ -259,7 +273,11 @@ export const adminPatchSubmissionBody = z
 export const adminUpsertAchievementBody = z
   .object({
     id: cuidParam.optional(),
-    slug: z.string().min(1).max(128).regex(/^[a-z0-9-]+$/),
+    slug: z
+      .string()
+      .min(1)
+      .max(128)
+      .regex(/^[a-z0-9-]+$/),
     title: z.string().min(1).max(256),
     subtitle: z.string().min(1).max(512),
     icon: z.string().min(1).max(128),

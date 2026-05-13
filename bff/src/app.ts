@@ -1,22 +1,22 @@
 import compression from 'compression'
 import cors from 'cors'
 import express, { type Express } from 'express'
+import type { PrismaClient } from '@prisma/client'
 import helmet from 'helmet'
 import { pinoHttp } from 'pino-http'
-import type { PrismaClient } from '@prisma/client'
-import { env } from './config/env.js'
-import { logger } from './infra/logger.js'
-import { buildContainer, type Container } from './container.js'
-import { errorHandler } from './middleware/errorHandler.js'
-import { requestContext } from './middleware/requestContext.js'
-import { adminRouter } from './routes/admin.routes.js'
-import { authRouter } from './routes/auth.routes.js'
-import { hallRouter } from './routes/hall.routes.js'
-import { meRouter } from './routes/me.routes.js'
-import { metaRouter } from './routes/meta.routes.js'
-import { solutionRouter } from './routes/solution.routes.js'
-import { sprintRouter } from './routes/sprint.routes.js'
-import { submissionRouter } from './routes/submission.routes.js'
+import {
+  adminRouter,
+  authRouter,
+  errorHandler,
+  hallRouter,
+  meRouter,
+  metaRouter,
+  requestContext,
+  solutionRouter,
+  sprintRouter,
+  submissionRouter,
+} from './api/index.js'
+import { buildContainer, env, logger, type Container } from './core/index.js'
 
 export interface AppOptions {
   prisma: PrismaClient
@@ -35,7 +35,7 @@ export function createApp({ prisma, container }: AppOptions): Express {
     cors({
       origin: env.CORS_ORIGINS,
       credentials: true,
-    }),
+    })
   )
   app.use(requestContext())
   app.use(express.json({ limit: '128kb' }))
@@ -51,7 +51,7 @@ export function createApp({ prisma, container }: AppOptions): Express {
         return 'info'
       },
       autoLogging: { ignore: (req) => req.url === '/api/v1/health' },
-    }),
+    })
   )
 
   app.get('/api/v1/health', (_req, res) => {

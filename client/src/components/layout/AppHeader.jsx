@@ -98,7 +98,7 @@ export function AppHeader() {
                 >
                   {item.label}
                 </Link>
-              ),
+              )
             )}
           </nav>
         </div>
@@ -158,12 +158,16 @@ export function AppHeader() {
                             key={row.id}
                             className={[
                               'rounded-lg border border-plantation/80 bg-aztec/50 px-3 py-2.5 max-md:px-3.5 max-md:py-3',
-                              row.unread ? 'border-l-[3px] border-l-turquoise pl-[calc(0.75rem-2px)]' : '',
+                              row.unread
+                                ? 'border-l-[3px] border-l-turquoise pl-[calc(0.75rem-2px)]'
+                                : '',
                             ]
                               .filter(Boolean)
                               .join(' ')}
                           >
-                            <p className="text-xs font-semibold text-catskill max-md:text-[13px]">{row.title}</p>
+                            <p className="text-xs font-semibold text-catskill max-md:text-[13px]">
+                              {row.title}
+                            </p>
                             <p className="mt-1 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-half-baked max-md:text-xs max-md:leading-snug">
                               {row.body}
                             </p>
@@ -227,7 +231,9 @@ export function AppHeader() {
             </div>
             <div className="hidden min-w-0 flex-col justify-center text-left xl:flex">
               <div className="text-xs font-semibold leading-tight text-mystic">{user.handle}</div>
-              <div className="font-mono text-[10px] leading-tight text-slate-arena">{user.role}</div>
+              <div className="font-mono text-[10px] leading-tight text-slate-arena">
+                {user.role}
+              </div>
             </div>
             <MaterialIcon
               name="expand_more"

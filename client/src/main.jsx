@@ -17,5 +17,5 @@ function AppRoot() {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AppRoot />
-  </StrictMode>,
+  </StrictMode>
 )

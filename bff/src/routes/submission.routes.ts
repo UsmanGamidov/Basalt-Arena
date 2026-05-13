@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { respondCreated } from '../api/http/respond.js'
 import { requireAuth } from '../middleware/auth.js'
 import { asyncHandler } from '../middleware/asyncHandler.js'
 import { submissionLimiter } from '../middleware/rateLimit.js'
@@ -25,14 +26,14 @@ export function submissionRouter(container: Container) {
         repoUrl: submission.repoUrl,
         demoUrl: submission.demoUrl,
       })
-      res.status(201).json({
+      return respondCreated(res, {
         ok: true,
         id: submission.id,
         receivedAt: submission.createdAt,
         repoUrl: submission.repoUrl,
         demoUrl: submission.demoUrl,
       })
-    }),
+    })
   )
 
   return router

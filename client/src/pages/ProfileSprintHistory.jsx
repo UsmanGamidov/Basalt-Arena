@@ -65,7 +65,9 @@ export function ProfileSprintHistory({ items }) {
               <div className="min-w-0 flex-1">
                 <h3 className="text-base font-bold leading-6 text-white">{row.sprintTitle}</h3>
                 {submitted ? (
-                  <p className="mt-1 font-mono text-xs leading-4 text-gull">Отправлено: {submitted}</p>
+                  <p className="mt-1 font-mono text-xs leading-4 text-gull">
+                    Отправлено: {submitted}
+                  </p>
                 ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
@@ -78,7 +80,12 @@ export function ProfileSprintHistory({ items }) {
                   {submissionStatusLabel(row.status)}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded border border-plantation bg-aztec/60 px-2 py-0.5 font-mono text-xs font-semibold leading-4 text-catskill/90">
-                  <MaterialIcon name="grade" size={14} opticalSize={14} className="text-turquoise" />
+                  <MaterialIcon
+                    name="grade"
+                    size={14}
+                    opticalSize={14}
+                    className="text-turquoise"
+                  />
                   {scoreLabel}
                 </span>
               </div>
@@ -112,7 +119,9 @@ export function ProfileSprintHistory({ items }) {
                 <p className="pb-1.5 text-[10px] font-bold uppercase leading-4 tracking-[1px] text-gull">
                   Комментарий наставника
                 </p>
-                <p className="whitespace-pre-wrap font-mono text-xs leading-[1.55] text-catskill/90">{comment}</p>
+                <p className="whitespace-pre-wrap font-mono text-xs leading-[1.55] text-catskill/90">
+                  {comment}
+                </p>
               </div>
             ) : null}
           </li>

@@ -33,7 +33,13 @@ export interface MePayload {
     skillsLabel: string
     contacts: { telegram: string; email: string; github: string }
     statsCards: Array<Record<string, unknown>>
-    achievements: Array<{ id: string; title: string; subtitle: string; icon: string; variant: 'earned' | 'locked' }>
+    achievements: Array<{
+      id: string
+      title: string
+      subtitle: string
+      icon: string
+      variant: 'earned' | 'locked'
+    }>
     form: { username: string; email: string; telegram: string; about: string }
   }
   sprintHistory: {
@@ -51,7 +57,9 @@ export interface MePayload {
   }
 }
 
-function resourceLinksFromBrief(brief: unknown): Array<{ label: string; href: string; icon: string }> {
+function resourceLinksFromBrief(
+  brief: unknown
+): Array<{ label: string; href: string; icon: string }> {
   if (!brief || typeof brief !== 'object' || Array.isArray(brief)) return []
   const raw = (brief as { resourceLinks?: unknown }).resourceLinks
   const parsed = sprintResourceLinksField.safeParse(raw)
@@ -82,7 +90,7 @@ function buildStatsCards(
   user: User,
   rank: number,
   leaderboardSize: number,
-  sprintsAccepted: number,
+  sprintsAccepted: number
 ): Array<Record<string, unknown>> {
   const ptsDelta = user.points - user.pointsAtMonthStart
   const moneyDelta = user.moneyEarned - user.moneyAtMonthStart
@@ -206,21 +214,28 @@ export function createUserViewService(deps: {
       let user = await deps.users.findById(userId)
       if (!user) return null
 
-      const [sprint, achievements, leaderboardSize, sprintsAccepted, history, notifUnread, notifRows] =
-        await Promise.all([
-          deps.sprints.findActive(),
-          deps.achievements.listForUser(userId),
-          deps.prisma.user.count(),
-          deps.prisma.submission.count({ where: { userId, status: 'ACCEPTED' } }),
-          deps.prisma.submission.findMany({
-            where: { userId },
-            orderBy: { createdAt: 'desc' },
-            take: 25,
-            include: { sprint: { select: { title: true, id: true } } },
-          }),
-          deps.notifications.countUnread(userId),
-          deps.notifications.listForMe(userId),
-        ])
+      const [
+        sprint,
+        achievements,
+        leaderboardSize,
+        sprintsAccepted,
+        history,
+        notifUnread,
+        notifRows,
+      ] = await Promise.all([
+        deps.sprints.findActive(),
+        deps.achievements.listForUser(userId),
+        deps.prisma.user.count(),
+        deps.prisma.submission.count({ where: { userId, status: 'ACCEPTED' } }),
+        deps.prisma.submission.findMany({
+          where: { userId },
+          orderBy: { createdAt: 'desc' },
+          take: 25,
+          include: { sprint: { select: { title: true, id: true } } },
+        }),
+        deps.notifications.countUnread(userId),
+        deps.notifications.listForMe(userId),
+      ])
 
       const monthKey = utcMonthKey()
       if (user.statsMonthKey !== monthKey) {
@@ -249,7 +264,8 @@ export function createUserViewService(deps: {
         user: {
           id: user.id,
           handle: user.handle,
-          role: user.role === 'ADMIN' ? 'Архитектор' : user.role === 'MENTOR' ? 'Ментор' : 'Участник',
+          role:
+            user.role === 'ADMIN' ? 'Архитектор' : user.role === 'MENTOR' ? 'Ментор' : 'Участник',
           avatarUrl: user.avatarUrl,
         },
         activeSprint: activeSprintPayload(sprint),

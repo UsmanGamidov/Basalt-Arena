@@ -2,11 +2,7 @@ import argon2 from 'argon2'
 import { AppError } from '../errors/AppError.js'
 import type { UserRepository } from '../repositories/userRepo.js'
 import { issueTokens, verifyRefreshToken, type TokenPair } from './tokenService.js'
-import {
-  isSessionActive,
-  registerSession,
-  revokeSession,
-} from './sessionStore.js'
+import { isSessionActive, registerSession, revokeSession } from './sessionStore.js'
 import type { User } from '@prisma/client'
 
 export interface PublicUser {

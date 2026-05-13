@@ -12,7 +12,7 @@ export function SheetContent({ className, children, ...props }) {
       <DialogPrimitive.Content
         className={cn(
           'fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-plantation bg-aztec shadow-2xl focus:outline-none data-[state=open]:slide-in-from-right',
-          className,
+          className
         )}
         {...props}
       >
@@ -35,7 +35,9 @@ export function SheetHeader({ title, description }) {
         {title}
       </DialogPrimitive.Title>
       {description ? (
-        <DialogPrimitive.Description className="mt-2 text-xs text-gull">{description}</DialogPrimitive.Description>
+        <DialogPrimitive.Description className="mt-2 text-xs text-gull">
+          {description}
+        </DialogPrimitive.Description>
       ) : (
         <DialogPrimitive.Description className="sr-only">{title}</DialogPrimitive.Description>
       )}

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { createLikeService } from '../../src/services/likeService.js'
-import { makeInMemoryLikeRepo, makeInMemorySubmissionRepo, makeMockSprintAccess } from './helpers.js'
+import {
+  makeInMemoryLikeRepo,
+  makeInMemorySubmissionRepo,
+  makeMockSprintAccess,
+} from './helpers.js'
 import type { Submission } from '@prisma/client'
 
 function seedSubmission(): Submission {

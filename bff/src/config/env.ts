@@ -24,8 +24,16 @@ const baseSchema = z.object({
 
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 chars'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 chars'),
-  JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(15 * 60),
-  JWT_REFRESH_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 24 * 30),
+  JWT_ACCESS_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(15 * 60),
+  JWT_REFRESH_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(60 * 60 * 24 * 30),
 
   RATE_LIMIT_DISABLED: z
     .string()
@@ -35,7 +43,14 @@ const baseSchema = z.object({
   CORS_ORIGINS: z
     .string()
     .optional()
-    .transform((value) => (value ? value.split(',').map((s) => s.trim()).filter(Boolean) : [])),
+    .transform((value) =>
+      value
+        ? value
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : []
+    ),
 
   DEV_REGISTER_KEY: z.string().optional(),
 })
@@ -60,7 +75,9 @@ export function loadEnv(processEnv: NodeJS.ProcessEnv = process.env): AppEnv {
   const merged = applyDevDefaults(processEnv)
   const result = baseSchema.safeParse(merged)
   if (!result.success) {
-    const issues = result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n  - ')
+    const issues = result.error.issues
+      .map((i) => `${i.path.join('.')}: ${i.message}`)
+      .join('\n  - ')
     throw new Error(`Invalid environment configuration:\n  - ${issues}`)
   }
   const isProd = result.data.NODE_ENV === 'production'
@@ -75,7 +92,7 @@ export function loadEnv(processEnv: NodeJS.ProcessEnv = process.env): AppEnv {
   if (corsOrigins.length === 0) {
     if (isProd) {
       throw new Error(
-        'CORS_ORIGINS is required in production: set a comma-separated allow-list (empty is not allowed; reflective wildcard was removed).',
+        'CORS_ORIGINS is required in production: set a comma-separated allow-list (empty is not allowed; reflective wildcard was removed).'
       )
     }
     corsOrigins = [

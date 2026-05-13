@@ -14,5 +14,11 @@ const buttonBase =
   'inline-flex items-center justify-center gap-2 whitespace-nowrap select-none disabled:pointer-events-none disabled:opacity-40'
 
 export function Button({ className, variant = 'gradient', type = 'button', ...props }) {
-  return <button type={type} className={cn(buttonBase, variants[variant] ?? variants.gradient, className)} {...props} />
+  return (
+    <button
+      type={type}
+      className={cn(buttonBase, variants[variant] ?? variants.gradient, className)}
+      {...props}
+    />
+  )
 }

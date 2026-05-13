@@ -4,17 +4,22 @@ import type { SprintRepository } from '../repositories/sprintRepo.js'
 import type { SubmissionRepository } from '../repositories/submissionRepo.js'
 
 export interface SubmissionService {
-  submit(input: {
-    userId: string
+  submit(input: { userId: string; sprintId: string; repoUrl: string; demoUrl?: string }): Promise<{
+    id: string
     sprintId: string
-    repoUrl: string
-    demoUrl?: string
-  }): Promise<{ id: string; sprintId: string; userId: string; repoUrl: string; demoUrl: string | null; createdAt: Date }>
-  submitToActive(input: {
     userId: string
     repoUrl: string
-    demoUrl?: string
-  }): Promise<{ id: string; sprintId: string; userId: string; repoUrl: string; demoUrl: string | null; createdAt: Date }>
+    demoUrl: string | null
+    createdAt: Date
+  }>
+  submitToActive(input: { userId: string; repoUrl: string; demoUrl?: string }): Promise<{
+    id: string
+    sprintId: string
+    userId: string
+    repoUrl: string
+    demoUrl: string | null
+    createdAt: Date
+  }>
 }
 
 export function createSubmissionService(deps: {

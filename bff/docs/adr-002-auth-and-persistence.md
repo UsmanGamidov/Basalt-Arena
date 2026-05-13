@@ -1,9 +1,11 @@
 # ADR-002: Authentication, Persistence and Rate Limiting
 
 ## Status
+
 Accepted
 
 ## Context
+
 ADR-001 fixed the public API contract. ADR-002 covers the production-grade
 implementation details for authentication, storage and abuse protection,
 replacing the early in-memory `ArenaStore`.
@@ -11,6 +13,7 @@ replacing the early in-memory `ArenaStore`.
 ## Decisions
 
 ### Password hashing — Argon2id
+
 - Library: `argon2` (node-argon2, native binding).
 - Variant: `argon2id` (default work factors from the library, tuned by `argon2.defaults`).
 - Rationale: argon2id is the OWASP-recommended primitive for password storage,
@@ -18,6 +21,7 @@ replacing the early in-memory `ArenaStore`.
   (pino-redact catches `passwordHash` and `password`).
 
 ### Tokens — short-lived access + long-lived refresh
+
 - Access token: HS256 JWT, 15 min default (`JWT_ACCESS_TTL_SECONDS`).
 - Refresh token: HS256 JWT, 30 days default (`JWT_REFRESH_TTL_SECONDS`).
 - Both tokens share a per-session `jti` (UUID).
@@ -33,6 +37,7 @@ replacing the early in-memory `ArenaStore`.
   (`src/config/env.ts`).
 
 ### Persistence — Postgres + Prisma
+
 - Source of truth: PostgreSQL accessed through `@prisma/client`.
 - Prisma schema lives in [`bff/prisma/schema.prisma`](../prisma/schema.prisma).
 - Critical indexes:
@@ -46,6 +51,7 @@ replacing the early in-memory `ArenaStore`.
   internal shapes.
 
 ### Rate limiting — Redis-backed, fail-open in dev
+
 - `express-rate-limit` with `rate-limit-redis` store.
 - Limits (per IP unless noted):
   - `login` — 5 / minute.
@@ -56,6 +62,7 @@ replacing the early in-memory `ArenaStore`.
 - `RATE_LIMIT_DISABLED=true` is only accepted outside of production.
 
 ### Error contract
+
 - `src/middleware/errorHandler.ts` normalizes responses to
   `{ code, message, details?, requestId }`.
 - Mappings:
@@ -68,6 +75,7 @@ replacing the early in-memory `ArenaStore`.
   pino's child logger (`req.log`).
 
 ## Consequences
+
 - Horizontal scaling is safe: sessions and rate-limit counters live in Redis.
 - Replaying a refresh token after rotation always fails (single-use refresh).
 - A stale access token cannot survive logout for longer than its 15-min TTL,

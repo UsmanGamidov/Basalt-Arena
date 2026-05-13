@@ -74,7 +74,7 @@ export function createMemberNotificationService(prisma: PrismaClient) {
       if (lines.length === 0 && mentorTouched) {
         if (p!.status === 'PENDING') {
           lines.push(
-            'Наставник отправил решение на доработку (ожидает повторной проверки). Проверьте репозиторий и критерии брифа.',
+            'Наставник отправил решение на доработку (ожидает повторной проверки). Проверьте репозиторий и критерии брифа.'
           )
         } else if (p!.status === 'REJECTED') {
           lines.push('Решение отклонено наставником.')

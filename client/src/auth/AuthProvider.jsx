@@ -93,7 +93,7 @@ export function AuthProvider({ children }) {
       const res = await postLogin({ email, password })
       setStoredTokens(
         { accessToken: res.accessToken, refreshToken: res.refreshToken },
-        { persist: rememberSession },
+        { persist: rememberSession }
       )
       const t = getStoredToken()
       setAccessToken(t)
@@ -104,7 +104,7 @@ export function AuthProvider({ children }) {
       })
       applyMe(me)
     },
-    [applyMe, queryClient],
+    [applyMe, queryClient]
   )
 
   const logout = useCallback(async () => {
@@ -157,7 +157,7 @@ export function AuthProvider({ children }) {
       logout,
       markNotificationsRead,
       loadSession,
-    ],
+    ]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

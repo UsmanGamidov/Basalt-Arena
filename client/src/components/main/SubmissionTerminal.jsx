@@ -95,12 +95,7 @@ export function SubmissionTerminal() {
           disabled={pending}
           className="group flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-turquoise px-4 font-sans text-sm font-semibold leading-5 text-white transition-colors duration-150 hover:bg-[#6d4ef0] disabled:opacity-60"
         >
-          <MaterialIcon
-            name="send"
-            size={16}
-            opticalSize={16}
-            className="text-white"
-          />
+          <MaterialIcon name="send" size={16} opticalSize={16} className="text-white" />
           {pending ? 'Отправка…' : 'Отправить решение'}
         </button>
         {notice ? (
