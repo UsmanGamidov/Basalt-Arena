@@ -1,61 +1,143 @@
+// VITE_API_BASE_URL: пусто → относительный /api/v1 (dev: Vite прокси на BFF, см. vite.config и client/.env.example).
 const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/+$/, '')
-const BASE = `${API_BASE_URL}/api/mock/v1`
-const BASE_V2 = `${API_BASE_URL}/api/mock/v1/v2`
-const TOKEN_KEY = 'basalt_mock_token'
+const BASE = `${API_BASE_URL}/api/v1`
+const ACCESS_KEY = 'basalt_access_token'
+const REFRESH_KEY = 'basalt_refresh_token'
+const PERSIST_KEY = 'basalt_persist_session'
 
-function safeStorage(fn) {
+function safe(fn) {
   try {
-    fn()
+    return fn()
   } catch {
     return undefined
   }
 }
 
-export function getStoredToken() {
-  try {
-    return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
-  } catch {
-    return null
-  }
+function storageFor(persist) {
+  return persist ? localStorage : sessionStorage
 }
 
-export function setStoredToken(token, opts = {}) {
+export function getStoredToken() {
+  return (
+    safe(() => localStorage.getItem(ACCESS_KEY)) ??
+    safe(() => sessionStorage.getItem(ACCESS_KEY)) ??
+    null
+  )
+}
+
+export function getStoredRefreshToken() {
+  return (
+    safe(() => localStorage.getItem(REFRESH_KEY)) ??
+    safe(() => sessionStorage.getItem(REFRESH_KEY)) ??
+    null
+  )
+}
+
+function isPersisted() {
+  return safe(() => localStorage.getItem(PERSIST_KEY) === '1') ?? false
+}
+
+export function setStoredTokens(tokens, opts = {}) {
   const persist = opts.persist !== false
-  safeStorage(() => {
-    if (token) {
-      if (persist) {
-        localStorage.setItem(TOKEN_KEY, token)
-        safeStorage(() => sessionStorage.removeItem(TOKEN_KEY))
-      } else {
-        sessionStorage.setItem(TOKEN_KEY, token)
-        safeStorage(() => localStorage.removeItem(TOKEN_KEY))
-      }
+  safe(() => {
+    if (!tokens) {
+      localStorage.removeItem(ACCESS_KEY)
+      localStorage.removeItem(REFRESH_KEY)
+      localStorage.removeItem(PERSIST_KEY)
+      sessionStorage.removeItem(ACCESS_KEY)
+      sessionStorage.removeItem(REFRESH_KEY)
+      return
+    }
+    const target = storageFor(persist)
+    const other = storageFor(!persist)
+    if (tokens.accessToken) target.setItem(ACCESS_KEY, tokens.accessToken)
+    if (tokens.refreshToken) target.setItem(REFRESH_KEY, tokens.refreshToken)
+    other.removeItem(ACCESS_KEY)
+    other.removeItem(REFRESH_KEY)
+    if (persist) {
+      localStorage.setItem(PERSIST_KEY, '1')
     } else {
-      safeStorage(() => localStorage.removeItem(TOKEN_KEY))
-      safeStorage(() => sessionStorage.removeItem(TOKEN_KEY))
+      localStorage.removeItem(PERSIST_KEY)
     }
   })
 }
 
-async function request(path, options = {}) {
-  return requestBase(BASE, path, options)
+// Back-compat shim used by older callers expecting `setStoredToken(token)`.
+export function setStoredToken(token, opts = {}) {
+  if (!token) {
+    setStoredTokens(null)
+  } else {
+    setStoredTokens({ accessToken: token }, opts)
+  }
 }
 
-async function requestV2(path, options = {}) {
-  return requestBase(BASE_V2, path, options)
+let refreshPromise = null
+let onSessionExpired = null
+
+export function onAuthExpired(callback) {
+  onSessionExpired = callback
 }
 
-async function requestBase(base, path, options = {}) {
-  const token = getStoredToken()
-  const res = await fetch(`${base}${path}`, {
+async function refreshTokensOnce() {
+  if (refreshPromise) return refreshPromise
+  const refreshToken = getStoredRefreshToken()
+  if (!refreshToken) return null
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      })
+      if (!res.ok) {
+        if (res.status === 400 || res.status === 401) {
+          setStoredTokens(null)
+        }
+        return null
+      }
+      const data = await res.json().catch(() => null)
+      if (!data?.accessToken || !data?.refreshToken) return null
+      setStoredTokens(
+        { accessToken: data.accessToken, refreshToken: data.refreshToken },
+        { persist: isPersisted() }
+      )
+      return data
+    } catch {
+      return null
+    } finally {
+      refreshPromise = null
+    }
+  })()
+  return refreshPromise
+}
+
+async function rawRequest(path, options = {}, token) {
+  return fetch(`${BASE}${path}`, {
+    ...options,
     headers: {
       Accept: 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.body && !options.headers?.['Content-Type']
+        ? { 'Content-Type': 'application/json' }
+        : {}),
       ...options.headers,
     },
-    ...options,
   })
+}
+
+async function request(path, options = {}) {
+  let token = getStoredToken()
+  let res = await rawRequest(path, options, token)
+  if (res.status === 401 && getStoredRefreshToken() && !path.startsWith('/auth/')) {
+    const refreshed = await refreshTokensOnce()
+    if (refreshed?.accessToken) {
+      token = refreshed.accessToken
+      res = await rawRequest(path, options, token)
+    } else {
+      setStoredTokens(null)
+      onSessionExpired?.()
+    }
+  }
   const text = await res.text()
   let data
   try {
@@ -64,55 +146,24 @@ async function requestBase(base, path, options = {}) {
     data = null
   }
   if (!res.ok) {
-    const msg = data?.error ?? res.statusText
-    throw new Error(msg || `HTTP ${res.status}`)
+    const msg = data?.message ?? data?.error ?? res.statusText
+    const error = new Error(msg || `HTTP ${res.status}`)
+    error.status = res.status
+    error.code = data?.code
+    error.details = data?.details
+    throw error
   }
   return data
 }
 
-function normalizeMeFromV2(payload) {
-  const u = payload?.user ?? {}
-  const profile = u.profile ?? {}
-  const statsObj = u.stats ?? {}
-  const cards = Array.isArray(statsObj.cards) ? statsObj.cards : []
-  const rankRaw = String(statsObj.globalRank ?? '#0')
-  const parsedRank = Number(rankRaw.replace(/[^\d]/g, ''))
-
-  return {
-    user: {
-      id: u.id,
-      handle: u.handle,
-      role: u.role,
-      avatarUrl: u.avatarUrl,
-    },
-    activeSprint: u?.sprintContext?.activeSprint ?? null,
-    stats: {
-      position: Number.isFinite(parsedRank) && parsedRank > 0 ? parsedRank : 0,
-      leaderboardSize: 10,
-      points: Number(statsObj.points ?? 0) || 0,
-      cards,
-    },
-    notificationsUnread: Number(u?.notifications?.unreadCount ?? 0) || 0,
-    profile: {
-      bio: profile.bio,
-      skillsLabel: profile.skillsLabel,
-      contacts: profile.contacts ?? {},
-      statsCards: cards,
-      achievements: Array.isArray(u.achievements) ? u.achievements : [],
-      form: profile.form ?? {},
-    },
-    sprintHistory: { items: [] },
-  }
-}
-
-export function postLogin(credentials) {
+export async function postLogin(credentials) {
   return request('/auth/login', {
     method: 'POST',
     body: JSON.stringify(credentials),
   })
 }
 
-export function postRegister(payload, opts = {}) {
+export async function postRegister(payload, opts = {}) {
   const devKey = opts.devKey ? String(opts.devKey) : ''
   return request('/auth/register', {
     method: 'POST',
@@ -125,94 +176,64 @@ export function postLogout() {
   return request('/auth/logout', { method: 'POST' })
 }
 
-export async function getMe() {
-  const v2 = await requestV2('/me')
-  return normalizeMeFromV2(v2)
+export function getMe() {
+  return request('/me')
 }
 
 export function patchProfile(payload) {
-  return requestV2('/me/profile', {
+  return request('/me/profile', {
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
 }
 
 export async function postNotificationsRead() {
-  const res = await requestV2('/me/notifications/read', { method: 'POST' })
+  const res = await request('/me/notifications/read', { method: 'POST' })
   return { notificationsUnread: Number(res?.unreadCount ?? 0) || 0 }
 }
 
 export async function getMeta() {
-  const res = await requestV2('/meta')
+  const res = await request('/meta')
   return {
-    build: String(res?.app?.build ?? 'v0.0.0-mock'),
-    serverTimeUtcDisplay: String(res?.server?.timeUtcDisplay ?? '00:00'),
-    copyrightYear: Number(res?.app?.copyrightYear ?? new Date().getUTCFullYear()),
+    build: String(res?.build ?? 'v0.0.0'),
+    serverTimeUtcDisplay: String(res?.serverTimeUtcDisplay ?? '00:00'),
+    copyrightYear: Number(res?.copyrightYear ?? new Date().getUTCFullYear()),
     sprintTeaser: res?.sprintTeaser ?? null,
     marketing: res?.marketing ?? null,
   }
 }
 
 export function postSubmission(payload) {
-  return requestV2('/submissions', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
+  return request('/submissions', { method: 'POST', body: JSON.stringify(payload) })
 }
 
-export async function getHall() {
-  const list = await getSprintsV2()
-  const summaries = Array.isArray(list?.sprints) ? list.sprints : []
-  const detailResponses = await Promise.all(
-    summaries.map((s) => getSprintByIdV2(String(s.id))),
-  )
-
-  const detailsById = new Map(
-    detailResponses
-      .map((res) => res?.sprint)
-      .filter(Boolean)
-      .map((s) => [String(s.id), s]),
-  )
-
-  const sprints = summaries.map((summary) => {
-    const detail = detailsById.get(String(summary.id))
-    return {
-      id: String(summary.id),
-      tabLabel: String(detail?.tabLabel ?? summary.tabLabel ?? ''),
-      tabIcon: detail?.tabIcon ?? null,
-      heroTitle: String(detail?.title ?? summary.title ?? ''),
-      tags: Array.isArray(detail?.tags) ? detail.tags : [],
-      completedLabel: String(detail?.completedLabel ?? summary.completedLabel ?? ''),
-      brief: detail?.brief ?? null,
-      metrics: detail?.metrics ?? summary.metrics ?? null,
-      solutions: Array.isArray(detail?.solutions) ? detail.solutions : [],
-    }
-  })
-
-  return {
-    page: list?.page ?? null,
-    quote: list?.quote ?? null,
-    pastWinners: Array.isArray(list?.pastWinners) ? list.pastWinners : [],
-    loadMoreRemaining: Number(list?.loadMoreRemaining ?? 0) || 0,
-    sprints,
-  }
+export function getHall(sortBy = 'efficiency') {
+  return request(`/hall?sortBy=${encodeURIComponent(sortBy)}`)
 }
 
 export function getSprintsV2() {
-  return requestV2('/sprints')
+  return request('/sprints')
 }
 
 export function getSprintByIdV2(id) {
-  return requestV2(`/sprints/${id}`)
+  return request(`/sprints/${id}`)
 }
 
-export function getSprintSolutionsV2(id) {
-  return requestV2(`/sprints/${id}/solutions`)
+export function getSprintSolutionsV2(id, sortBy = 'efficiency') {
+  return request(`/sprints/${id}/solutions?sortBy=${encodeURIComponent(sortBy)}`)
 }
 
 export function postSprintSubmissionV2(id, payload) {
-  return requestV2(`/sprints/${id}/submissions`, {
+  return request(`/sprints/${id}/submissions`, {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+}
+
+export function putSolutionLike(id) {
+  return request(`/solutions/${id}/like`, { method: 'PUT' })
+}
+
+export function deleteSolutionLike(id) {
+  return request(`/solutions/${id}/like`, { method: 'DELETE' })
 }

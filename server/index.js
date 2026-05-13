@@ -33,7 +33,7 @@ const server = app.listen(PORT, () => {
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     console.error(
-      `[basalt-arena] Порт ${PORT} занят. Закройте процесс или: set PORT=3002 && node index.js`,
+      `[basalt-arena] Порт ${PORT} занят. Закройте процесс или: set PORT=3002 && node index.js`
     )
   } else {
     console.error(err)

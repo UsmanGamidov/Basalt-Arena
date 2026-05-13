@@ -29,27 +29,24 @@ export function SprintTimer({ endAt }) {
   const m = Math.floor((totalSec % 3600) / 60)
   const s = totalSec % 60
 
-  const glow = '[text-shadow:0_0_10px_rgba(13,204,242,0.5)]'
-  const digitHours = `tabular-nums text-[57.5px] font-bold leading-[60px] tracking-[-3px] text-turquoise max-[360px]:text-[48px] max-[360px]:leading-[50px] max-[360px]:tracking-[-2px] ${glow}`
-  const digitMinutes = `tabular-nums text-[57.9px] font-bold leading-[60px] tracking-[-3px] text-turquoise max-[360px]:text-[48px] max-[360px]:leading-[50px] max-[360px]:tracking-[-2px] ${glow}`
-  const digitSeconds = `tabular-nums text-[59.9px] font-bold leading-[60px] tracking-[-3px] text-spring max-[360px]:text-[50px] max-[360px]:leading-[50px] max-[360px]:tracking-[-2px] ${glow}`
+  const digitBase =
+    'font-mono tabular-nums text-[56px] font-bold leading-[60px] tracking-[-2px] max-[360px]:text-[44px] max-[360px]:leading-[48px] max-[360px]:tracking-[-1.5px]'
+  const digitHours = `${digitBase} text-catskill`
+  const digitMinutes = `${digitBase} text-catskill`
+  const digitSeconds = `${digitBase} text-turquoise`
   const colonClass =
-    'shrink-0 text-[60px] font-bold leading-[60px] text-turquoise/30 translate-y-[-2px] max-[360px]:text-[48px] max-[360px]:leading-[50px]'
+    'shrink-0 font-mono text-[44px] font-bold leading-[60px] text-fiord translate-y-[-4px] max-[360px]:text-[36px] max-[360px]:leading-[48px]'
 
   return (
-    <section className="relative isolate overflow-hidden rounded-xl border border-turquoise/20 bg-[rgba(26,46,50,0.3)] p-8 max-[360px]:p-4">
-      <div
-        className="pointer-events-none absolute inset-px rounded-[11px] bg-[linear-gradient(90deg,rgba(13,204,242,0.05)_0%,rgba(13,204,242,0)_50%,rgba(13,204,242,0.05)_100%)]"
-        aria-hidden
-      />
+    <section className="relative isolate overflow-hidden rounded-xl border border-plantation bg-timber p-8 max-[360px]:p-4">
       <div className="relative z-[1] flex flex-col items-center">
-        <p className="box-border min-h-9 pb-4 text-center text-sm font-bold uppercase leading-5 tracking-[4.2px] text-half-baked max-[360px]:pb-2 max-[360px]:text-[11px] max-[360px]:leading-4 max-[360px]:tracking-[3px] sm:whitespace-nowrap">
-          До завершения спринта
+        <p className="box-border min-h-9 pb-4 text-center font-mono text-[11px] font-medium uppercase leading-5 tracking-[1.5px] text-slate-arena max-[360px]:pb-2 max-[360px]:text-[10px] max-[360px]:leading-4 sm:whitespace-nowrap">
+          // до завершения спринта
         </p>
         <div className="flex w-full min-w-0 max-w-full items-start justify-center gap-[10px] max-[360px]:gap-2 md:gap-10">
           <div className="flex w-[69px] shrink-0 flex-col items-center max-[360px]:w-[56px]">
             <span className={digitHours}>{pad2(h)}</span>
-            <span className="mt-2 text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-half-baked max-[360px]:mt-1 max-[360px]:text-[9px] max-[360px]:leading-3">
+            <span className="mt-2 font-mono text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-slate-arena max-[360px]:mt-1 max-[360px]:text-[9px] max-[360px]:leading-3">
               Часов
             </span>
           </div>
@@ -58,7 +55,7 @@ export function SprintTimer({ endAt }) {
           </span>
           <div className="flex w-[69px] shrink-0 flex-col items-center max-[360px]:w-[56px]">
             <span className={digitMinutes}>{pad2(m)}</span>
-            <span className="mt-2 text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-half-baked max-[360px]:mt-1 max-[360px]:text-[9px] max-[360px]:leading-3">
+            <span className="mt-2 font-mono text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-slate-arena max-[360px]:mt-1 max-[360px]:text-[9px] max-[360px]:leading-3">
               Минут
             </span>
           </div>
@@ -67,7 +64,7 @@ export function SprintTimer({ endAt }) {
           </span>
           <div className="flex w-[60px] shrink-0 flex-col items-center max-[360px]:w-[50px]">
             <span className={digitSeconds}>{pad2(s)}</span>
-            <span className="mt-2 text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-spring max-[360px]:mt-1 max-[360px]:text-[9px] max-[360px]:leading-3">
+            <span className="mt-2 font-mono text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-slate-arena max-[360px]:mt-1 max-[360px]:text-[9px] max-[360px]:leading-3">
               Секунд
             </span>
           </div>

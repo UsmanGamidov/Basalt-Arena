@@ -30,7 +30,7 @@ function RichLine({ parts }) {
           <span key={i} className="text-spring">
             {p.h}
           </span>
-        ),
+        )
       )}
     </span>
   )
@@ -47,7 +47,7 @@ function TaskParagraph({ chunks }) {
             <span className="text-turquoise">{c.code}</span>
             {c.after ? <span>{c.after}</span> : null}
           </span>
-        ),
+        )
       )}
     </p>
   )
@@ -105,8 +105,7 @@ export function SprintBriefModal({ open, onClose, sprint }) {
 
   if (!rendered || !sprint) return null
 
-  const brief =
-    sprint.brief && typeof sprint.brief === 'object' ? sprint.brief : FALLBACK_BRIEF
+  const brief = sprint.brief && typeof sprint.brief === 'object' ? sprint.brief : FALLBACK_BRIEF
 
   const title = String(sprint.heroTitle ?? '')
   const tags = Array.isArray(sprint.tags) ? sprint.tags : []
@@ -122,7 +121,7 @@ export function SprintBriefModal({ open, onClose, sprint }) {
         type="button"
         aria-label="Закрыть бриф"
         className={[
-          'absolute inset-0 z-0 bg-[rgba(16,31,34,0.8)] backdrop-blur-[2px] transition-opacity duration-300 ease-out',
+          'absolute inset-0 z-0 bg-black/70 backdrop-blur-[2px] transition-opacity duration-300 ease-out',
           entered ? 'opacity-100' : 'opacity-0',
         ].join(' ')}
         onClick={onClose}
@@ -133,19 +132,14 @@ export function SprintBriefModal({ open, onClose, sprint }) {
         aria-modal="true"
         aria-labelledby="sprint-brief-title"
         className={[
-          'relative z-[1] isolate flex w-full max-w-[768px] max-h-[calc(100dvh-4rem)] flex-col overflow-hidden rounded-[16px] border border-[rgba(13,204,242,0.3)] bg-[#1A2E33] shadow-[0_25px_50px_-12px_rgba(13,204,242,0.1)] transition-[opacity,transform] duration-300 ease-out',
+          'relative z-[1] isolate flex w-full max-w-[768px] max-h-[calc(100dvh-4rem)] flex-col overflow-hidden rounded-2xl border border-plantation bg-timber transition-[opacity,transform] duration-300 ease-out',
           entered ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-6 scale-[0.98] opacity-0',
         ].join(' ')}
       >
-        <div
-          className="pointer-events-none absolute -right-[79px] -top-[79px] size-[240px] rounded-full bg-[rgba(13,204,242,0.1)] blur-[32px]"
-          aria-hidden
-        />
-
         <header className="relative z-[1] flex shrink-0 items-center justify-between gap-4 border-b border-plantation p-6">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[rgba(13,204,242,0.3)] bg-[rgba(13,204,242,0.15)]">
-              <MaterialIcon name="description" size={24} className="text-turquoise" />
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-plantation bg-aztec">
+              <MaterialIcon name="description" size={20} className="text-turquoise" />
             </div>
             <div className="min-w-0">
               <p className="font-mono text-[10px] font-normal uppercase leading-[15px] tracking-[1px] text-slate-arena">
@@ -180,28 +174,28 @@ export function SprintBriefModal({ open, onClose, sprint }) {
                 {tag}
               </span>
             ))}
-            <span
-              className="inline-flex items-center gap-1 rounded-md border border-[#334155] bg-aztec px-2.5 py-1 font-mono text-xs font-normal leading-4 text-gull"
-            >
+            <span className="inline-flex items-center gap-1 rounded-md border border-[#334155] bg-aztec px-2.5 py-1 font-mono text-xs font-normal leading-4 text-gull">
               <MaterialIcon name="event" size={12} className="text-gull" />
               {completed}
             </span>
           </div>
 
           {brief.quote ? (
-            <div className="relative bg-[rgba(13,204,242,0.1)] px-4 py-[16.7px] pb-4 pl-5 pt-[16.7px]">
+            <div className="relative rounded-md bg-aztec px-4 py-4 pl-5">
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-turquoise shadow-[0_0_18px_rgba(13,204,242,0.55)]"
+                className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-turquoise"
               />
-              <p className="font-mono text-sm font-normal italic leading-[23px] text-white">
+              <p className="font-mono text-sm font-normal italic leading-[23px] text-catskill">
                 {String(brief.quote)}
               </p>
             </div>
           ) : null}
 
           {Array.isArray(brief.taskParagraphs)
-            ? brief.taskParagraphs.map((para, idx) => <TaskParagraph key={idx} chunks={para.chunks} />)
+            ? brief.taskParagraphs.map((para, idx) => (
+                <TaskParagraph key={idx} chunks={para.chunks} />
+              ))
             : null}
 
           {brief.acceptanceTitle ? (
@@ -250,7 +244,7 @@ export function SprintBriefModal({ open, onClose, sprint }) {
           ) : null}
         </div>
 
-        <footer className="relative z-[3] flex shrink-0 flex-col gap-4 border-t border-plantation bg-[rgba(16,31,34,0.4)] p-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <footer className="relative z-[3] flex shrink-0 flex-col gap-4 border-t border-plantation bg-aztec/40 p-6 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <button
             type="button"
             onClick={onClose}
@@ -264,9 +258,9 @@ export function SprintBriefModal({ open, onClose, sprint }) {
           <Link
             to={sprintTo}
             onClick={onClose}
-            className="relative inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-turquoise px-5 py-2.5 font-sans text-sm font-bold leading-5 text-aztec shadow-[0_10px_15px_-3px_rgba(13,204,242,0.25),0_4px_6px_-4px_rgba(13,204,242,0.25)] transition-[background-color,box-shadow] duration-300 hover:bg-white hover:shadow-[0_12px_18px_-3px_rgba(255,255,255,0.35),0_6px_10px_-4px_rgba(255,255,255,0.35)] sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-turquoise px-5 font-sans text-sm font-semibold leading-5 text-white transition-colors duration-150 hover:bg-[#6d4ef0] sm:w-auto"
           >
-            <MaterialIcon name="rocket_launch" size={18} className="text-aztec" />
+            <MaterialIcon name="rocket_launch" size={16} className="text-white" />
             Перейти к спринту
           </Link>
         </footer>

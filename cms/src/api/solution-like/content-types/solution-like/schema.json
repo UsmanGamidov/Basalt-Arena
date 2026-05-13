@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "solution_likes",
+  "info": {
+    "singularName": "solution-like",
+    "pluralName": "solution-likes",
+    "displayName": "Solution Like"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "likes",
+      "required": true
+    },
+    "submission": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::submission.submission",
+      "inversedBy": "likes",
+      "required": true
+    }
+  }
+}

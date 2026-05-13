@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+cms/build
+cms/.strapi
+.cursor
+.claude
+package-lock.json
