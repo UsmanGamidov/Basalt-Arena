@@ -1,15 +1,23 @@
 import { INestApplication, Injectable, OnModuleInit } from '@nestjs/common'
 import { PrismaClient } from '@prisma/client'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+function resolveDatabaseUrl(): string {
+  const fromEnv = String(process.env.DATABASE_URL ?? '').trim()
+  if (fromEnv) return fromEnv
+
+  const dbPath = existsSync(resolve(process.cwd(), 'prisma/dev.db'))
+    ? resolve(process.cwd(), 'prisma/dev.db')
+    : resolve(process.cwd(), 'server/prisma/dev.db')
+  return `file:${dbPath.replace(/\\/g, '/')}`
+}
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
-    const dbUrl = String(process.env.DATABASE_URL ?? '').trim()
-    if (!dbUrl) {
-      throw new Error('DATABASE_URL is required')
-    }
     super({
-      datasources: { db: { url: dbUrl } },
+      datasources: { db: { url: resolveDatabaseUrl() } },
     })
   }
 

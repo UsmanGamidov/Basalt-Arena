@@ -31,10 +31,17 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   async onModuleInit() {
-    await this.migrateLegacySubmissionStatuses()
-    await this.backfillAchievementDefinitionLinks()
-    await this.reconcileAllUsersPointsFromSolutions()
-    await this.upgradeLegacyPasswordHashes()
+    try {
+      await this.migrateLegacySubmissionStatuses()
+      await this.backfillAchievementDefinitionLinks()
+      await this.reconcileAllUsersPointsFromSolutions()
+      await this.upgradeLegacyPasswordHashes()
+    } catch (err) {
+      console.error(
+        '[basalt-arena] DB startup maintenance skipped (check DATABASE_URL / Supabase connectivity):',
+        err,
+      )
+    }
     this.prizeSettlementTimer = setInterval(() => {
       void this.runPrizeSettlementTick()
     }, PRIZE_SETTLEMENT_INTERVAL_MS)
@@ -1322,7 +1329,10 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     return { likes, liked: !existing }
   }
 
-  async adminCreateUser(payload: { handle: string; email: string; password: string; displayName?: string }) {
+  async adminCreateUser(
+    payload: { handle: string; email: string; password: string; displayName?: string },
+    actor?: AdminActor,
+  ) {
     const rawHandle = payload.handle.trim()
     const handle = rawHandle.startsWith('@') ? rawHandle.slice(1).trim() : rawHandle
     if (handle.length < 2) {
@@ -1367,6 +1377,13 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
         github: true,
       },
     })
+    await this.appendAdminLog(
+      actor,
+      'user.create',
+      'user',
+      user.id,
+      `Создан пользователь @${user.handle} (${user.email})`,
+    )
     return { user }
   }
 
@@ -1405,6 +1422,7 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
       displayName?: string
       password?: string
     },
+    actor?: AdminActor,
   ) {
     await this.prisma.user.update({
       where: { id: userId },
@@ -1429,6 +1447,17 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
       },
     })
     if (!updated) throw new NotFoundException('Пользователь не найден')
+    const parts: string[] = []
+    if (payload.role !== undefined) parts.push(`role=${payload.role}`)
+    if (payload.displayName !== undefined) parts.push('displayName')
+    if (payload.password) parts.push('password')
+    await this.appendAdminLog(
+      actor,
+      'user.update',
+      'user',
+      userId,
+      `Обновлён @${updated.handle}${parts.length ? ` (${parts.join(', ')})` : ''}`,
+    )
     return { user: updated }
   }
 
@@ -1470,12 +1499,15 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async adminCreateAchievementDefinition(payload: {
-    title: string
-    subtitle: string
-    icon: string
-    variant?: string
-  }) {
+  async adminCreateAchievementDefinition(
+    payload: {
+      title: string
+      subtitle: string
+      icon: string
+      variant?: string
+    },
+    actor?: AdminActor,
+  ) {
     const title = payload.title.trim()
     const existing = await this.prisma.achievementDefinition.findUnique({
       where: { title },
@@ -1490,6 +1522,13 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
         variant: payload.variant ?? 'earned',
       },
     })
+    await this.appendAdminLog(
+      actor,
+      'achievement_definition.create',
+      'achievement_definition',
+      definition.id,
+      `Добавлен шаблон ачивки «${definition.title}»`,
+    )
     return { ok: true, definition }
   }
 
@@ -1509,7 +1548,7 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async adminDeleteAchievementDefinition(definitionId: string) {
+  async adminDeleteAchievementDefinition(definitionId: string, actor?: AdminActor) {
     await this.backfillAchievementDefinitionLinks()
     const row = await this.prisma.achievementDefinition.findUnique({
       where: { id: definitionId },
@@ -1536,12 +1575,20 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
       })
       await tx.achievementDefinition.delete({ where: { id: definitionId } })
     })
+    await this.appendAdminLog(
+      actor,
+      'achievement_definition.delete',
+      'achievement_definition',
+      definitionId,
+      `Удалён шаблон ачивки «${row.title}»`,
+    )
     return { ok: true }
   }
 
   async adminUpdateAchievementDefinition(
     definitionId: string,
     payload: { title?: string; subtitle?: string; icon?: string; variant?: string },
+    actor?: AdminActor,
   ) {
     await this.backfillAchievementDefinitionLinks()
     const current = await this.prisma.achievementDefinition.findUnique({
@@ -1615,10 +1662,18 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
 
       return definition
     })
+    await this.appendAdminLog(
+      actor,
+      'achievement_definition.update',
+      'achievement_definition',
+      definitionId,
+      `Обновлён шаблон ачивки «${updated.title}»`,
+    )
     return { ok: true, definition: updated }
   }
 
-  async adminGrantAchievement(payload: {
+  async adminGrantAchievement(
+    payload: {
     userId?: string
     userIds?: string[]
     definitionId?: string
@@ -1626,7 +1681,9 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     subtitle?: string
     icon?: string
     variant?: string
-  }) {
+  },
+    actor?: AdminActor,
+  ) {
     const targetIds = [
       ...new Set(
         [...(payload.userIds ?? []), ...(payload.userId ? [payload.userId] : [])]
@@ -1682,6 +1739,16 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
       granted += 1
     }
 
+    if (granted > 0) {
+      await this.appendAdminLog(
+        actor,
+        'achievement.grant',
+        'achievement_definition',
+        definitionId,
+        `Выдана ачивка «${title}» ${granted} пользователю(ям)${skipped > 0 ? `, пропущено ${skipped}` : ''}`,
+      )
+    }
+
     return { ok: true, granted, skipped, achievements }
   }
 
@@ -1694,21 +1761,24 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     return [main, ...rest]
   }
 
-  async adminCreateSprint(payload: {
-    id: string
-    tabLabel: string
-    tabIcon?: string
-    title: string
-    description?: string
-    completedLabel?: string
-    published?: boolean
-    isMainActive?: boolean
-    endsAt: string
-    prizeMoney?: number
-    tags?: unknown[]
-    metrics?: Record<string, unknown>
-    brief?: Record<string, unknown>
-  }) {
+  async adminCreateSprint(
+    payload: {
+      id: string
+      tabLabel: string
+      tabIcon?: string
+      title: string
+      description?: string
+      completedLabel?: string
+      published?: boolean
+      isMainActive?: boolean
+      endsAt: string
+      prizeMoney?: number
+      tags?: unknown[]
+      metrics?: Record<string, unknown>
+      brief?: Record<string, unknown>
+    },
+    actor?: AdminActor,
+  ) {
     const existing = await this.prisma.sprint.findUnique({ where: { id: payload.id } })
     if (existing) throw new ConflictException('Спринт с таким id уже существует')
 
@@ -1740,6 +1810,13 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     if (payload.isMainActive === true) {
       await this.setMainActiveSprint(created.id)
     }
+    await this.appendAdminLog(
+      actor,
+      'sprint.create',
+      'sprint',
+      created.id,
+      `Создан спринт «${created.tabLabel || created.title}» (${created.id})`,
+    )
     return created
   }
 
@@ -1760,6 +1837,7 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
       brief?: Record<string, unknown>
       replaceBrief?: boolean
     },
+    actor?: AdminActor,
   ) {
     const current = await this.prisma.sprint.findUnique({ where: { id: sprintId } })
     if (!current) throw new NotFoundException('Спринт не найден')
@@ -1791,7 +1869,7 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
           ? payload.published
           : undefined
 
-    return this.prisma.sprint.update({
+    const updated = await this.prisma.sprint.update({
       where: { id: sprintId },
       data: {
         ...(payload.tabLabel !== undefined ? { tabLabel: payload.tabLabel } : {}),
@@ -1814,10 +1892,30 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
         ...(nextBrief !== null ? { briefJson: JSON.stringify(nextBrief) } : {}),
       },
     })
+    await this.appendAdminLog(
+      actor,
+      'sprint.update',
+      'sprint',
+      sprintId,
+      `Обновлён спринт «${updated.tabLabel || updated.title}» (${sprintId})`,
+    )
+    return updated
   }
 
-  async adminDeleteSprint(sprintId: string) {
+  async adminDeleteSprint(sprintId: string, actor?: AdminActor) {
+    const sprint = await this.prisma.sprint.findUnique({
+      where: { id: sprintId },
+      select: { id: true, tabLabel: true, title: true },
+    })
+    if (!sprint) throw new NotFoundException('Спринт не найден')
     await this.prisma.sprint.delete({ where: { id: sprintId } })
+    await this.appendAdminLog(
+      actor,
+      'sprint.delete',
+      'sprint',
+      sprintId,
+      `Удалён спринт «${sprint.tabLabel || sprint.title}» (${sprintId})`,
+    )
     return { ok: true }
   }
 
@@ -1999,7 +2097,7 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     return { submission: this.mapSubmissionForAdmin(updated) }
   }
 
-  async adminAddSprintEnrollments(sprintId: string, userIds: string[]) {
+  async adminAddSprintEnrollments(sprintId: string, userIds: string[], actor?: AdminActor) {
     const sprint = await this.prisma.sprint.findUnique({
       where: { id: sprintId },
       select: { id: true, title: true, tabLabel: true },
@@ -2024,13 +2122,33 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
         `Вас зачислили на «${sprintLabel}». Можно отправлять решение с главной.`,
       )
     }
+    if (added > 0) {
+      await this.appendAdminLog(
+        actor,
+        'sprint.enroll',
+        'sprint',
+        sprintId,
+        `Зачислено ${added} участник(ов) на «${sprintLabel}»`,
+      )
+    }
     return { ok: true, count: added }
   }
 
-  async adminRemoveSprintEnrollment(sprintId: string, userId: string) {
-    const sprint = await this.prisma.sprint.findUnique({ where: { id: sprintId }, select: { id: true } })
+  async adminRemoveSprintEnrollment(sprintId: string, userId: string, actor?: AdminActor) {
+    const sprint = await this.prisma.sprint.findUnique({
+      where: { id: sprintId },
+      select: { id: true, tabLabel: true, title: true },
+    })
     if (!sprint) throw new NotFoundException('Спринт не найден')
+    const userHandle = await this.userHandleById(userId)
     await this.prisma.sprintEnrollment.deleteMany({ where: { sprintId, userId } })
+    await this.appendAdminLog(
+      actor,
+      'sprint.unenroll',
+      'sprint',
+      sprintId,
+      `Снят @${userHandle} со спринта «${sprint.tabLabel || sprint.title}»`,
+    )
     return { ok: true }
   }
 
@@ -2459,13 +2577,21 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async adminDeleteAchievement(achievementId: string) {
+  async adminDeleteAchievement(achievementId: string, actor?: AdminActor) {
     const row = await this.prisma.achievement.findUnique({
       where: { id: achievementId },
-      select: { id: true },
+      select: { id: true, title: true, userId: true },
     })
     if (!row) throw new NotFoundException('Достижение не найдено')
+    const userHandle = await this.userHandleById(row.userId)
     await this.prisma.achievement.delete({ where: { id: achievementId } })
+    await this.appendAdminLog(
+      actor,
+      'achievement.revoke',
+      'achievement',
+      achievementId,
+      `Отозвана ачивка «${row.title}» у @${userHandle}`,
+    )
     return { ok: true }
   }
 
@@ -2538,14 +2664,21 @@ export class MockDbService implements OnModuleInit, OnModuleDestroy {
     const take = Math.min(200, Math.max(1, Math.floor(limit)))
     const skip = Math.max(0, Math.floor(offset))
     const needle = q?.trim()
+    const dbUrl = String(process.env.DATABASE_URL ?? '')
+    const logSearchInsensitive =
+      dbUrl.startsWith('postgresql://') || dbUrl.startsWith('postgres://')
+    const logTextFilter = (field: 'actorHandle' | 'action' | 'targetType' | 'targetId' | 'message') =>
+      logSearchInsensitive
+        ? { [field]: { contains: needle, mode: 'insensitive' as const } }
+        : { [field]: { contains: needle } }
     const where = needle
       ? {
           OR: [
-            { actorHandle: { contains: needle } },
-            { action: { contains: needle } },
-            { targetType: { contains: needle } },
-            { targetId: { contains: needle } },
-            { message: { contains: needle } },
+            logTextFilter('actorHandle'),
+            logTextFilter('action'),
+            logTextFilter('targetType'),
+            logTextFilter('targetId'),
+            logTextFilter('message'),
           ],
         }
       : undefined

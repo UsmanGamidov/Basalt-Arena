@@ -27,13 +27,13 @@ export class AdminController {
   }
 
   @Post('users')
-  createUser(@Body() body: AdminCreateUserDto) {
-    return this.db.adminCreateUser(body)
+  createUser(@Body() body: AdminCreateUserDto, @Req() req: Request) {
+    return this.db.adminCreateUser(body, req.basaltAdmin)
   }
 
   @Patch('users/:id')
-  updateUser(@Param('id') id: string, @Body() body: AdminUpdateUserDto) {
-    return this.db.adminUpdateUser(id, body)
+  updateUser(@Param('id') id: string, @Body() body: AdminUpdateUserDto, @Req() req: Request) {
+    return this.db.adminUpdateUser(id, body, req.basaltAdmin)
   }
 
   @Delete('users/:id')
@@ -49,23 +49,27 @@ export class AdminController {
   }
 
   @Post('achievements/definitions')
-  createAchievementDefinition(@Body() body: AdminCreateAchievementDefinitionDto) {
-    return this.db.adminCreateAchievementDefinition(body)
+  createAchievementDefinition(@Body() body: AdminCreateAchievementDefinitionDto, @Req() req: Request) {
+    return this.db.adminCreateAchievementDefinition(body, req.basaltAdmin)
   }
 
   @Delete('achievements/definitions/:id')
-  deleteAchievementDefinition(@Param('id') id: string) {
-    return this.db.adminDeleteAchievementDefinition(id)
+  deleteAchievementDefinition(@Param('id') id: string, @Req() req: Request) {
+    return this.db.adminDeleteAchievementDefinition(id, req.basaltAdmin)
   }
 
   @Patch('achievements/definitions/:id')
-  updateAchievementDefinition(@Param('id') id: string, @Body() body: AdminUpdateAchievementDefinitionDto) {
-    return this.db.adminUpdateAchievementDefinition(id, body)
+  updateAchievementDefinition(
+    @Param('id') id: string,
+    @Body() body: AdminUpdateAchievementDefinitionDto,
+    @Req() req: Request,
+  ) {
+    return this.db.adminUpdateAchievementDefinition(id, body, req.basaltAdmin)
   }
 
   @Post('achievements/grant')
-  grantAchievement(@Body() body: AdminGrantAchievementDto) {
-    return this.db.adminGrantAchievement(body)
+  grantAchievement(@Body() body: AdminGrantAchievementDto, @Req() req: Request) {
+    return this.db.adminGrantAchievement(body, req.basaltAdmin)
   }
 
   @Get('achievements')
@@ -74,8 +78,8 @@ export class AdminController {
   }
 
   @Delete('achievements/:id')
-  deleteAchievement(@Param('id') id: string) {
-    return this.db.adminDeleteAchievement(id)
+  deleteAchievement(@Param('id') id: string, @Req() req: Request) {
+    return this.db.adminDeleteAchievement(id, req.basaltAdmin)
   }
 
   @Get('submissions')
@@ -123,18 +127,18 @@ export class AdminController {
   }
 
   @Post('sprints')
-  createSprint(@Body() body: AdminCreateSprintDto) {
-    return this.db.adminCreateSprint(body)
+  createSprint(@Body() body: AdminCreateSprintDto, @Req() req: Request) {
+    return this.db.adminCreateSprint(body, req.basaltAdmin)
   }
 
   @Patch('sprints/:id')
-  updateSprint(@Param('id') id: string, @Body() body: AdminUpdateSprintDto) {
-    return this.db.adminUpdateSprint(id, body)
+  updateSprint(@Param('id') id: string, @Body() body: AdminUpdateSprintDto, @Req() req: Request) {
+    return this.db.adminUpdateSprint(id, body, req.basaltAdmin)
   }
 
   @Delete('sprints/:id')
-  deleteSprint(@Param('id') id: string) {
-    return this.db.adminDeleteSprint(id)
+  deleteSprint(@Param('id') id: string, @Req() req: Request) {
+    return this.db.adminDeleteSprint(id, req.basaltAdmin)
   }
 
   @Get('sprints/:id/participants')
@@ -162,13 +166,21 @@ export class AdminController {
   }
 
   @Post('sprints/:id/participants')
-  addSprintParticipants(@Param('id') id: string, @Body() body: AdminSprintParticipantsDto) {
-    return this.db.adminAddSprintEnrollments(id, body.userIds)
+  addSprintParticipants(
+    @Param('id') id: string,
+    @Body() body: AdminSprintParticipantsDto,
+    @Req() req: Request,
+  ) {
+    return this.db.adminAddSprintEnrollments(id, body.userIds, req.basaltAdmin)
   }
 
   @Delete('sprints/:id/participants/:userId')
-  removeSprintParticipant(@Param('id') id: string, @Param('userId') userId: string) {
-    return this.db.adminRemoveSprintEnrollment(id, userId)
+  removeSprintParticipant(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Req() req: Request,
+  ) {
+    return this.db.adminRemoveSprintEnrollment(id, userId, req.basaltAdmin)
   }
 
   @Post('sprints/:sprintId/solutions')

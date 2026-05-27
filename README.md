@@ -1,10 +1,10 @@
 # Basalt Arena
 
-Веб-приложение с фронтендом на React (Vite) и mock API на NestJS + Prisma (PostgreSQL) для разработки интерфейсов, авторизации, профиля, главного экрана и зала славы.
+Веб-приложение с фронтендом на React (Vite) и mock API на NestJS + Prisma для разработки интерфейсов, авторизации, профиля, главного экрана и зала славы.
 
 ## Стек
 - Frontend: React, React Router, Tailwind CSS, Vite
-- Backend: NestJS, Prisma, PostgreSQL
+- Backend: NestJS, Prisma (SQLite локально, PostgreSQL на Render/Supabase)
 - Монорепо через npm workspaces (`client`, `server`)
 
 ## Структура проекта
@@ -14,10 +14,8 @@
 ## Быстрый старт (локально)
 1. Установить зависимости:
    - `npm install`
-2. Скопировать `.env.example` в `.env` (корень и при необходимости `server/.env.example` → `server/.env`).
-3. Применить схему БД и сгенерировать Prisma Client:
-   - `npm run prisma:push -w server`
-4. Запустить фронт и сервер вместе:
+2. Скопировать `server/.env.example` → `server/.env` (для локалки достаточно SQLite: `DATABASE_URL="file:./prisma/dev.db"`).
+3. Запустить фронт и сервер вместе (схема БД применится автоматически):
    - `npm run dev`
 5. Открыть:
    - Frontend: `http://localhost:5173`
@@ -39,7 +37,7 @@
 
 - `VITE_API_BASE_URL` — URL API для клиента (например `http://localhost:3001`)
 - `PORT` — порт сервера (по умолчанию `3001`)
-- `DATABASE_URL` — PostgreSQL URL для Prisma (например Supabase/Neon)
+- `DATABASE_URL` — локально `file:./prisma/dev.db`; на Render — PostgreSQL URL (Supabase Session pooler)
 - `JWT_SECRET` — секрет для подписи access token (обязателен в production)
 - `BASALT_DEV_REGISTER_KEY` — dev-ключ для регистрации через mock API
 - `BASALT_CORS_ORIGIN` — разрешённые CORS origin (через запятую) или `*`

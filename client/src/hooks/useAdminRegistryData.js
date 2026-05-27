@@ -4,6 +4,7 @@ import {
   getAdminLogs,
   getAdminSprintSubmissions,
 } from '../api/basaltApi.js'
+import { LIVE_DATA_EVENT } from '../lib/liveData.js'
 import { submissionMatchesSearch, submissionMatchesStatus } from '../lib/adminSubmissions.js'
 import { ADMIN_USERS_PAGE_SIZE } from './useListPagination.js'
 
@@ -108,6 +109,15 @@ export function useAdminRegistryData({ section, setError }) {
     if (section === 'logs') setAdminLogsOffset(0)
   }, [adminLogsQuery, section])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const onDataChanged = () => {
+      if (section === 'logs') void loadAdminLogs()
+    }
+    window.addEventListener(LIVE_DATA_EVENT, onDataChanged)
+    return () => window.removeEventListener(LIVE_DATA_EVENT, onDataChanged)
+  }, [section, loadAdminLogs])
+
   return {
     submissionsSprintFilter,
     setSubmissionsSprintFilter,
@@ -130,6 +140,7 @@ export function useAdminRegistryData({ section, setError }) {
     adminLogsQuery,
     setAdminLogsQuery,
     loadSubmissions,
+    loadAdminLogs,
     ADMIN_LOGS_PAGE,
     REGISTRY_SUBMISSIONS_PAGE,
   }
