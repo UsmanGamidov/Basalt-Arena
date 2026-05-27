@@ -31,6 +31,7 @@ coverage/
 .env
 .env.*
 !.env.example
+!**/.env.example
 **/.env
 **/.env.*
 *.pem
@@ -44,3 +45,13 @@ coverage/
 *.log
 *.tmp
 *.temp
+
+# Local databases / Prisma runtime files
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+server/prisma/*.db
+server/prisma/*.db-*

@@ -1,101 +1,37 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { patchProfile } from '../api/basaltApi.js'
+import { deleteMySubmissionV2, patchProfile } from '../api/basaltApi.js'
+import { notifyLiveDataChanged } from '../lib/liveData.js'
 import { useAuth } from '../auth/useAuth.js'
 import { AppFooter } from '../components/layout/AppFooter.jsx'
 import { AppHeader } from '../components/layout/AppHeader.jsx'
 import { MaterialIcon } from '../components/ui/MaterialIcon.jsx'
+import { resolveUserAvatarUrl } from '../lib/avatar.js'
+import { useConfirm } from '../context/ConfirmProvider.jsx'
 
-function dicebearAvatar(seed) {
-  const q = new URLSearchParams({
-    seed: String(seed),
-    scale: '62',
-    radius: '12',
-  })
-  return `https://api.dicebear.com/7.x/identicon/svg?${q.toString()}`
+function isSubmissionHistoryDeleted(row) {
+  return (
+    row?.isDeleted === true ||
+    row?.status === 'deleted_by_user' ||
+    row?.status === 'deleted_by_admin'
+  )
 }
 
-const FALLBACK_PROFILE = {
-  bio: 'Разработчик. Учусь, делаю проекты, участвую в спринтах Basalt Arena.',
-  skillsLabel: 'Python, Go, Rust',
+const EMPTY_PROFILE = {
+  bio: '',
+  skillsLabel: '',
   contacts: {
-    telegram: '@dev_architect',
-    email: 'admin@admin.com',
-    github: '/dev_architect',
+    telegram: '',
+    email: '',
+    github: '',
   },
-  statsCards: [
-    {
-      key: 'points',
-      label: 'Баллы',
-      value: '90',
-      trendLabel: '+12% за месяц',
-      trendVariant: 'malachite',
-      icon: 'military_tech',
-      iconTint: 'turquoise',
-    },
-    {
-      key: 'rank',
-      label: 'Глобальный ранг',
-      value: '#3',
-      trendLabel: '+2 позиции',
-      trendVariant: 'malachite',
-      icon: 'leaderboard',
-      iconTint: 'turquoise',
-    },
-    {
-      key: 'sprints',
-      label: 'Спринтов пройдено',
-      value: '1',
-      trendLabel: '100% участия',
-      trendVariant: 'turquoise',
-      icon: 'bolt',
-      iconTint: 'turquoise',
-    },
-    {
-      key: 'money',
-      label: 'Заработано денег',
-      value: '20 000 \u20BD',
-      trendLabel: '+20 000 \u20BD',
-      trendVariant: 'spring',
-      icon: 'payments',
-      iconTint: 'spring',
-    },
-  ],
-  achievements: [
-    {
-      id: 'gaz',
-      title: 'Газующий',
-      subtitle: 'Не пропустил ни одного спринта',
-      icon: 'calendar_month',
-      variant: 'earned',
-    },
-    {
-      id: 'arch',
-      title: 'Архитектор',
-      subtitle: 'Создатель Basalt Arena',
-      icon: 'architecture',
-      variant: 'earned',
-    },
-    {
-      id: 'first',
-      title: 'Первый',
-      subtitle: 'Выложил решение первым',
-      icon: 'looks_one',
-      variant: 'earned',
-    },
-    {
-      id: 'ghost',
-      title: 'Невидимка',
-      subtitle: 'Ни разу не участвовал',
-      icon: 'block',
-      variant: 'locked',
-    },
-  ],
+  statsCards: [],
+  achievements: [],
   form: {
-    username: 'dev_architect',
-    email: 'admin@admin.com',
-    telegram: '@dev_architect',
-    about: 'Разработчик. Учусь, делаю проекты, участвую в спринтах Basalt Arena.',
+    username: '',
+    email: '',
+    telegram: '',
+    about: '',
   },
 }
 
@@ -103,7 +39,7 @@ const SIDEBAR_NAV = [
   { key: 'overview', label: 'Обзор', icon: 'person', sectionId: 'profile-hero' },
   { key: 'badges', label: 'Бейджи и достижения', icon: 'workspace_premium', sectionId: 'profile-achievements' },
   { key: 'stats', label: 'Статистика', icon: 'query_stats', sectionId: 'profile-stats' },
-  { key: 'history', label: 'История спринтов', icon: 'history', sectionId: null, disabled: true },
+  { key: 'history', label: 'История отправок', icon: 'history', sectionId: 'profile-sprint-history' },
   { key: 'settings', label: 'Настройки', icon: 'settings', sectionId: 'profile-settings' },
 ]
 
@@ -111,6 +47,7 @@ const SECTION_TO_NAV = {
   'profile-hero': 'overview',
   'profile-stats': 'stats',
   'profile-achievements': 'badges',
+  'profile-sprint-history': 'history',
   'profile-settings': 'settings',
 }
 
@@ -162,12 +99,14 @@ function StatMetricCard({ card }) {
         <p className="pb-2 text-[36px] font-bold leading-[45px] text-white max-[360px]:text-[30px] max-[360px]:leading-9">
           {card.value}
         </p>
-        <div
-          className={`inline-flex w-max max-w-full items-center gap-1.5 rounded px-2 py-0.5 text-xs font-bold leading-4 ${trendPillClass(trendVariant)}`}
-        >
-          <MaterialIcon name="trending_up" size={14} opticalSize={14} className="leading-none" />
-          <span>{card.trendLabel}</span>
-        </div>
+        {card.trendLabel ? (
+          <div
+            className={`inline-flex w-max max-w-full items-center gap-1.5 rounded px-2 py-0.5 text-xs font-bold leading-4 ${trendPillClass(trendVariant)}`}
+          >
+            <MaterialIcon name="trending_up" size={14} opticalSize={14} className="leading-none" />
+            <span>{card.trendLabel}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   )
@@ -218,42 +157,62 @@ function AchievementTile({ achievement }) {
   )
 }
 
+function formatSubmittedAt(iso) {
+  if (typeof iso !== 'string' || !iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export function ProfilePage() {
   const navigate = useNavigate()
-  const { user, profile: profileRaw, refreshSession, logout } =
+  const confirm = useConfirm()
+  const { user, profile: profileRaw, sprintHistory, refreshSession, logout } =
     useAuth()
   const profile = useMemo(() => {
     const p = profileRaw && typeof profileRaw === 'object' ? profileRaw : {}
     return {
-      ...FALLBACK_PROFILE,
+      ...EMPTY_PROFILE,
       ...p,
       contacts: {
-        ...FALLBACK_PROFILE.contacts,
+        ...EMPTY_PROFILE.contacts,
         ...(p.contacts && typeof p.contacts === 'object' ? p.contacts : {}),
       },
       form: {
-        ...FALLBACK_PROFILE.form,
+        ...EMPTY_PROFILE.form,
         ...(p.form && typeof p.form === 'object' ? p.form : {}),
       },
-      statsCards: Array.isArray(p.statsCards) ? p.statsCards : FALLBACK_PROFILE.statsCards,
-      achievements: Array.isArray(p.achievements) ? p.achievements : FALLBACK_PROFILE.achievements,
+      statsCards: Array.isArray(p.statsCards) ? p.statsCards : [],
+      achievements: Array.isArray(p.achievements) ? p.achievements : [],
     }
   }, [profileRaw])
 
   const [activeNav, setActiveNav] = useState('overview')
-  const [form, setForm] = useState(() => ({ ...FALLBACK_PROFILE.form }))
+  const [form, setForm] = useState(() => ({ ...EMPTY_PROFILE.form }))
   const [saveState, setSaveState] = useState('idle')
+  const [historyDeletingId, setHistoryDeletingId] = useState(null)
+  const [historyNotice, setHistoryNotice] = useState(null)
+  const [historyModalOpen, setHistoryModalOpen] = useState(false)
   const scrollSuppressRef = useRef(0)
 
   useEffect(() => {
     const id = window.setTimeout(() => {
       setForm({
-        ...FALLBACK_PROFILE.form,
+        ...EMPTY_PROFILE.form,
         ...(profileRaw?.form && typeof profileRaw.form === 'object' ? profileRaw.form : {}),
       })
     }, 0)
     return () => window.clearTimeout(id)
   }, [profileRaw])
+
+  const historyItems = Array.isArray(sprintHistory?.items) ? sprintHistory.items : []
+  const historyPreviewItems = historyItems.slice(0, 3)
 
   useEffect(() => {
     const ids = Object.keys(SECTION_TO_NAV)
@@ -277,9 +236,7 @@ export function ProfilePage() {
     return () => obs.disconnect()
   }, [])
 
-  const avatarSrc =
-    user?.avatarUrl?.trim() ||
-    dicebearAvatar(user?.handle ?? user?.id ?? 'user')
+  const avatarSrc = resolveUserAvatarUrl(user)
 
   const scrollToSection = useCallback((navKey, sectionId) => {
     scrollSuppressRef.current = Date.now() + 800
@@ -292,12 +249,37 @@ export function ProfilePage() {
 
   const displayHandle = `@${String(user.handle ?? '').replace(/^@/, '')}`
 
+  async function onWithdrawSubmission(submissionId) {
+    const ok = await confirm({
+      title: 'Отозвать отправку?',
+      message: 'Наставник всё равно увидит её в очереди проверки.',
+      confirmLabel: 'Отозвать',
+      danger: true,
+    })
+    if (!ok) return
+    setHistoryDeletingId(submissionId)
+    setHistoryNotice(null)
+    try {
+      await deleteMySubmissionV2(submissionId)
+      setHistoryNotice({ type: 'ok', text: 'Отправка отозвана' })
+      await refreshSession()
+      notifyLiveDataChanged({ source: 'submission' })
+    } catch (e) {
+      setHistoryNotice({
+        type: 'err',
+        text: e instanceof Error ? e.message : 'Не удалось отозвать отправку',
+      })
+    } finally {
+      setHistoryDeletingId(null)
+    }
+  }
+
   if (!user) return null
 
   return (
     <div className="flex min-h-screen flex-col bg-aztec">
       <AppHeader />
-      <main className="flex-1 pt-[73px]">
+      <main className="flex-1 pt-[116px] md:pt-[73px]">
         <div className="mx-auto max-w-[1400px] px-6 pb-10 pt-10 max-[360px]:px-3 max-[360px]:pb-6 max-[360px]:pt-6 md:px-10">
           <div className="flex flex-col gap-8 max-[360px]:gap-6 lg:flex-row lg:items-start lg:gap-8">
             <aside className="flex w-full shrink-0 flex-col gap-6 lg:w-[306px]">
@@ -424,9 +406,11 @@ export function ProfilePage() {
               </section>
 
               <section id="profile-stats" className="scroll-mt-[88px] grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {profile.statsCards.map((c) => (
-                  <StatMetricCard key={String(c.key)} card={c} />
-                ))}
+                {profile.statsCards.length === 0 ? (
+                  <p className="col-span-full font-mono text-sm text-gull">Статистика загружается с сервера…</p>
+                ) : (
+                  profile.statsCards.map((c) => <StatMetricCard key={String(c.key)} card={c} />)
+                )}
               </section>
 
               <section id="profile-achievements" className="scroll-mt-[88px] flex flex-col gap-6 max-[360px]:gap-4">
@@ -453,6 +437,152 @@ export function ProfilePage() {
                     <AchievementTile key={String(a.id)} achievement={a} />
                   ))}
                 </div>
+              </section>
+
+              <section
+                id="profile-sprint-history"
+                className="scroll-mt-[88px] flex flex-col gap-6 max-[360px]:gap-4"
+              >
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:pb-2">
+                  <h2 className="inline-flex items-center gap-2 text-lg font-bold leading-7 text-white">
+                    <MaterialIcon name="history" size={24} opticalSize={24} className="text-turquoise" />
+                    История отправок
+                  </h2>
+                  <p className="font-mono text-xs text-slate-arena max-[360px]:text-[11px]">
+                    Репозитории и демо, которые ты отправлял через терминал на главной.
+                  </p>
+                </div>
+                {historyNotice ? (
+                  <p
+                    className={
+                      historyNotice.type === 'ok'
+                        ? 'font-mono text-xs text-spring'
+                        : 'font-mono text-xs text-red-400'
+                    }
+                    role="status"
+                  >
+                    {historyNotice.text}
+                  </p>
+                ) : null}
+                {historyItems.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-plantation bg-timber/10 px-6 py-10 text-center">
+                    <p className="font-mono text-sm text-gull">
+                      Пока нет отправок. Когда отправишь решение в активном спринте, оно появится здесь.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="overflow-hidden rounded-xl border border-plantation bg-timber/15">
+                    <ul className="divide-y divide-plantation/80">
+                      {historyPreviewItems.map((row) => {
+                        const deleted = isSubmissionHistoryDeleted(row)
+                        return (
+                        <li
+                          key={String(row.id)}
+                          className={[
+                            'px-4 py-4 max-[360px]:px-3 max-[360px]:py-3',
+                            deleted
+                              ? 'border-l-2 border-red-400/50 bg-red-950/15 opacity-85'
+                              : '',
+                          ].join(' ')}
+                        >
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <p
+                                className={[
+                                  'truncate text-sm font-bold',
+                                  deleted ? 'text-gull line-through decoration-red-400/60' : 'text-white',
+                                ].join(' ')}
+                              >
+                                {row.sprintTitle ?? row.tabLabel}
+                              </p>
+                              <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-slate-arena">
+                                Спринт #{row.sprintId} · {formatSubmittedAt(row.submittedAt)}
+                              </p>
+                              {row.statusLabel ? (
+                                <p
+                                  className={[
+                                    'inline-flex w-fit rounded-md px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide',
+                                    deleted
+                                      ? 'bg-red-950/40 text-red-300'
+                                      : row.status === 'approved'
+                                        ? 'bg-spring/10 text-spring'
+                                          : 'bg-turquoise/10 text-turquoise',
+                                  ].join(' ')}
+                                >
+                                  {row.statusLabel}
+                                </p>
+                              ) : null}
+                              {row.reviewNote ? (
+                                <p className="font-mono text-[10px] text-gull">
+                                  Комментарий наставника: {row.reviewNote}
+                                </p>
+                              ) : null}
+                              {row.status === 'approved' && row.mentorScore != null ? (
+                                <p className="font-mono text-[10px] text-spring">
+                                  Балл за спринт: {row.mentorScore}
+                                </p>
+                              ) : null}
+                            </div>
+                            <div className="flex shrink-0 flex-wrap items-center gap-2">
+                              {row.sprintId != null && String(row.sprintId) !== '' ? (
+                                <Link
+                                  to={`/hall?sprint=${encodeURIComponent(String(row.sprintId))}`}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-plantation bg-aztec/60 px-3 py-1.5 font-mono text-xs text-catskill transition hover:border-turquoise/40 hover:text-turquoise"
+                                >
+                                  <MaterialIcon name="bolt" size={14} opticalSize={14} />
+                                  К спринту
+                                </Link>
+                              ) : null}
+                              {row.canDelete ? (
+                                <button
+                                  type="button"
+                                  disabled={historyDeletingId === row.id}
+                                  onClick={() => void onWithdrawSubmission(row.id)}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-400/30 bg-red-950/20 px-3 py-1.5 font-mono text-xs text-red-300 transition hover:border-red-400/50 disabled:opacity-50"
+                                >
+                                  {historyDeletingId === row.id ? '…' : 'Отозвать'}
+                                </button>
+                              ) : null}
+                              <a
+                                href={row.repoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-plantation bg-aztec/60 px-3 py-1.5 font-mono text-xs text-turquoise transition hover:border-turquoise/40 hover:bg-aztec"
+                              >
+                                <MaterialIcon name="code" size={14} opticalSize={14} />
+                                Код
+                              </a>
+                              {row.demoUrl ? (
+                                <a
+                                  href={row.demoUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-plantation bg-aztec/60 px-3 py-1.5 font-mono text-xs text-gull transition hover:border-white/25 hover:text-white"
+                                >
+                                  <MaterialIcon name="rocket_launch" size={14} opticalSize={14} />
+                                  Демо
+                                </a>
+                              ) : null}
+                            </div>
+                          </div>
+                        </li>
+                        )
+                      })}
+                    </ul>
+                    </div>
+                    {historyItems.length > 3 ? (
+                      <button
+                        type="button"
+                        onClick={() => setHistoryModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-plantation bg-aztec/60 px-3 py-1.5 font-mono text-xs text-catskill transition hover:border-turquoise/40 hover:text-turquoise"
+                      >
+                        <MaterialIcon name="visibility" size={14} opticalSize={14} />
+                        Посмотреть все ({historyItems.length})
+                      </button>
+                    ) : null}
+                  </div>
+                )}
               </section>
 
               <section
@@ -504,7 +634,7 @@ export function ProfilePage() {
                       <label className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-gull">
                         Электронная почта
                       </label>
-                      <div className="relative isolate">
+                      <div className="relative isolate min-w-0">
                         <MaterialIcon
                           name="mail"
                           size={18}
@@ -519,6 +649,9 @@ export function ProfilePage() {
                           autoComplete="email"
                         />
                       </div>
+                      <p className="font-mono text-[10px] leading-relaxed text-gull">
+                        Email обновится после сохранения профиля.
+                      </p>
                     </div>
                   </div>
 
@@ -603,6 +736,130 @@ export function ProfilePage() {
           </div>
         </div>
       </main>
+      {historyModalOpen ? (
+        <div className="fixed inset-0 z-[95] flex items-end justify-center p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:items-center sm:p-4">
+          <button
+            type="button"
+            onClick={() => setHistoryModalOpen(false)}
+            className="absolute inset-0 bg-aztec/80 backdrop-blur-[1px]"
+            aria-label="Закрыть историю отправок"
+          />
+          <div className="relative z-[1] flex max-h-[92dvh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-plantation bg-timber shadow-2xl sm:max-h-[85vh]">
+            <div className="flex items-center justify-between border-b border-plantation/70 px-4 py-3">
+              <h3 className="inline-flex items-center gap-2 text-sm font-bold text-white">
+                <MaterialIcon name="history" size={18} opticalSize={18} className="text-turquoise" />
+                Все отправки
+              </h3>
+              <button
+                type="button"
+                onClick={() => setHistoryModalOpen(false)}
+                className="rounded px-2 py-1 font-mono text-xs text-gull hover:bg-white/5"
+              >
+                Закрыть
+              </button>
+            </div>
+            <div className="overflow-auto p-3 sm:p-4">
+              <div className="overflow-hidden rounded-xl border border-plantation bg-timber/15">
+                <ul className="divide-y divide-plantation/80">
+                  {historyItems.map((row) => {
+                    const deleted = isSubmissionHistoryDeleted(row)
+                    return (
+                      <li
+                        key={`modal-${String(row.id)}`}
+                        className={[
+                          'px-4 py-4 max-[360px]:px-3 max-[360px]:py-3',
+                          deleted ? 'border-l-2 border-red-400/50 bg-red-950/15 opacity-85' : '',
+                        ].join(' ')}
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <p
+                              className={[
+                                'truncate text-sm font-bold',
+                                deleted ? 'text-gull line-through decoration-red-400/60' : 'text-white',
+                              ].join(' ')}
+                            >
+                              {row.sprintTitle ?? row.tabLabel}
+                            </p>
+                            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-slate-arena">
+                              Спринт #{row.sprintId} · {formatSubmittedAt(row.submittedAt)}
+                            </p>
+                            {row.statusLabel ? (
+                              <p
+                                className={[
+                                  'inline-flex w-fit rounded-md px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide',
+                                  deleted
+                                    ? 'bg-red-950/40 text-red-300'
+                                    : row.status === 'approved'
+                                      ? 'bg-spring/10 text-spring'
+                                        : 'bg-turquoise/10 text-turquoise',
+                                ].join(' ')}
+                              >
+                                {row.statusLabel}
+                              </p>
+                            ) : null}
+                            {row.reviewNote ? (
+                              <p className="font-mono text-[10px] text-gull">
+                                Комментарий наставника: {row.reviewNote}
+                              </p>
+                            ) : null}
+                            {row.status === 'approved' && row.mentorScore != null ? (
+                              <p className="font-mono text-[10px] text-spring">
+                                Балл за спринт: {row.mentorScore}
+                              </p>
+                            ) : null}
+                          </div>
+                          <div className="flex shrink-0 flex-wrap items-center gap-2">
+                            {row.sprintId != null && String(row.sprintId) !== '' ? (
+                              <Link
+                                to={`/hall?sprint=${encodeURIComponent(String(row.sprintId))}`}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-plantation bg-aztec/60 px-3 py-1.5 font-mono text-xs text-catskill transition hover:border-turquoise/40 hover:text-turquoise"
+                              >
+                                <MaterialIcon name="bolt" size={14} opticalSize={14} />
+                                К спринту
+                              </Link>
+                            ) : null}
+                            {row.canDelete ? (
+                              <button
+                                type="button"
+                                disabled={historyDeletingId === row.id}
+                                onClick={() => void onWithdrawSubmission(row.id)}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-red-400/30 bg-red-950/20 px-3 py-1.5 font-mono text-xs text-red-300 transition hover:border-red-400/50 disabled:opacity-50"
+                              >
+                                {historyDeletingId === row.id ? '…' : 'Отозвать'}
+                              </button>
+                            ) : null}
+                            <a
+                              href={row.repoUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-plantation bg-aztec/60 px-3 py-1.5 font-mono text-xs text-turquoise transition hover:border-turquoise/40 hover:bg-aztec"
+                            >
+                              <MaterialIcon name="code" size={14} opticalSize={14} />
+                              Код
+                            </a>
+                            {row.demoUrl ? (
+                              <a
+                                href={row.demoUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-plantation bg-aztec/60 px-3 py-1.5 font-mono text-xs text-gull transition hover:border-white/25 hover:text-white"
+                              >
+                                <MaterialIcon name="rocket_launch" size={14} opticalSize={14} />
+                                Демо
+                              </a>
+                            ) : null}
+                          </div>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <AppFooter />
     </div>
   )

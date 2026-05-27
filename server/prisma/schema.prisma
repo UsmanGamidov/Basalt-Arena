@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String       @id @default(cuid())
+  handle             String       @unique
+  displayName        String       @default("")
+  email              String       @unique
+  passwordHash       String
+  role               String       @default("user")
+  avatarUrl          String?
+  notificationsUnread Int         @default(0)
+  points             Int          @default(0)
+  globalRank         String       @default("#0")
+  sprintsCompleted   Int          @default(0)
+  moneyEarned        String       @default("0 ₽")
+  bio                String       @default("")
+  skillsLabel        String       @default("")
+  telegram           String       @default("")
+  github             String       @default("")
+  achievements       Achievement[]
+  submissions        Submission[]
+  solutions          Solution[]
+  likes              SolutionLike[]
+  authTokens         AuthToken[]
+  sprintEnrollments  SprintEnrollment[]
+  notifications      Notification[]
+  emailChangeChallenge EmailChangeChallenge?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+/** Подтверждение смены email: код в уведомлении, срок 15 мин. */
+model EmailChangeChallenge {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  newEmail  String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actorHandle String
+  action     String
+  targetType String
+  targetId   String?
+  message    String
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+}
+
+model Sprint {
+  id             String       @id
+  tabLabel       String
+  tabIcon        String?
+  title          String
+  /** Короткое описание задания — показывается на главной и в карточках; подробный макет — в briefJson */
+  description    String       @default("")
+  completedLabel String
+  endsAt         DateTime?
+  /** Спринт в зале славы и публичных списках */
+  published      Boolean      @default(true)
+  /** Единственный «текущий» спринт на главной (только один true в системе) */
+  isMainActive   Boolean      @default(false)
+  /** Фиксированная сумма призовых за победу в спринте (1 место). */
+  prizeMoney     Int          @default(0)
+  /** Кому начислены призовые после закрытия спринта. */
+  prizeWinnerUserId String?
+  /** Момент фиксации победителя и выдачи призовых. */
+  prizeAwardedAt DateTime?
+  tagsJson       String       @default("[]")
+  metricsJson    String       @default("{}")
+  briefJson      String       @default("{}")
+  solutions      Solution[]
+  submissions    Submission[]
+  enrollments    SprintEnrollment[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+/** Участник спринта: у пользователя есть «свои» спринты через записи здесь */
+model SprintEnrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  sprintId   String
+  enrolledAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sprint     Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sprintId])
+}
+
+model Solution {
+  id           String         @id @default(cuid())
+  sprintId     String
+  userId       String
+  rank         Int
+  rankBadge    String?
+  mentorScore  Int            @default(0)
+  codeUrl      String
+  demoUrl      String?
+  showCrown    Boolean        @default(false)
+  sprint       Sprint         @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes        SolutionLike[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([sprintId, userId])
+}
+
+model SolutionLike {
+  id         String   @id @default(cuid())
+  solutionId String
+  userId     String
+  solution   Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([solutionId, userId])
+}
+
+enum SubmissionStatus {
+  pending_review
+  deleted_by_user
+  approved
+  rejected
+  deleted_by_admin
+}
+
+model Submission {
+  id          String           @id @default(cuid())
+  sprintId    String
+  userId      String
+  repoUrl     String
+  demoUrl     String?
+  status      SubmissionStatus @default(pending_review)
+  mentorScore Int?
+  reviewNote  String?
+  reviewedAt  DateTime?
+  sprint      Sprint           @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
+
+  @@unique([sprintId, userId])
+  @@index([userId, sprintId, status])
+}
+
+/** Шаблон ачивки в каталоге (без привязки к пользователю) */
+model AchievementDefinition {
+  id        String   @id @default(cuid())
+  title     String   @unique
+  subtitle  String
+  icon      String
+  variant   String   @default("earned")
+  achievements Achievement[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Achievement {
+  id        String   @id @default(cuid())
+  userId    String
+  definitionId String?
+  title     String
+  subtitle  String
+  icon      String
+  variant   String   @default("earned")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  definition AchievementDefinition? @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, title])
+  @@index([definitionId])
+}
+
+model AuthToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}

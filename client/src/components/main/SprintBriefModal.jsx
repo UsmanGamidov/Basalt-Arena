@@ -1,24 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MaterialIcon } from '../ui/MaterialIcon.jsx'
+import { SprintCountdownLabel } from './SprintCountdownLabel.jsx'
+import { normalizeSprintBriefView } from '../../lib/sprintTaskBrief.js'
 
 const TRANSITION_MS = 320
-
-const FALLBACK_BRIEF = {
-  taskParagraphs: [
-    {
-      chunks: [
-        'Описание спринта приходит с API в поле brief. Обновите страницу или перезапустите сервер с актуальным mock-api.',
-      ],
-    },
-  ],
-  acceptanceTitle: 'Критерии приёмки',
-  acceptanceItems: [
-    { parts: ['Соответствие макету и работоспособный фронтенд по заданию спринта.'] },
-  ],
-  resourceLinks: [],
-  sprintPath: '/',
-}
 
 function RichLine({ parts }) {
   return (
@@ -105,12 +91,11 @@ export function SprintBriefModal({ open, onClose, sprint }) {
 
   if (!rendered || !sprint) return null
 
-  const brief =
-    sprint.brief && typeof sprint.brief === 'object' ? sprint.brief : FALLBACK_BRIEF
+  const brief = normalizeSprintBriefView(sprint)
 
-  const title = String(sprint.heroTitle ?? '')
+  const title = String(sprint.heroTitle ?? sprint.title ?? '')
   const tags = Array.isArray(sprint.tags) ? sprint.tags : []
-  const completed = String(sprint.completedLabel ?? '')
+  const completedEndsAt = sprint.endsAt ?? null
   const sprintTo = typeof brief.sprintPath === 'string' ? brief.sprintPath : '/'
 
   return (
@@ -184,7 +169,7 @@ export function SprintBriefModal({ open, onClose, sprint }) {
               className="inline-flex items-center gap-1 rounded-md border border-[#334155] bg-aztec px-2.5 py-1 font-mono text-xs font-normal leading-4 text-gull"
             >
               <MaterialIcon name="event" size={12} className="text-gull" />
-              {completed}
+              <SprintCountdownLabel endsAt={completedEndsAt} />
             </span>
           </div>
 

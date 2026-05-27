@@ -1,20 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import { parseEndsAt } from '../../lib/sprintTime.js'
 
 function pad2(n) {
   return String(n).padStart(2, '0')
 }
 
-const defaultOffsetMs = () => Date.now() + 2 * 3600 * 1000 + 45 * 60 * 1000 + 12 * 1000
-
 export function SprintTimer({ endAt }) {
-  const target = useMemo(() => {
-    if (endAt instanceof Date && !Number.isNaN(endAt.getTime())) return endAt
-    if (typeof endAt === 'string' && endAt.trim()) {
-      const parsed = new Date(endAt)
-      if (!Number.isNaN(parsed.getTime())) return parsed
-    }
-    return new Date(defaultOffsetMs())
-  }, [endAt])
+  const target = useMemo(() => parseEndsAt(endAt), [endAt])
 
   const [now, setNow] = useState(() => Date.now())
 
@@ -23,7 +15,18 @@ export function SprintTimer({ endAt }) {
     return () => window.clearInterval(id)
   }, [])
 
+  if (!target) {
+    return (
+      <section className="relative isolate overflow-hidden rounded-xl border border-plantation/80 bg-timber/40 p-8 text-center max-[360px]:p-4">
+        <p className="font-mono text-sm text-half-baked">
+          Дедлайн спринта не задан. Администратор укажет дату окончания в админке.
+        </p>
+      </section>
+    )
+  }
+
   const ms = Math.max(0, target.getTime() - now)
+  const ended = ms <= 0
   const totalSec = Math.floor(ms / 1000)
   const h = Math.floor(totalSec / 3600)
   const m = Math.floor((totalSec % 3600) / 60)
@@ -44,7 +47,7 @@ export function SprintTimer({ endAt }) {
       />
       <div className="relative z-[1] flex flex-col items-center">
         <p className="box-border min-h-9 pb-4 text-center text-sm font-bold uppercase leading-5 tracking-[4.2px] text-half-baked max-[360px]:pb-2 max-[360px]:text-[11px] max-[360px]:leading-4 max-[360px]:tracking-[3px] sm:whitespace-nowrap">
-          До завершения спринта
+          {ended ? 'Спринт завершён' : 'До завершения спринта'}
         </p>
         <div className="flex w-full min-w-0 max-w-full items-start justify-center gap-[10px] max-[360px]:gap-2 md:gap-10">
           <div className="flex w-[69px] shrink-0 flex-col items-center max-[360px]:w-[56px]">

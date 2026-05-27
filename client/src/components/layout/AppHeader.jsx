@@ -2,32 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/useAuth.js'
 import { MaterialIcon } from '../ui/MaterialIcon.jsx'
-
-const MOCK_NOTIFICATION_ROWS = [
-  {
-    id: 'sprint',
-    title: 'Спринт',
-    body: '#2 BASALT ARENA (FRONTEND): следите за таймером и отправьте решение до дедлайна.',
-  },
-]
-
-function dicebearAvatar(seed) {
-  const q = new URLSearchParams({
-    seed: String(seed ?? 'user'),
-    scale: '62',
-    radius: '12',
-  })
-  return `https://api.dicebear.com/7.x/identicon/svg?${q.toString()}`
-}
+import { resolveUserAvatarUrl } from '../../lib/avatar.js'
 
 export function AppHeader() {
   const { pathname } = useLocation()
-  const { user, notificationsUnread, logout, markNotificationsRead } = useAuth()
+  const { user, notificationsUnread, notificationItems, logout, markNotificationsRead } = useAuth()
   const [notifOpen, setNotifOpen] = useState(false)
   const [marking, setMarking] = useState(false)
   const panelRef = useRef(null)
 
-  const avatarSrc = user?.avatarUrl?.trim() || dicebearAvatar(user?.handle ?? user?.id ?? 'user')
+  const avatarSrc = resolveUserAvatarUrl(user)
 
   useEffect(() => {
     if (!notifOpen) return
@@ -52,6 +36,9 @@ export function AppHeader() {
   const navItems = [
     { label: 'Активный спринт', to: '/', active: pathname === '/', disabled: false },
     { label: 'Зал славы', to: '/hall', active: pathname === '/hall', disabled: false },
+    ...(user.role === 'admin'
+      ? [{ label: 'Админка', to: '/admin', active: pathname === '/admin', disabled: false }]
+      : []),
     { label: 'Документация', to: '/docs', active: false, disabled: true },
   ]
 
@@ -66,7 +53,7 @@ export function AppHeader() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 min-h-[73px] border-b border-plantation bg-aztec">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-plantation bg-aztec md:min-h-[73px]">
       <div className="mx-auto flex h-[72px] max-w-[1400px] items-center justify-between gap-0 px-6 max-[360px]:px-3 md:px-10">
         <div className="flex min-w-0 shrink items-center gap-6 max-[360px]:gap-3 md:gap-10">
           <Link to="/" className="flex shrink-0 items-center gap-3 leading-none">
@@ -159,12 +146,17 @@ export function AppHeader() {
                     </p>
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2 max-md:px-3">
-                    {notificationsUnread > 0 ? (
+                    {notificationItems.length > 0 ? (
                       <ul className="flex flex-col gap-2">
-                        {MOCK_NOTIFICATION_ROWS.map((row) => (
+                        {notificationItems.map((row) => (
                           <li
                             key={row.id}
-                            className="rounded-lg border border-plantation/80 bg-aztec/50 px-3 py-2.5 max-md:px-3.5 max-md:py-3"
+                            className={[
+                              'rounded-lg border px-3 py-2.5 max-md:px-3.5 max-md:py-3',
+                              row.read
+                                ? 'border-plantation/50 bg-aztec/30 opacity-75'
+                                : 'border-plantation/80 bg-aztec/50',
+                            ].join(' ')}
                           >
                             <p className="text-xs font-semibold text-catskill max-md:text-[13px]">
                               {row.title}
@@ -177,7 +169,7 @@ export function AppHeader() {
                       </ul>
                     ) : (
                       <p className="px-2 py-6 text-center font-mono text-xs leading-relaxed text-half-baked max-md:py-8 max-md:text-[13px]">
-                        Нет новых уведомлений
+                        Нет уведомлений
                       </p>
                     )}
                   </div>
@@ -233,6 +225,36 @@ export function AppHeader() {
           </Link>
         </div>
       </div>
+
+      <nav
+        className="mx-auto flex max-w-[1400px] gap-1 overflow-x-auto overscroll-x-contain border-t border-plantation/80 px-4 py-2 [-webkit-overflow-scrolling:touch] md:hidden"
+        aria-label="Навигация"
+      >
+        {navItems.map((item) =>
+          item.disabled ? (
+            <span
+              key={item.label}
+              className="shrink-0 cursor-not-allowed rounded-lg px-3 py-1.5 font-mono text-[11px] font-medium uppercase tracking-wide opacity-40 text-fiord"
+            >
+              {item.label}
+            </span>
+          ) : (
+            <Link
+              key={item.label}
+              to={item.to}
+              className={[
+                'shrink-0 rounded-lg px-3 py-1.5 font-mono text-[11px] font-medium uppercase tracking-wide',
+                item.active && 'bg-turquoise/15 font-bold text-turquoise',
+                !item.active && 'text-gull hover:bg-white/5 hover:text-catskill',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+            >
+              {item.label}
+            </Link>
+          ),
+        )}
+      </nav>
     </header>
   )
 }

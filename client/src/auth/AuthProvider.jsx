@@ -7,6 +7,7 @@ import {
   postNotificationsRead,
   setStoredToken,
 } from '../api/basaltApi.js'
+import { useLiveDataRefresh } from '../hooks/useLiveDataRefresh.js'
 import { AuthContext } from './context.js'
 
 export function AuthProvider({ children }) {
@@ -17,6 +18,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [sprintHistory, setSprintHistory] = useState(null)
   const [notificationsUnread, setNotificationsUnread] = useState(0)
+  const [notificationItems, setNotificationItems] = useState([])
 
   const applyMe = useCallback((me) => {
     setUser(me.user)
@@ -25,6 +27,7 @@ export function AuthProvider({ children }) {
     setProfile(me.profile ?? null)
     setSprintHistory(me.sprintHistory ?? null)
     setNotificationsUnread(me.notificationsUnread ?? 0)
+    setNotificationItems(Array.isArray(me.notificationItems) ? me.notificationItems : [])
   }, [])
 
   const clearSession = useCallback(() => {
@@ -34,6 +37,7 @@ export function AuthProvider({ children }) {
     setProfile(null)
     setSprintHistory(null)
     setNotificationsUnread(0)
+    setNotificationItems([])
   }, [])
 
   const loadSession = useCallback(async () => {
@@ -57,9 +61,11 @@ export function AuthProvider({ children }) {
     loadSession()
   }, [loadSession])
 
+  useLiveDataRefresh(loadSession, { enabled: Boolean(user?.id) })
+
   const login = useCallback(
-    async (email, password, rememberSession = true) => {
-      const res = await postLogin({ email, password })
+    async (loginOrEmail, password, rememberSession = true) => {
+      const res = await postLogin({ loginOrEmail, password, remember: rememberSession })
       setStoredToken(res.accessToken, { persist: rememberSession })
       applyMe(await getMe())
     },
@@ -81,8 +87,10 @@ export function AuthProvider({ children }) {
     try {
       const res = await postNotificationsRead()
       setNotificationsUnread(res.notificationsUnread ?? 0)
+      setNotificationItems((items) => items.map((n) => ({ ...n, read: true })))
     } catch {
       setNotificationsUnread(0)
+      setNotificationItems((items) => items.map((n) => ({ ...n, read: true })))
     }
   }, [])
 
@@ -95,6 +103,7 @@ export function AuthProvider({ children }) {
       profile,
       sprintHistory,
       notificationsUnread,
+      notificationItems,
       login,
       logout,
       markNotificationsRead,
@@ -108,6 +117,7 @@ export function AuthProvider({ children }) {
       profile,
       sprintHistory,
       notificationsUnread,
+      notificationItems,
       login,
       logout,
       markNotificationsRead,

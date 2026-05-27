@@ -113,6 +113,68 @@
   }
 }
 
+@layer components {
+  .admin-table-scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table-scroll-hint {
+    position: relative;
+  }
+
+  .arena-spin-input {
+    @apply overflow-hidden rounded border border-plantation bg-aztec;
+    height: 2rem;
+  }
+
+  .arena-spin-input__field {
+    @apply h-full border-0 bg-transparent px-2 font-mono text-xs text-catskill outline-none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .arena-spin-input__field::-webkit-outer-spin-button,
+  .arena-spin-input__field::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .arena-spin-input__controls {
+    @apply flex w-7 shrink-0 flex-col border-l border-plantation;
+  }
+
+  .arena-spin-input__btn {
+    @apply flex flex-1 items-center justify-center text-half-baked transition;
+  }
+
+  .arena-spin-input__btn:hover:not(:disabled) {
+    @apply bg-turquoise/15 text-turquoise;
+  }
+
+  .arena-spin-input__btn:disabled {
+    @apply cursor-not-allowed opacity-30;
+  }
+
+  .arena-spin-input__btn--up {
+    @apply border-b border-plantation/80;
+  }
+
+  .admin-page-nav-btn {
+    @apply inline-flex h-8 min-w-[2.25rem] items-center justify-center gap-1 rounded-lg border border-plantation bg-aztec/80 px-2.5 font-mono text-[10px] font-bold uppercase tracking-wide text-catskill transition;
+  }
+
+  .admin-page-nav-btn:hover:not(:disabled) {
+    @apply border-turquoise/40 bg-turquoise/10 text-turquoise;
+  }
+
+  .admin-page-nav-btn:disabled {
+    @apply cursor-not-allowed opacity-35;
+  }
+
+}
+
 @layer utilities {
   .scrollbar-track-transparent {
     scrollbar-color: var(--app-scrollbar-thumb) transparent;

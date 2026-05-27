@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build client
+        run: npm run build -w client
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate -w server
+
+      - name: Build server
+        run: npm run build -w server
+
+      - name: Server smoke test (health)
+        run: npm run test:server:health
+
+      - name: Server integration test (api)
+        run: npm run test:server:api

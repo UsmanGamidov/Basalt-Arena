@@ -7,7 +7,7 @@ import { TaskDescriptionCard } from '../components/main/TaskDescriptionCard.jsx'
 import { UserStatsCard } from '../components/main/UserStatsCard.jsx'
 import { useAuth } from '../auth/useAuth.js'
 
-const defaultStats = { position: 3, leaderboardSize: 10, points: 90 }
+const defaultStats = { position: 0, leaderboardSize: 1, points: 0 }
 
 export function MainScreen() {
   const { user, activeSprint, stats } = useAuth()
@@ -18,7 +18,7 @@ export function MainScreen() {
   return (
     <div className="flex min-h-screen flex-col bg-aztec">
       <AppHeader />
-      <main className="flex-1 px-0 pt-[73px]">
+      <main className="flex-1 px-0 pt-[116px] md:pt-[73px]">
         <div className="mx-auto max-w-[1400px] px-6 py-10 max-[360px]:px-3 max-[360px]:py-6 md:px-10">
           <div className="flex flex-col gap-8 max-[360px]:gap-6">
             {activeSprint ? (
@@ -28,7 +28,7 @@ export function MainScreen() {
                 <SprintTimer endAt={activeSprint.endsAt} />
 
                 <div className="grid grid-cols-1 gap-6 max-[360px]:gap-5 md:gap-8 xl:grid-cols-[minmax(0,1fr)_418px] xl:items-start">
-                  <TaskDescriptionCard />
+                  <TaskDescriptionCard sprint={activeSprint} />
 
                   <aside className="flex flex-col gap-6">
                     <SubmissionTerminal />
@@ -43,8 +43,8 @@ export function MainScreen() {
             ) : (
               <div className="rounded-xl border border-plantation bg-timber/40 px-6 py-16 text-center">
                 <p className="font-mono text-sm leading-relaxed text-half-baked">
-                  У вас сейчас нет активного спринта. Когда наставник назначит задание, здесь появится
-                  таймер и материалы — данные придут с сервера через тот же API, что и сейчас (мок).
+                  Сейчас на главной нет активного спринта. Когда наставник включит спринт на главной, здесь
+                  появятся задание, таймер и терминал отправки (для зачисленных участников).
                 </p>
               </div>
             )}

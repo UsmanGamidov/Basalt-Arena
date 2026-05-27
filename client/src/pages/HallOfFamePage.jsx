@@ -1,19 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import { getHall } from '../api/basaltApi.js'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { getHall, mergeHallUntilSprintVisible, postSolutionLike } from '../api/basaltApi.js'
 import { useAuth } from '../auth/useAuth.js'
+import { useLiveDataRefresh } from '../hooks/useLiveDataRefresh.js'
+import { SprintCountdownLabel } from '../components/main/SprintCountdownLabel.jsx'
 import { AppFooter } from '../components/layout/AppFooter.jsx'
 import { AppHeader } from '../components/layout/AppHeader.jsx'
 import { SprintBriefModal } from '../components/main/SprintBriefModal.jsx'
 import { MaterialIcon } from '../components/ui/MaterialIcon.jsx'
+import { SortBar } from '../components/ui/SortBar.jsx'
+import { resolveUserAvatarUrl } from '../lib/avatar.js'
+import { HALL_SOLUTION_SORT_OPTIONS, sortHallSolutions } from '../lib/sortHallSolutions.js'
 
-function dicebearAvatar(seed) {
-  const q = new URLSearchParams({
-    seed: String(seed),
-    scale: '62',
-    radius: '12',
-  })
-  return `https://api.dicebear.com/7.x/identicon/svg?${q.toString()}`
-}
+const HALL_FIRST_PAGE_LIMIT = 10
 
 function rankBadgeClasses(badge) {
   switch (badge) {
@@ -28,11 +27,12 @@ function rankBadgeClasses(badge) {
   }
 }
 
-function SolutionCard({ solution, isWinner }) {
+function SolutionCard({ sprintId, solution, isWinner, onLikesUpdated }) {
   const s = solution
   const rank = s.rank
   const badge = s.rankBadge ?? 'muted'
-  const likesActive = rank === 1
+  const likedByMe = !!s.likedByMe
+  const [likePending, setLikePending] = useState(false)
 
   return (
     <article
@@ -62,11 +62,7 @@ function SolutionCard({ solution, isWinner }) {
               ].join(' ')}
             >
               <img
-                src={
-                  typeof s.avatarUrl === 'string' && s.avatarUrl
-                    ? s.avatarUrl
-                    : dicebearAvatar(s.avatarSeed ?? s.handle)
-                }
+                src={resolveUserAvatarUrl({ id: s.userId, avatarUrl: s.avatarUrl })}
                 alt=""
                 className="h-full w-full object-contain"
                 decoding="async"
@@ -178,14 +174,48 @@ function SolutionCard({ solution, isWinner }) {
 
           <button
             type="button"
+            disabled={likePending}
+            onClick={async () => {
+              if (likePending || !sprintId || s.id == null) return
+              setLikePending(true)
+              try {
+                const r = await postSolutionLike(sprintId, s.id)
+                onLikesUpdated?.(
+                  s.id,
+                  Number(r?.likes ?? 0) || 0,
+                  Boolean(r?.liked),
+                )
+              } finally {
+                setLikePending(false)
+              }
+            }}
             className={[
               'inline-flex items-center gap-2 rounded-lg border px-3 py-2 font-mono text-sm font-bold transition max-[360px]:px-2 max-[360px]:py-1.5 max-[360px]:text-xs',
-              likesActive
-                ? 'border-turquoise/30 bg-turquoise/20 text-turquoise hover:border-turquoise/55 hover:bg-turquoise/30 hover:text-[#67E8F9] hover:shadow-[0_0_16px_rgba(13,204,242,0.28)]'
+              likedByMe
+                ? isWinner
+                  ? 'border-[rgba(234,179,8,0.45)] bg-[rgba(234,179,8,0.12)] text-[#FDE68A] shadow-[inset_0_0_12px_rgba(234,179,8,0.2)] hover:border-[rgba(234,179,8,0.6)]'
+                  : 'border-turquoise/40 bg-turquoise/10 text-turquoise shadow-[inset_0_0_12px_rgba(13,204,242,0.12)] hover:border-turquoise/55'
                 : 'border-[rgba(71,85,105,0.5)] bg-[rgba(51,65,85,0.3)] text-gull hover:text-white',
+              likePending ? 'cursor-wait opacity-70' : '',
             ].join(' ')}
           >
-            <MaterialIcon name="favorite" size={18} className={likesActive ? 'text-turquoise' : ''} />
+            <MaterialIcon
+              name="favorite"
+              size={18}
+              opticalSize={18}
+              className={
+                likedByMe
+                  ? isWinner
+                    ? 'text-[#EAB308] drop-shadow-[0_0_8px_rgba(234,179,8,0.55)]'
+                    : 'text-turquoise drop-shadow-[0_0_8px_rgba(13,204,242,0.45)]'
+                  : ''
+              }
+              style={
+                likedByMe
+                  ? { fontVariationSettings: `'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 18` }
+                  : undefined
+              }
+            />
             {s.likes}
           </button>
         </div>
@@ -302,49 +332,117 @@ function QuoteCard({ quote }) {
 
 export function HallOfFamePage() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activeSprintId, setActiveSprintId] = useState('2')
-  const [loadMoreClicked, setLoadMoreClicked] = useState(false)
+  const [activeSprintId, setActiveSprintId] = useState('')
+  const [loadingMore, setLoadingMore] = useState(false)
   const [briefOpen, setBriefOpen] = useState(false)
+  const [hallSortKey, setHallSortKey] = useState('mentor-desc')
+  const hallDataRef = useRef(null)
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      setLoading(true)
+  hallDataRef.current = data
+
+  const reloadHall = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!silent) setLoading(true)
       setError(null)
       try {
-        const json = await getHall()
-        if (!cancelled) {
-          setData(json)
-          const first = json?.sprints?.[0]?.id
-          if (first) setActiveSprintId(first)
-        }
+        const json = await getHall({ limit: HALL_FIRST_PAGE_LIMIT, offset: 0 })
+        const want = searchParams.get('sprint')?.trim() ?? ''
+        const merged =
+          want && json
+            ? await mergeHallUntilSprintVisible(want, json, { limit: HALL_FIRST_PAGE_LIMIT })
+            : json
+        setData(merged)
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Ошибка загрузки')
+        setError(e instanceof Error ? e.message : 'Ошибка загрузки')
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!silent) setLoading(false)
       }
+    },
+    [searchParams],
+  )
+
+  useEffect(() => {
+    void reloadHall({ silent: false })
+  }, [reloadHall])
+
+  useLiveDataRefresh(() => reloadHall({ silent: true }), { enabled: Boolean(user) })
+
+  useEffect(() => {
+    if (!data?.sprints?.length) return
+    const raw = searchParams.get('sprint')
+    const normalized = raw != null && String(raw).trim() !== '' ? String(raw).trim() : ''
+    const match =
+      normalized && data.sprints.some((s) => String(s.id) === normalized) ? normalized : ''
+    if (match) {
+      setActiveSprintId(match)
+      return
     }
-    load()
+    const first = data.sprints[0]?.id
+    if (first != null) setActiveSprintId(String(first))
+  }, [data, searchParams])
+
+  useEffect(() => {
+    if (loading) return
+    const d = hallDataRef.current
+    if (!d?.sprints?.length) return
+    const want = searchParams.get('sprint')?.trim() ?? ''
+    if (!want || d.sprints.some((s) => String(s.id) === want)) return
+    if (!d.loadMoreRemaining) return
+
+    let cancelled = false
+    setLoadingMore(true)
+    setError(null)
+    void mergeHallUntilSprintVisible(want, d, { limit: HALL_FIRST_PAGE_LIMIT })
+      .then((merged) => {
+        if (!cancelled) setData(merged)
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : 'Ошибка загрузки')
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingMore(false)
+      })
+
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [searchParams, loading])
 
   const activeSprint = useMemo(() => {
     if (!data?.sprints?.length) return null
-    return data.sprints.find((s) => s.id === activeSprintId) ?? data.sprints[0]
+    return (
+      data.sprints.find((s) => String(s.id) === String(activeSprintId)) ?? data.sprints[0]
+    )
   }, [data, activeSprintId])
 
   const sortedSolutions = useMemo(() => {
-    const list = activeSprint?.solutions ? [...activeSprint.solutions] : []
-    list.sort(
-      (a, b) => (b.mentorScore ?? 0) - (a.mentorScore ?? 0) || (b.likes ?? 0) - (a.likes ?? 0),
-    )
-    return list
-  }, [activeSprint])
+    const list = activeSprint?.solutions ?? []
+    return sortHallSolutions(list, hallSortKey)
+  }, [activeSprint, hallSortKey])
+
+  const mergeSolutionLikes = useCallback((solutionId, likes, likedByMe) => {
+    setData((prev) => {
+      if (!prev?.sprints) return prev
+      const sid = String(solutionId)
+      return {
+        ...prev,
+        sprints: prev.sprints.map((sp) =>
+          String(sp.id) !== String(activeSprintId)
+            ? sp
+            : {
+                ...sp,
+                solutions: sp.solutions.map((sol) =>
+                  String(sol.id) === sid ? { ...sol, likes, likedByMe: !!likedByMe } : sol,
+                ),
+              },
+        ),
+      }
+    })
+  }, [activeSprintId])
 
   if (!user) return null
 
@@ -353,7 +451,7 @@ export function HallOfFamePage() {
   return (
     <div className="flex min-h-screen flex-col bg-aztec">
       <AppHeader />
-      <main className="flex-1 px-0 pt-[73px]">
+      <main className="flex-1 px-0 pt-[116px] md:pt-[73px]">
         <div className="mx-auto max-w-[1400px] px-6 py-10 max-[360px]:px-3 max-[360px]:py-6 md:px-10">
           {loading ? (
             <p className="font-mono text-sm text-gull">Загрузка зала славы…</p>
@@ -389,9 +487,9 @@ export function HallOfFamePage() {
               <div className="border-b border-plantation/80">
                 <div className="flex gap-8 overflow-x-auto pb-px max-[360px]:gap-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {data?.sprints?.map((sp) => {
-                    const active = sp.id === activeSprint?.id
+                    const active = String(sp.id) === String(activeSprint?.id)
                     const basaltTab =
-                      sp.id === '2' ||
+                      String(sp.id) === '2' ||
                       String(sp.tabLabel ?? '')
                         .toLowerCase()
                         .includes('basalt arena')
@@ -399,7 +497,18 @@ export function HallOfFamePage() {
                       <button
                         key={sp.id}
                         type="button"
-                        onClick={() => setActiveSprintId(sp.id)}
+                        onClick={() => {
+                          const sid = String(sp.id)
+                          setActiveSprintId(sid)
+                          setSearchParams(
+                            (prev) => {
+                              const n = new URLSearchParams(prev)
+                              n.set('sprint', sid)
+                              return n
+                            },
+                            { replace: true },
+                          )
+                        }}
                         className={[
                           'flex shrink-0 items-center gap-2 border-b-2 pb-3 text-base transition max-[360px]:gap-1.5 max-[360px]:text-sm',
                           active
@@ -428,6 +537,12 @@ export function HallOfFamePage() {
                 </div>
               </div>
 
+              {loadingMore ? (
+                <p className="font-mono text-xs text-half-baked" aria-live="polite">
+                  Подгружаем спринты…
+                </p>
+              ) : null}
+
               {activeSprint ? (
                 <section className="relative isolate overflow-hidden rounded-xl border border-plantation bg-timber px-6 pb-6 pt-8 max-[360px]:px-4 max-[360px]:pb-4 max-[360px]:pt-5 md:px-6 md:pb-6 md:pt-8 lg:px-8 lg:pb-8 lg:pt-10">
                   <div
@@ -450,7 +565,7 @@ export function HallOfFamePage() {
                         ))}
                         <span className="flex items-center gap-1 rounded-md border border-[#334155] bg-aztec px-2.5 py-1 font-mono text-xs text-gull max-[360px]:text-[11px]">
                           <MaterialIcon name="event" size={12} className="text-gull" />
-                          {activeSprint.completedLabel}
+                          <SprintCountdownLabel endsAt={activeSprint.endsAt} />
                         </span>
                       </div>
                     </div>
@@ -472,12 +587,15 @@ export function HallOfFamePage() {
 
               <div className="grid grid-cols-1 gap-8 max-[360px]:gap-6 xl:grid-cols-[minmax(0,1fr)_418px] xl:items-start">
                 <div className="flex min-w-0 flex-col gap-4">
-                  <div className="flex flex-row items-center justify-between gap-2 max-[360px]:items-end">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h2 className="text-lg font-bold leading-7 text-catskill">Лучшие решения</h2>
-                    <p className="whitespace-nowrap font-mono text-xs uppercase tracking-[1.2px] max-[360px]:text-[10px]">
-                      <span className="text-slate-arena">СОРТИРОВКА: </span>
-                      <span className="font-bold text-catskill">ЭФФЕКТИВНОСТЬ</span>
-                    </p>
+                    <SortBar
+                      variant="hall"
+                      label="Сортировка"
+                      value={hallSortKey}
+                      onChange={setHallSortKey}
+                      options={HALL_SOLUTION_SORT_OPTIONS}
+                    />
                   </div>
 
                   {sortedSolutions.length === 0 ? (
@@ -486,21 +604,41 @@ export function HallOfFamePage() {
                     </p>
                   ) : (
                     sortedSolutions.map((sol) => (
-                      <SolutionCard key={sol.rank} solution={sol} isWinner={sol.rank === 1} />
+                      <SolutionCard
+                        key={String(sol.id ?? `${activeSprint?.id}-${sol.rank}`)}
+                        sprintId={activeSprint.id}
+                        solution={sol}
+                        isWinner={sol.rank === 1}
+                        onLikesUpdated={mergeSolutionLikes}
+                      />
                     ))
                   )}
 
-                  {data?.loadMoreRemaining > 0 && sortedSolutions.length > 0 ? (
+                  {data?.loadMoreRemaining > 0 ? (
                     <div className="flex justify-center pt-6">
                       <button
                         type="button"
-                        onClick={() => setLoadMoreClicked(true)}
-                        disabled={loadMoreClicked}
+                        disabled={loadingMore}
+                        onClick={async () => {
+                          if (!data?.sprints?.length || loadingMore) return
+                          setLoadingMore(true)
+                          setError(null)
+                          try {
+                            const more = await getHall({
+                              limit: HALL_FIRST_PAGE_LIMIT,
+                              offset: data.sprints.length,
+                              existingSprints: data.sprints,
+                            })
+                            setData(more)
+                          } catch (e) {
+                            setError(e instanceof Error ? e.message : 'Ошибка загрузки')
+                          } finally {
+                            setLoadingMore(false)
+                          }
+                        }}
                         className="inline-flex items-center gap-2 font-mono text-sm uppercase tracking-[1.4px] text-slate-arena transition hover:text-gull disabled:opacity-50"
                       >
-                        {loadMoreClicked
-                          ? 'Пагинация появится в API'
-                          : `Загрузить ещё ${data.loadMoreRemaining} решений`}
+                        {loadingMore ? 'Загрузка…' : `Загрузить ещё (${data.loadMoreRemaining})`}
                         <MaterialIcon name="expand_more" size={18} />
                       </button>
                     </div>
