@@ -1,7 +1,6 @@
 import { RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
-import express from 'express'
 import { AppModule } from './app.module'
 import { registerClientSpaRoutes } from './client-dist'
 
@@ -24,8 +23,7 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: resolveCorsConfig(),
   })
-  const expressApp = app.getHttpAdapter().getInstance()
-  registerClientSpaRoutes(expressApp, express.static)
+  registerClientSpaRoutes(app)
   app.enableShutdownHooks()
   app.setGlobalPrefix('api/mock/v1', {
     exclude: [{ path: 'health', method: RequestMethod.GET }],
