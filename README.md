@@ -1,10 +1,10 @@
 # Basalt Arena
 
-Веб-приложение с фронтендом на React (Vite) и mock API на NestJS + Prisma (SQLite) для разработки интерфейсов, авторизации, профиля, главного экрана и зала славы.
+Веб-приложение с фронтендом на React (Vite) и mock API на NestJS + Prisma (PostgreSQL) для разработки интерфейсов, авторизации, профиля, главного экрана и зала славы.
 
 ## Стек
 - Frontend: React, React Router, Tailwind CSS, Vite
-- Backend: NestJS, Prisma, SQLite
+- Backend: NestJS, Prisma, PostgreSQL
 - Монорепо через npm workspaces (`client`, `server`)
 
 ## Структура проекта
@@ -39,7 +39,7 @@
 
 - `VITE_API_BASE_URL` — URL API для клиента (например `http://localhost:3001`)
 - `PORT` — порт сервера (по умолчанию `3001`)
-- `DATABASE_URL` — SQLite для Prisma (`file:./prisma/dev.db`)
+- `DATABASE_URL` — PostgreSQL URL для Prisma (например Supabase/Neon)
 - `JWT_SECRET` — секрет для подписи access token (обязателен в production)
 - `BASALT_DEV_REGISTER_KEY` — dev-ключ для регистрации через mock API
 - `BASALT_CORS_ORIGIN` — разрешённые CORS origin (через запятую) или `*`
