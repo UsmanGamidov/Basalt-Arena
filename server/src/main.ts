@@ -1,6 +1,7 @@
 import { RequestMethod, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
+import type { NextFunction, Request, Response } from 'express'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { AppModule } from './app.module'
@@ -23,10 +24,15 @@ function setupClientSpa(app: NestExpressApplication) {
     return
   }
   app.useStaticAssets(dist, { index: false })
-  const http = app.getHttpAdapter().getInstance()
-  http.get('*', (req: { path: string }, res: { sendFile: (p: string) => void }, next: () => void) => {
-    if (req.path.startsWith('/api') || req.path === '/health') return next()
-    res.sendFile(join(dist, 'index.html'))
+  // Express 5+ no longer accepts path '*'; fallback via middleware after routes init.
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const method = String(req.method ?? 'GET').toUpperCase()
+    if (method !== 'GET' && method !== 'HEAD') return next()
+    const path = String(req.path ?? '')
+    if (path.startsWith('/api') || path === '/health') return next()
+    res.sendFile(join(dist, 'index.html'), (err: Error | null) => {
+      if (err) next(err)
+    })
   })
   console.log(`Static UI: ${dist}`)
 }
@@ -54,7 +60,6 @@ async function bootstrap() {
   app.setGlobalPrefix('api/mock/v1', {
     exclude: [{ path: 'health', method: RequestMethod.GET }],
   })
-  setupClientSpa(app)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -67,6 +72,8 @@ async function bootstrap() {
   )
 
   const port = Number(process.env.PORT ?? 3001)
+  await app.init()
+  setupClientSpa(app)
   await app.listen(port)
   console.log(`Server http://localhost:${port}  (health: http://localhost:${port}/health)`)
 }
