@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common'
 import { JwtModule } from '@nestjs/jwt'
+import { env } from './config/env'
 import { AuthService } from './auth/auth.service'
 import { AuthSessionService } from './auth/auth-session.service'
 import { AdminAuditService } from './domain/admin-audit.service'
@@ -16,21 +17,12 @@ import { SprintLifecycleService } from './domain/sprint-lifecycle.service'
 import { UserDerivedStatsService } from './domain/user-derived-stats.service'
 import { UsersService } from './domain/users.service'
 
-const jwtSecret =
-  process.env.JWT_SECRET && process.env.JWT_SECRET.trim()
-    ? process.env.JWT_SECRET
-    : process.env.NODE_ENV === 'production'
-      ? (() => {
-          throw new Error('JWT_SECRET is required in production')
-        })()
-      : 'basalt-local-dev-jwt'
-
 @Global()
 @Module({
   imports: [
     JwtModule.register({
       global: true,
-      secret: jwtSecret,
+      secret: env.JWT_SECRET,
       signOptions: { expiresIn: '15m' },
     }),
   ],

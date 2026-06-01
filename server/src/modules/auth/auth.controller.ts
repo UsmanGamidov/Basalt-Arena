@@ -1,6 +1,7 @@
 import { Body, Controller, Headers, Post, UnauthorizedException } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { Throttle } from '@nestjs/throttler'
+import { env } from '../../config/env'
 import { AuthService } from '../../auth/auth.service'
 import { LoginDto, RegisterDto } from './dto/login.dto'
 import { RefreshDto } from './dto/refresh.dto'
@@ -53,7 +54,7 @@ export class AuthController {
   @Throttle({ default: { limit: 3, ttl: 3_600_000 } })
   @Post('register')
   async register(@Body() body: RegisterDto, @Headers('x-dev-register-key') devKey?: string) {
-    const expected = String(process.env.BASALT_DEV_REGISTER_KEY ?? '').trim()
+    const expected = env.BASALT_DEV_REGISTER_KEY.trim()
     if (!expected) {
       throw new UnauthorizedException('Саморегистрация отключена')
     }
