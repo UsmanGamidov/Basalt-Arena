@@ -1,0 +1,8 @@
+node_modules
+**/node_modules
+**/dist
+.venv
+coverage
+package-lock.json
+client/public
+server/prisma/migrations

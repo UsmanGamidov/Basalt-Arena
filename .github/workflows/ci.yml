@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Unit tests
+      - name: Client unit tests
         run: npm test
 
       - name: Build client
@@ -31,6 +31,9 @@ jobs:
 
       - name: Build server
         run: npm run build -w server
+
+      - name: Server unit tests
+        run: npm run test:server:unit
 
       - name: Server smoke test (health)
         run: npm run test:server:health

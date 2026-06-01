@@ -156,3 +156,6 @@ npm run bootstrap:admin:remote -w server   # нужен postgres DATABASE_URL в
 - Админские действия логируются через журнал аудита.
 - Изменения схемы — **в обеих** схемах Prisma (SQLite и PostgreSQL) + сгенерировать миграцию (`prisma:migrate:diff:postgres`).
 - В production задавать сильный `JWT_SECRET` и конкретный `BASALT_CORS_ORIGIN`.
+- Форматирование — Prettier: `npm run format` / `npm run format:check`.
+- Pre-commit (опционально): `npx husky init`, затем в `.husky/pre-commit` указать `npx lint-staged` — изменённые файлы будут автоформатироваться.
+- Значимые архитектурные решения фиксируются в [`docs/adr/`](docs/adr).

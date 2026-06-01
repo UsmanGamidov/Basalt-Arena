@@ -15,9 +15,23 @@
     "test:server:unit": "npm run build -w server && node scripts/test-money-util.mjs && node scripts/test-auth-session.mjs && npm run test -w server",
     "test:server:health": "node scripts/test-server-health.mjs",
     "test:server:api": "npm run build -w server && node scripts/test-server-api.mjs",
-    "fix:money-earned": "npm run build -w server && node scripts/fix-legacy-money-earned.mjs"
+    "fix:money-earned": "npm run build -w server && node scripts/fix-legacy-money-earned.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "{client,server,scripts}/**/*.{js,jsx,ts}": [
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "devDependencies": {
-    "concurrently": "^9.2.0"
+    "concurrently": "^9.2.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3"
   }
 }
