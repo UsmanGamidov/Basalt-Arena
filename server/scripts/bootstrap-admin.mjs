@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt'
+import argon2 from 'argon2'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -17,7 +17,7 @@ async function main() {
   const password = requiredEnv('BASALT_BOOTSTRAP_ADMIN_PASSWORD')
   const displayName = String(process.env.BASALT_BOOTSTRAP_ADMIN_DISPLAY_NAME ?? '').trim()
 
-  const passwordHash = await bcrypt.hash(password, 10)
+  const passwordHash = await argon2.hash(password, { type: argon2.argon2id })
   const user = await prisma.user.upsert({
     where: { email },
     update: {
