@@ -330,6 +330,44 @@ function QuoteCard({ quote }) {
   )
 }
 
+function HallSkeleton() {
+  return (
+    <div className="flex animate-pulse flex-col gap-8" aria-hidden>
+      <div className="flex flex-col gap-3">
+        <div className="h-5 w-40 rounded-full bg-timber" />
+        <div className="h-9 w-64 max-w-full rounded bg-timber" />
+        <div className="h-4 w-80 max-w-full rounded bg-timber/70" />
+      </div>
+      <div className="flex gap-6 border-b border-plantation/80 pb-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-5 w-24 rounded bg-timber" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_418px]">
+        <div className="flex flex-col gap-4">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="flex items-center gap-5 rounded-xl border border-plantation bg-timber p-6"
+            >
+              <div className="size-16 shrink-0 rounded-xl bg-aztec/60" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-40 max-w-full rounded bg-aztec/60" />
+                <div className="h-3 w-56 max-w-full rounded bg-aztec/40" />
+              </div>
+              <div className="h-9 w-16 shrink-0 rounded-lg bg-aztec/60" />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-4">
+          <div className="h-32 rounded-xl border border-plantation bg-timber" />
+          <div className="h-40 rounded-xl border border-plantation bg-timber" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function HallOfFamePage() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -454,7 +492,12 @@ export function HallOfFamePage() {
       <main className="flex-1 px-0 pt-[116px] md:pt-[73px]">
         <div className="mx-auto max-w-[1400px] px-6 py-10 max-[360px]:px-3 max-[360px]:py-6 md:px-10">
           {loading ? (
-            <p className="font-mono text-sm text-gull">Загрузка зала славы…</p>
+            <>
+              <p className="sr-only" role="status">
+                Загрузка зала славы…
+              </p>
+              <HallSkeleton />
+            </>
           ) : error ? (
             <div className="rounded-xl border border-plantation bg-timber/60 px-6 py-8 text-center">
               <p className="text-gull">{error}</p>

@@ -271,7 +271,7 @@ export function LoginPage() {
                         className="shrink-0 font-mono text-[10px] leading-[15px] text-turquoise transition hover:underline"
                         onClick={() => {
                           dismissErr()
-                          setInfo('Восстановление пароля в мок-режиме недоступно — используйте тестовый пароль.')
+                          setInfo('Восстановление пароля недоступно. Обратитесь к ментору.')
                         }}
                       >
                         Забыл?

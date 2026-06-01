@@ -82,7 +82,7 @@ export function SubmissionTerminal() {
           </p>
         ) : notEnrolled ? (
           <p className="rounded-lg border border-plantation/80 bg-aztec/60 px-3 py-2.5 font-mono text-xs text-half-baked">
-            Нет доступа для отправки решения.
+            Нет доступа для отправки решения. Обратитесь к ментору, чтобы он зачислил вас в спринт.
           </p>
         ) : (
           <>

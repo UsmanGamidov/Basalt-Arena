@@ -196,9 +196,18 @@ export function ProfilePage() {
   const [activeNav, setActiveNav] = useState('overview')
   const [form, setForm] = useState(() => ({ ...EMPTY_PROFILE.form }))
   const [saveState, setSaveState] = useState('idle')
+  const [saveError, setSaveError] = useState(null)
   const [historyDeletingId, setHistoryDeletingId] = useState(null)
   const [historyNotice, setHistoryNotice] = useState(null)
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
+  const [editingContacts, setEditingContacts] = useState(false)
+  const [contactsDraft, setContactsDraft] = useState({ telegram: '', email: '' })
+  const [contactsBusy, setContactsBusy] = useState(false)
+  const [contactsError, setContactsError] = useState(null)
+  const [editingSkills, setEditingSkills] = useState(false)
+  const [skillsDraft, setSkillsDraft] = useState('')
+  const [skillsBusy, setSkillsBusy] = useState(false)
+  const [achievementsModalOpen, setAchievementsModalOpen] = useState(false)
   const scrollSuppressRef = useRef(0)
 
   useEffect(() => {
@@ -274,6 +283,42 @@ export function ProfilePage() {
     }
   }
 
+  async function saveContacts() {
+    setContactsBusy(true)
+    setContactsError(null)
+    try {
+      await patchProfile({
+        form: { telegram: contactsDraft.telegram, email: contactsDraft.email },
+      })
+      await refreshSession()
+      setEditingContacts(false)
+    } catch (e) {
+      setContactsError(e instanceof Error ? e.message : 'Не удалось сохранить')
+    } finally {
+      setContactsBusy(false)
+    }
+  }
+
+  async function saveSkills() {
+    setSkillsBusy(true)
+    try {
+      await patchProfile({ form: { skillsLabel: skillsDraft } })
+      await refreshSession()
+      setEditingSkills(false)
+    } catch {
+      /* оставляем режим редактирования открытым */
+    } finally {
+      setSkillsBusy(false)
+    }
+  }
+
+  const sortedAchievements = [...profile.achievements].sort((a, b) => {
+    const ta = a.createdAt ? Date.parse(a.createdAt) : 0
+    const tb = b.createdAt ? Date.parse(b.createdAt) : 0
+    return tb - ta
+  })
+  const achievementsPreview = sortedAchievements.slice(0, 4)
+
   if (!user) return null
 
   return (
@@ -319,52 +364,122 @@ export function ProfilePage() {
               <div className="flex flex-col gap-4 rounded-xl border border-plantation bg-timber/20 p-5 max-[360px]:gap-3 max-[360px]:p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold uppercase leading-4 tracking-[1.2px] text-slate-arena">Контакты</p>
-                  <button
-                    type="button"
-                    className="rounded p-1 text-slate-arena transition-colors hover:text-white"
-                    aria-label="Изменить контакты"
+                  {!editingContacts ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setContactsError(null)
+                        setContactsDraft({
+                          telegram: profile.contacts.telegram ?? '',
+                          email: profile.contacts.email ?? '',
+                        })
+                        setEditingContacts(true)
+                      }}
+                      className="rounded p-1 text-slate-arena transition-colors hover:text-white"
+                      aria-label="Изменить контакты"
+                    >
+                      <MaterialIcon name="edit" size={14} opticalSize={14} />
+                    </button>
+                  ) : null}
+                </div>
+                {editingContacts ? (
+                  <form
+                    className="flex flex-col gap-3"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      void saveContacts()
+                    }}
                   >
-                    <MaterialIcon name="edit" size={14} opticalSize={14} />
-                  </button>
-                </div>
-                <div className="flex flex-col gap-4">
-                  <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
-                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
-                      <MaterialIcon
-                        name="send"
-                        size={18}
-                        opticalSize={18}
-                        className="text-gull transition-colors group-hover:text-white"
+                    <label className="flex flex-col gap-1">
+                      <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wide text-slate-arena">
+                        <MaterialIcon name="send" size={14} opticalSize={14} /> Telegram
+                      </span>
+                      <input
+                        value={contactsDraft.telegram}
+                        onChange={(e) => setContactsDraft((d) => ({ ...d, telegram: e.target.value }))}
+                        placeholder="@username"
+                        className="h-10 rounded-lg border border-plantation bg-aztec px-3 text-sm text-white outline-none focus:border-turquoise/40"
                       />
-                      Telegram
-                    </span>
-                    <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.telegram}</span>
-                  </div>
-                  <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
-                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
-                      <MaterialIcon
-                        name="mail"
-                        size={18}
-                        opticalSize={18}
-                        className="text-gull transition-colors group-hover:text-white"
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wide text-slate-arena">
+                        <MaterialIcon name="mail" size={14} opticalSize={14} /> Email
+                      </span>
+                      <input
+                        type="email"
+                        value={contactsDraft.email}
+                        onChange={(e) => setContactsDraft((d) => ({ ...d, email: e.target.value }))}
+                        placeholder="you@example.com"
+                        className="h-10 rounded-lg border border-plantation bg-aztec px-3 text-sm text-white outline-none focus:border-turquoise/40"
                       />
-                      Email
-                    </span>
-                    <span className="truncate text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.email}</span>
+                    </label>
+                    <p className="font-mono text-[10px] leading-relaxed text-slate-arena">
+                      GitHub формируется из логина и меняется в настройках профиля.
+                    </p>
+                    {contactsError ? (
+                      <p className="font-mono text-[11px] text-red-400">{contactsError}</p>
+                    ) : null}
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={contactsBusy}
+                        className="flex-1 rounded-lg bg-turquoise px-3 py-2 font-mono text-xs font-bold text-aztec transition hover:bg-white disabled:opacity-60"
+                      >
+                        {contactsBusy ? 'Сохранение…' : 'Сохранить'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={contactsBusy}
+                        onClick={() => {
+                          setEditingContacts(false)
+                          setContactsError(null)
+                        }}
+                        className="rounded-lg border border-plantation px-3 py-2 font-mono text-xs text-gull transition hover:bg-white/5 disabled:opacity-60"
+                      >
+                        Отмена
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
+                      <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
+                        <MaterialIcon
+                          name="send"
+                          size={18}
+                          opticalSize={18}
+                          className="text-gull transition-colors group-hover:text-white"
+                        />
+                        Telegram
+                      </span>
+                      <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.telegram}</span>
+                    </div>
+                    <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
+                      <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
+                        <MaterialIcon
+                          name="mail"
+                          size={18}
+                          opticalSize={18}
+                          className="text-gull transition-colors group-hover:text-white"
+                        />
+                        Email
+                      </span>
+                      <span className="truncate text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.email}</span>
+                    </div>
+                    <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
+                      <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
+                        <MaterialIcon
+                          name="code"
+                          size={18}
+                          opticalSize={18}
+                          className="text-gull transition-colors group-hover:text-white"
+                        />
+                        GitHub
+                      </span>
+                      <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.github}</span>
+                    </div>
                   </div>
-                  <div className="group flex items-center justify-between gap-2 rounded border border-transparent px-2 py-2 transition-[border-color,background-color] duration-200 hover:border-white/15 hover:bg-white/[0.045]">
-                    <span className="inline-flex items-center gap-2 text-sm text-gull transition-colors group-hover:text-white max-[360px]:text-xs">
-                      <MaterialIcon
-                        name="code"
-                        size={18}
-                        opticalSize={18}
-                        className="text-gull transition-colors group-hover:text-white"
-                      />
-                      GitHub
-                    </span>
-                    <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.github}</span>
-                  </div>
-                </div>
+                )}
               </div>
             </aside>
 
@@ -395,11 +510,56 @@ export function ProfilePage() {
                       {profile.bio}
                     </p>
                     <div className="flex w-full flex-wrap justify-center gap-2 pt-4 md:justify-start">
-                      <div className="inline-flex items-center gap-2 rounded border border-plantation bg-aztec/80 px-3 py-1.5">
-                        <MaterialIcon name="code" size={14} opticalSize={14} className="text-[#4ADE80]" />
-                        <span className="text-xs font-medium leading-4 text-mystic">{profile.skillsLabel}</span>
-                        <MaterialIcon name="edit" size={12} opticalSize={12} className="text-slate-arena" />
-                      </div>
+                      {editingSkills ? (
+                        <form
+                          className="flex w-full max-w-sm items-center gap-2"
+                          onSubmit={(e) => {
+                            e.preventDefault()
+                            void saveSkills()
+                          }}
+                        >
+                          <input
+                            value={skillsDraft}
+                            onChange={(e) => setSkillsDraft(e.target.value)}
+                            maxLength={120}
+                            placeholder="JavaScript, React"
+                            className="h-9 min-w-0 flex-1 rounded border border-plantation bg-aztec px-3 text-xs text-white outline-none focus:border-turquoise/40"
+                          />
+                          <button
+                            type="submit"
+                            disabled={skillsBusy}
+                            className="rounded bg-turquoise px-3 py-1.5 font-mono text-[11px] font-bold text-aztec transition hover:bg-white disabled:opacity-60"
+                          >
+                            {skillsBusy ? '…' : 'OK'}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={skillsBusy}
+                            onClick={() => setEditingSkills(false)}
+                            className="rounded border border-plantation px-2 py-1.5 font-mono text-[11px] text-gull transition hover:bg-white/5 disabled:opacity-60"
+                          >
+                            Отмена
+                          </button>
+                        </form>
+                      ) : (
+                        <div className="inline-flex items-center gap-2 rounded border border-plantation bg-aztec/80 px-3 py-1.5">
+                          <MaterialIcon name="code" size={14} opticalSize={14} className="text-[#4ADE80]" />
+                          <span className="text-xs font-medium leading-4 text-mystic">
+                            {profile.skillsLabel || 'Не указано'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSkillsDraft(profile.skillsLabel ?? '')
+                              setEditingSkills(true)
+                            }}
+                            className="rounded p-0.5 text-slate-arena transition-colors hover:text-white"
+                            aria-label="Изменить навыки"
+                          >
+                            <MaterialIcon name="edit" size={12} opticalSize={12} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -419,24 +579,35 @@ export function ProfilePage() {
                     <MaterialIcon name="military_tech" size={24} opticalSize={24} className="text-turquoise" />
                     Галерея достижений
                   </h2>
-                  <Link
-                    to="/hall"
-                    className="group inline-flex items-center gap-1 text-xs font-bold uppercase leading-4 tracking-[0.6px] text-gull transition hover:text-turquoise"
-                  >
-                    ВСЕ ДОСТИЖЕНИЯ
-                    <MaterialIcon
-                      name="arrow_forward"
-                      size={16}
-                      opticalSize={16}
-                      className="text-gull transition-colors group-hover:text-turquoise"
-                    />
-                  </Link>
+                  {sortedAchievements.length > 4 ? (
+                    <button
+                      type="button"
+                      onClick={() => setAchievementsModalOpen(true)}
+                      className="group inline-flex items-center gap-1 text-xs font-bold uppercase leading-4 tracking-[0.6px] text-gull transition hover:text-turquoise"
+                    >
+                      ВСЕ ДОСТИЖЕНИЯ ({sortedAchievements.length})
+                      <MaterialIcon
+                        name="arrow_forward"
+                        size={16}
+                        opticalSize={16}
+                        className="text-gull transition-colors group-hover:text-turquoise"
+                      />
+                    </button>
+                  ) : null}
                 </div>
-                <div className="grid grid-cols-2 gap-4 max-[360px]:grid-cols-1 max-[360px]:gap-3 min-[760px]:grid-cols-4">
-                  {profile.achievements.map((a) => (
-                    <AchievementTile key={String(a.id)} achievement={a} />
-                  ))}
-                </div>
+                {sortedAchievements.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-plantation bg-timber/10 px-6 py-10 text-center">
+                    <p className="font-mono text-sm text-gull">
+                      Пока нет достижений. Они появятся, когда наставник отметит твои успехи.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 max-[360px]:grid-cols-1 max-[360px]:gap-3 min-[760px]:grid-cols-4">
+                    {achievementsPreview.map((a) => (
+                      <AchievementTile key={String(a.id)} achievement={a} />
+                    ))}
+                  </div>
+                )}
               </section>
 
               <section
@@ -599,13 +770,14 @@ export function ProfilePage() {
                   onSubmit={async (e) => {
                     e.preventDefault()
                     setSaveState('saving')
+                    setSaveError(null)
                     try {
                       await patchProfile({ form })
                       await refreshSession()
                       setSaveState('saved')
                       window.setTimeout(() => setSaveState('idle'), 2800)
                     } catch (err) {
-                      console.warn('[profile] save', err)
+                      setSaveError(err instanceof Error ? err.message : null)
                       setSaveState('error')
                     }
                   }}
@@ -691,7 +863,9 @@ export function ProfilePage() {
                         <span className="font-mono text-xs text-spring md:mr-auto">Изменения сохранены</span>
                       ) : null}
                       {saveState === 'error' ? (
-                        <span className="font-mono text-xs text-[#FCA5A5] md:mr-auto">Не удалось сохранить</span>
+                        <span className="font-mono text-xs text-[#FCA5A5] md:mr-auto">
+                          {saveError || 'Не удалось сохранить'}
+                        </span>
                       ) : null}
                       <div className="flex w-full min-w-0 flex-row items-stretch gap-3 md:w-auto md:justify-end">
                         <button
@@ -855,6 +1029,38 @@ export function ProfilePage() {
                     )
                   })}
                 </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {achievementsModalOpen ? (
+        <div className="fixed inset-0 z-[95] flex items-end justify-center p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:items-center sm:p-4">
+          <button
+            type="button"
+            onClick={() => setAchievementsModalOpen(false)}
+            className="absolute inset-0 bg-aztec/80 backdrop-blur-[1px]"
+            aria-label="Закрыть список достижений"
+          />
+          <div className="relative z-[1] flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-plantation bg-timber shadow-2xl sm:max-h-[85vh]">
+            <div className="flex items-center justify-between border-b border-plantation/70 px-4 py-3">
+              <h3 className="inline-flex items-center gap-2 text-sm font-bold text-white">
+                <MaterialIcon name="military_tech" size={18} opticalSize={18} className="text-turquoise" />
+                Все достижения ({sortedAchievements.length})
+              </h3>
+              <button
+                type="button"
+                onClick={() => setAchievementsModalOpen(false)}
+                className="rounded px-2 py-1 font-mono text-xs text-gull hover:bg-white/5"
+              >
+                Закрыть
+              </button>
+            </div>
+            <div className="overflow-auto p-3 sm:p-4">
+              <div className="grid grid-cols-2 gap-4 max-[360px]:grid-cols-1 min-[760px]:grid-cols-4">
+                {sortedAchievements.map((a) => (
+                  <AchievementTile key={`all-${String(a.id)}`} achievement={a} />
+                ))}
               </div>
             </div>
           </div>

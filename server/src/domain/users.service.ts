@@ -100,6 +100,7 @@ export class UsersService {
           subtitle: a.subtitle,
           icon: a.icon,
           variant: a.variant,
+          createdAt: a.createdAt.toISOString(),
         })),
         sprintContext: await this.buildSprintContextForUser(u.id),
         sprintHistory: { items: await this.listUserSubmissionHistory(u.id) },
@@ -119,7 +120,15 @@ export class UsersService {
 
   async patchMeProfile(
     user: BasaltSessionUser,
-    payload: { form?: { username?: string; email?: string; telegram?: string; about?: string } },
+    payload: {
+      form?: {
+        username?: string
+        email?: string
+        telegram?: string
+        skillsLabel?: string
+        about?: string
+      }
+    },
   ) {
     if (!payload.form) {
       return { ok: true, profile: null }
@@ -131,6 +140,10 @@ export class UsersService {
     }
     const about = String(payload.form.about ?? user.bio)
     const telegram = String(payload.form.telegram ?? user.telegram)
+    const skillsLabel =
+      payload.form.skillsLabel !== undefined
+        ? String(payload.form.skillsLabel).trim().slice(0, 120)
+        : user.skillsLabel
     const email = String(payload.form.email ?? user.email)
       .trim()
       .toLowerCase()
@@ -160,6 +173,7 @@ export class UsersService {
           handle: username,
           bio: about,
           telegram,
+          skillsLabel,
           email,
           github,
         },

@@ -39,7 +39,7 @@ export function AppHeader() {
     ...(user.role === 'admin'
       ? [{ label: 'Админка', to: '/admin', active: pathname === '/admin', disabled: false }]
       : []),
-    { label: 'Документация', to: '/docs', active: false, disabled: true },
+    { label: 'Документация', href: '/api/docs', external: true, active: false, disabled: false },
   ]
 
   async function onMarkAllRead() {
@@ -72,7 +72,17 @@ export function AppHeader() {
 
           <nav className="hidden min-w-0 items-center gap-1 md:flex">
             {navItems.map((item) =>
-              item.disabled ? (
+              item.external ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium leading-5 text-gull transition hover:text-catskill xl:px-4"
+                >
+                  {item.label}
+                </a>
+              ) : item.disabled ? (
                 <span
                   key={item.label}
                   className="cursor-not-allowed whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium leading-5 opacity-40 text-fiord xl:px-4"
@@ -231,7 +241,17 @@ export function AppHeader() {
         aria-label="Навигация"
       >
         {navItems.map((item) =>
-          item.disabled ? (
+          item.external ? (
+            <a
+              key={item.label}
+              href={item.href}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-lg px-3 py-1.5 font-mono text-[11px] font-medium uppercase tracking-wide text-gull hover:bg-white/5 hover:text-catskill"
+            >
+              {item.label}
+            </a>
+          ) : item.disabled ? (
             <span
               key={item.label}
               className="shrink-0 cursor-not-allowed rounded-lg px-3 py-1.5 font-mono text-[11px] font-medium uppercase tracking-wide opacity-40 text-fiord"

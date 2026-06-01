@@ -19,6 +19,12 @@ export class ProfileFormDto {
   @IsString()
   telegram?: string
 
+  @ApiPropertyOptional({ example: 'JavaScript, React' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  skillsLabel?: string
+
   @ApiPropertyOptional({ maxLength: 2000 })
   @IsOptional()
   @IsString()

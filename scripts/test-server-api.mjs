@@ -261,17 +261,26 @@ async function main() {
           username: 'reguser2',
           email: 'reguser2@example.com',
           telegram: '@reguser2',
+          skillsLabel: 'TypeScript, React',
           about: 'about from integration test',
         },
       },
     })
     assert(patchProfile.status === 200, `Patch profile failed: ${patchProfile.status}`)
+    assert(
+      patchProfile.data?.profile?.skillsLabel === 'TypeScript, React',
+      'skillsLabel patch not returned by profile update',
+    )
 
     const regMeAfterPatch = await requestJson('/v2/me', { token: regToken })
     assert(regMeAfterPatch.status === 200, `Get /v2/me after profile patch failed: ${regMeAfterPatch.status}`)
     assert(
       regMeAfterPatch.data?.user?.profile?.form?.username === 'reguser2',
       'Username patch not reflected in /v2/me',
+    )
+    assert(
+      regMeAfterPatch.data?.user?.profile?.skillsLabel === 'TypeScript, React',
+      'skillsLabel patch not reflected in /v2/me',
     )
 
     const createUser = await requestJson('/admin/users', {
