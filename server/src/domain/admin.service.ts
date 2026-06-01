@@ -168,6 +168,23 @@ export class AdminService {
     },
     actor?: AdminActor,
   ) {
+    // Защита от блокировки админ-доступа: нельзя понизить себя или последнего администратора.
+    if (payload.role && isUserRole(payload.role) && payload.role !== USER_ROLE_ADMIN) {
+      if (actor?.id === userId) {
+        throw new BadRequestException('Нельзя понизить собственную роль администратора')
+      }
+      const target = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      })
+      if (target?.role === USER_ROLE_ADMIN) {
+        const adminCount = await this.prisma.user.count({ where: { role: USER_ROLE_ADMIN } })
+        if (adminCount <= 1) {
+          throw new BadRequestException('Нельзя понизить последнего администратора')
+        }
+      }
+    }
+
     const data: Prisma.UserUpdateInput = {}
     if (payload.role && isUserRole(payload.role)) {
       data.role = payload.role as UserRole

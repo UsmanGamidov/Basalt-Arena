@@ -91,9 +91,9 @@ export class SubmissionsService {
       select: { id: true, status: true },
     })
     if (existingSubmission) {
-      if (existingSubmission.status === 'pending_review' || existingSubmission.status === 'deleted_by_user') {
+      if (existingSubmission.status === 'pending_review') {
         throw new ConflictException(
-          'У тебя уже есть отправка на проверке в этом спринте. Дождись решения наставника или отзови текущую в профиле.',
+          'У тебя уже есть отправка на проверке в этом спринте. Дождись решения наставника или отзови её в профиле.',
         )
       }
       if (existingSubmission.status === 'approved') {

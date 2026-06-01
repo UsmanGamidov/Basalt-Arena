@@ -37,20 +37,8 @@ model User {
   authTokens         AuthToken[]
   sprintEnrollments  SprintEnrollment[]
   notifications      Notification[]
-  emailChangeChallenge EmailChangeChallenge?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
-}
-
-/** Подтверждение смены email: код в уведомлении, срок 15 мин. */
-model EmailChangeChallenge {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  newEmail  String
-  code      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AdminLog {

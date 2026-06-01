@@ -405,6 +405,31 @@ async function main() {
     const submissionId = createSubmission.data?.id
     assert(typeof submissionId === 'string', 'Missing submission id')
 
+    // Отзыв своей отправки должен освобождать участника для повторной подачи в том же спринте.
+    const withdrawSubmission = await requestJson(`/v2/submissions/${submissionId}`, {
+      method: 'DELETE',
+      token: userToken,
+    })
+    assert(withdrawSubmission.status === 200, `Withdraw submission failed: ${withdrawSubmission.status}`)
+    assert(
+      withdrawSubmission.data?.submission?.status === 'deleted_by_user',
+      'Expected status deleted_by_user after withdraw',
+    )
+
+    const resubmitAfterWithdraw = await requestJson('/v2/submissions', {
+      method: 'POST',
+      token: userToken,
+      body: { repoUrl: 'https://github.com/example/repo-again' },
+    })
+    assert(
+      resubmitAfterWithdraw.status === 201,
+      `Resubmit after withdraw should succeed, got ${resubmitAfterWithdraw.status}`,
+    )
+    assert(
+      resubmitAfterWithdraw.data?.status === 'pending_review',
+      'Expected pending_review after resubmit',
+    )
+
     const activeSubmission = await requestJson('/v2/sprints/S-IT-1/submissions/active', { token: userToken })
     assert(activeSubmission.status === 200, `Active submission endpoint failed: ${activeSubmission.status}`)
     assert(activeSubmission.data?.submission?.id === submissionId, 'Active submission id mismatch')
@@ -509,6 +534,16 @@ async function main() {
       token: adminToken,
     })
     assert(deleteSelfAdmin.status === 400, `Expected 400 when deleting self admin, got ${deleteSelfAdmin.status}`)
+
+    const demoteSelfAdmin = await requestJson(`/admin/users/${adminId}`, {
+      method: 'PATCH',
+      token: adminToken,
+      body: { role: 'user' },
+    })
+    assert(
+      demoteSelfAdmin.status === 400,
+      `Expected 400 when demoting self admin, got ${demoteSelfAdmin.status}`,
+    )
 
     console.log('Server API integration test passed (full critical flow)')
   } finally {

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { User } from '@prisma/client'
 
-/** Пользователь из валидного JWT, с достижениями (как в getUserByTokenOrThrow). */
-export type BasaltSessionUser = Prisma.UserGetPayload<{ include: { achievements: true } }>
+/** Пользователь из валидного JWT (базовые поля User, без связей). */
+export type BasaltSessionUser = User

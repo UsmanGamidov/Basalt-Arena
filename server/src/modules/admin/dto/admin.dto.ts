@@ -294,12 +294,11 @@ export class AdminReviewSubmissionDto {
   @IsIn(['approve'])
   action!: 'approve'
 
-  @ApiPropertyOptional({ minimum: 0, maximum: MENTOR_SCORE_MAX })
-  @IsOptional()
+  @ApiProperty({ minimum: 0, maximum: MENTOR_SCORE_MAX })
   @IsInt()
   @Min(0)
   @Max(MENTOR_SCORE_MAX)
-  mentorScore?: number
+  mentorScore!: number
 
   @ApiPropertyOptional()
   @IsOptional()

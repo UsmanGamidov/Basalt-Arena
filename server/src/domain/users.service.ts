@@ -31,6 +31,7 @@ export class UsersService {
       include: { achievements: true },
     })
     const u = fresh ?? user
+    const achievements = fresh?.achievements ?? []
     const prizeAgg = await this.prisma.sprint.aggregate({
       where: { prizeWinnerUserId: u.id, prizeAwardedAt: { not: null }, prizeMoney: { gt: 0 } },
       _sum: { prizeMoney: true },
@@ -88,7 +89,7 @@ export class UsersService {
           leaderboardSize: leaderboard.leaderboardSize,
           cards,
         },
-        achievements: u.achievements.map((a) => ({
+        achievements: achievements.map((a) => ({
           id: a.id,
           title: a.title,
           subtitle: a.subtitle,

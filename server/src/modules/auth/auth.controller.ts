@@ -1,13 +1,12 @@
-import { Body, Controller, Headers, Post, UnauthorizedException, UseGuards } from '@nestjs/common'
+import { Body, Controller, Headers, Post, UnauthorizedException } from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler'
+import { Throttle } from '@nestjs/throttler'
 import { AuthService } from '../../auth/auth.service'
 import { LoginDto, RegisterDto } from './dto/login.dto'
 import { RefreshDto } from './dto/refresh.dto'
 
 @ApiTags('auth')
 @Controller('auth')
-@UseGuards(ThrottlerGuard)
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 

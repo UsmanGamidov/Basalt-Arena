@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
-import { ThrottlerModule } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core'
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { AuthModule } from './modules/auth/auth.module'
 import { V2Module } from './modules/v2/v2.module'
 import { AdminModule } from './modules/admin/admin.module'
@@ -17,5 +18,9 @@ import { HealthController } from './health.controller'
     AdminModule,
   ],
   controllers: [HealthController],
+  providers: [
+    // Глобальный rate-limit (120/мин) на все маршруты; @Throttle на роутах ужесточает лимит точечно.
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

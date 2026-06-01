@@ -178,7 +178,6 @@ export class AuthSessionService {
     await this.assertActiveAccessSession(payload)
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
-      include: { achievements: true },
     })
     if (!user) {
       throw new UnauthorizedException('Токен невалиден')
