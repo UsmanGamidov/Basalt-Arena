@@ -701,9 +701,18 @@ export class AdminService {
       )
       return { ok: true, purged: true }
     }
-    await this.prisma.submission.update({
-      where: { id: submissionId },
-      data: { status: 'deleted_by_admin', reviewedAt: new Date() },
+    let removedSolutions = 0
+    await this.prisma.$transaction(async (tx) => {
+      await tx.submission.update({
+        where: { id: submissionId },
+        data: { status: 'deleted_by_admin', reviewedAt: new Date() },
+      })
+      if (sub.status === 'approved') {
+        const removed = await tx.solution.deleteMany({
+          where: { sprintId: sub.sprintId, userId: sub.userId },
+        })
+        removedSolutions = removed.count
+      }
     })
     await this.audit.append(
       actor,
@@ -712,22 +721,18 @@ export class AdminService {
       sub.id,
       `Отправка ${sub.id} (@${userHandle}) переведена в deleted_by_admin (sprint=${sprintId})`,
     )
-    if (sub.status === 'approved') {
-      const removed = await this.prisma.solution.deleteMany({
-        where: { sprintId: sub.sprintId, userId: sub.userId },
-      })
-      if (removed.count > 0) {
-        await this.prizeSettlement.recalculateSprintRanks(sub.sprintId)
-        await this.prizeSettlement.reconcileUserDerivedStats(sub.userId)
-        await this.audit.append(
-          actor,
-          'solution.auto_delete',
-          'solution',
-          null,
-          `Удалено ${removed.count} решений после удаления approved-отправки (sprint=${sprintId}, user=@${userHandle})`,
-        )
-      }
+    if (sub.status === 'approved' && removedSolutions > 0) {
+      await this.prizeSettlement.recalculateSprintRanks(sub.sprintId)
+      await this.prizeSettlement.reconcileUserDerivedStats(sub.userId)
+      await this.audit.append(
+        actor,
+        'solution.auto_delete',
+        'solution',
+        null,
+        `Удалено ${removedSolutions} решений после удаления approved-отправки (sprint=${sprintId}, user=@${userHandle})`,
+      )
     }
+    this.realtime.publish('submission')
     return { ok: true }
   }
 
@@ -913,51 +918,44 @@ export class AdminService {
 
     const existingCount = await this.prisma.solution.count({ where: { sprintId } })
     const rank = typeof payload.rank === 'number' ? payload.rank : existingCount + 1
-
-    const created = await this.prisma.solution.create({
-      data: {
-        sprintId,
-        userId: payload.userId,
-        rank,
-        rankBadge: payload.rankBadge ?? this.rankToBadge(rank),
-        mentorScore: this.normalizeMentorScore(payload.mentorScore),
-        codeUrl: payload.codeUrl,
-        demoUrl: payload.demoUrl ?? null,
-        showCrown: payload.showCrown ?? false,
-      },
-    })
+    const mentorScore = this.normalizeMentorScore(payload.mentorScore)
     const reviewedAt = new Date()
-    const latestSubmission = await this.prisma.submission.findFirst({
-      where: { sprintId, userId: payload.userId },
-      orderBy: { createdAt: 'desc' },
-      select: { id: true },
-    })
-    if (latestSubmission?.id) {
-      await this.prisma.submission.update({
-        where: { id: latestSubmission.id },
-        data: {
-          status: 'approved',
-          repoUrl: payload.codeUrl,
-          demoUrl: payload.demoUrl ?? null,
-          mentorScore: this.normalizeMentorScore(payload.mentorScore),
-          reviewNote: 'Решение принято администратором вручную.',
-          reviewedAt,
-        },
-      })
-    } else {
-      await this.prisma.submission.create({
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      const solution = await tx.solution.create({
         data: {
           sprintId,
           userId: payload.userId,
-          repoUrl: payload.codeUrl,
+          rank,
+          rankBadge: payload.rankBadge ?? this.rankToBadge(rank),
+          mentorScore,
+          codeUrl: payload.codeUrl,
           demoUrl: payload.demoUrl ?? null,
-          status: 'approved',
-          mentorScore: this.normalizeMentorScore(payload.mentorScore),
-          reviewNote: 'Решение принято администратором вручную.',
-          reviewedAt,
+          showCrown: payload.showCrown ?? false,
         },
       })
-    }
+      const latestSubmission = await tx.submission.findFirst({
+        where: { sprintId, userId: payload.userId },
+        orderBy: { createdAt: 'desc' },
+        select: { id: true },
+      })
+      const submissionData = {
+        status: 'approved' as const,
+        repoUrl: payload.codeUrl,
+        demoUrl: payload.demoUrl ?? null,
+        mentorScore,
+        reviewNote: 'Решение принято администратором вручную.',
+        reviewedAt,
+      }
+      if (latestSubmission?.id) {
+        await tx.submission.update({ where: { id: latestSubmission.id }, data: submissionData })
+      } else {
+        await tx.submission.create({
+          data: { sprintId, userId: payload.userId, ...submissionData },
+        })
+      }
+      return solution
+    })
     await this.prizeSettlement.recalculateSprintRanks(sprintId)
     if (!options?.skipPointsReconcile) {
       await this.prizeSettlement.reconcileUserDerivedStats(payload.userId)
@@ -1013,28 +1011,30 @@ export class AdminService {
         ? this.normalizeMentorScore(payload.mentorScore)
         : undefined
 
-    const updated = await this.prisma.solution.update({
-      where: { id: solutionId },
-      data: {
-        ...(payload.userId !== undefined ? { userId: payload.userId } : {}),
-        ...(mentorScore !== undefined ? { mentorScore } : {}),
-        ...(payload.codeUrl !== undefined ? { codeUrl: payload.codeUrl } : {}),
-        ...(payload.demoUrl !== undefined ? { demoUrl: payload.demoUrl } : {}),
-        ...(payload.rank !== undefined ? { rank: payload.rank } : {}),
-        ...(payload.rankBadge !== undefined ? { rankBadge: payload.rankBadge } : {}),
-        ...(payload.showCrown !== undefined ? { showCrown: payload.showCrown } : {}),
-      },
+    const mentorScoreChanged = mentorScore !== undefined && mentorScore !== current.mentorScore
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const sol = await tx.solution.update({
+        where: { id: solutionId },
+        data: {
+          ...(payload.userId !== undefined ? { userId: payload.userId } : {}),
+          ...(mentorScore !== undefined ? { mentorScore } : {}),
+          ...(payload.codeUrl !== undefined ? { codeUrl: payload.codeUrl } : {}),
+          ...(payload.demoUrl !== undefined ? { demoUrl: payload.demoUrl } : {}),
+          ...(payload.rank !== undefined ? { rank: payload.rank } : {}),
+          ...(payload.rankBadge !== undefined ? { rankBadge: payload.rankBadge } : {}),
+          ...(payload.showCrown !== undefined ? { showCrown: payload.showCrown } : {}),
+        },
+      })
+      if (mentorScoreChanged) {
+        await tx.submission.updateMany({
+          where: { sprintId: current.sprintId, userId: current.userId, status: 'approved' },
+          data: { mentorScore },
+        })
+      }
+      return sol
     })
     await this.prizeSettlement.recalculateSprintRanks(current.sprintId)
-    if (mentorScore !== undefined && mentorScore !== current.mentorScore) {
-      await this.prisma.submission.updateMany({
-        where: {
-          sprintId: current.sprintId,
-          userId: current.userId,
-          status: 'approved',
-        },
-        data: { mentorScore },
-      })
+    if (mentorScoreChanged) {
       await this.prizeSettlement.reconcileUserDerivedStats(current.userId)
     }
     const userHandle = await this.audit.resolveUserHandle(current.userId)
@@ -1054,23 +1054,23 @@ export class AdminService {
     if (!current) throw new NotFoundException('Решение не найдено')
     const sprintId = current.sprintId
     const userId = current.userId
-    await this.prisma.solution.delete({ where: { id: solutionId } })
-    const updatedSubmissions = await this.prisma.submission.updateMany({
-      where: {
-        sprintId,
-        userId,
-        status: 'approved',
-      },
-      data: {
-        status: 'deleted_by_admin',
-        reviewedAt: new Date(),
-        reviewNote:
-          'Решение в зале славы удалено администратором. Отправка снята и требует повторной подачи.',
-      },
+    let snappedSubmissions = 0
+    await this.prisma.$transaction(async (tx) => {
+      await tx.solution.delete({ where: { id: solutionId } })
+      const res = await tx.submission.updateMany({
+        where: { sprintId, userId, status: 'approved' },
+        data: {
+          status: 'deleted_by_admin',
+          reviewedAt: new Date(),
+          reviewNote:
+            'Решение в зале славы удалено администратором. Отправка снята и требует повторной подачи.',
+        },
+      })
+      snappedSubmissions = res.count
     })
     await this.prizeSettlement.recalculateSprintRanks(sprintId)
     await this.prizeSettlement.reconcileUserDerivedStats(userId)
-    if (updatedSubmissions.count > 0) {
+    if (snappedSubmissions > 0) {
       await this.notifications.push(
         userId,
         'Отправка снята',

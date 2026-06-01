@@ -45,14 +45,19 @@ export class UsersService {
       u.moneyEarned = moneyEarnedRub
     }
     const moneyEarnedLabel = formatMoneyRub(u.moneyEarned)
-    const [globalRank, sprintsCompleted] = await Promise.all([
-      this.derivedStats.buildGlobalRankMap().then((m) =>
-        this.derivedStats.globalRankFromMap(u.id, u.points, m),
-      ),
+    // Один проход по лидерборду на запрос: ранг и позиция выводятся из него же.
+    const [leaderboard, sprintsCompleted] = await Promise.all([
+      this.getLeaderboardStats(u.id),
       this.derivedStats.sprintsCompletedForUser(u.id),
     ])
-    const cards = await this.buildStatsCards(u.id, { globalRank, sprintsCompleted, points: u.points })
-    const leaderboard = await this.getLeaderboardStats(u.id)
+    const globalRank = leaderboard.position > 0 ? `#${leaderboard.position}` : '#0'
+    const cards = await this.buildStatsCards(u.id, {
+      points: u.points,
+      globalRank,
+      sprintsCompleted,
+      moneyEarned: u.moneyEarned,
+      leaderboard,
+    })
     const notificationRows = await this.prisma.notification.findMany({
       where: { userId: u.id },
       orderBy: { createdAt: 'desc' },
@@ -365,24 +370,22 @@ export class UsersService {
 
   private async buildStatsCards(
     userId: string,
-    live: { points: number; globalRank: string; sprintsCompleted: number },
+    live: {
+      points: number
+      globalRank: string
+      sprintsCompleted: number
+      moneyEarned: number
+      leaderboard: { position: number; leaderboardSize: number }
+    },
   ) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        moneyEarned: true,
-      },
-    })
-    if (!user) return []
-
-    const [lb, solutionsCount, enrollmentsCount] = await Promise.all([
-      this.getLeaderboardStats(userId),
+    const lb = live.leaderboard
+    const [solutionsCount, enrollmentsCount, winsWithPrize] = await Promise.all([
       this.prisma.solution.count({ where: { userId } }),
       this.prisma.sprintEnrollment.count({ where: { userId } }),
+      this.prisma.sprint.count({
+        where: { prizeWinnerUserId: userId, prizeAwardedAt: { not: null }, prizeMoney: { gt: 0 } },
+      }),
     ])
-    const winsWithPrize = await this.prisma.sprint.count({
-      where: { prizeWinnerUserId: userId, prizeAwardedAt: { not: null }, prizeMoney: { gt: 0 } },
-    })
 
     const pointsTrend =
       solutionsCount > 0
@@ -437,7 +440,7 @@ export class UsersService {
       {
         key: 'money',
         label: 'Заработано денег',
-        value: formatMoneyRub(user.moneyEarned),
+        value: formatMoneyRub(live.moneyEarned),
         trendLabel: moneyTrend,
         trendVariant: 'spring',
         icon: 'payments',

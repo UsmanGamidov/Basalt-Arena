@@ -27,14 +27,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       } else if (typeof res === 'object' && res !== null && 'message' in res) {
         message = (res as { message: string | string[] }).message
       }
-    } else if (exception instanceof Error) {
-      this.logger.error(
-        `${request.method} ${request.url}`,
-        exception.stack ?? exception.message,
-      )
-      // Клиенту не отдаём stack / Prisma / пути к файлам — только в лог сервера.
-    } else {
-      this.logger.error(`${request.method} ${request.url}`, String(exception))
+    }
+
+    // Логируем серверные сбои с контекстом запроса (requestId выставляет pino-http).
+    // Клиенту stack/Prisma/пути не уходят — только безопасное сообщение.
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+      const requestId =
+        (request as Request & { id?: string }).id ??
+        (request.headers['x-request-id'] as string | undefined)
+      const context = `${request.method} ${request.url}${requestId ? ` [req:${requestId}]` : ''}`
+      const trace = exception instanceof Error ? (exception.stack ?? exception.message) : String(exception)
+      this.logger.error(context, trace)
+      // Точка интеграции внешнего трекера ошибок (Sentry и т.п.):
+      // reportError?.(exception, { requestId, path: request.url, method: request.method })
     }
 
     response.status(status).json({
