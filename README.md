@@ -125,9 +125,18 @@ npm run test:server:api   # интеграционный прогон API
 
 CI (GitHub Actions) гоняет линт/сборку клиента и серверные тесты на каждый push.
 
+## Миграции БД
+
+Прод (PostgreSQL) использует версионируемые **Prisma-миграции** (`server/prisma/migrations/`):
+
+- `prisma:deploy:postgres` применяет миграции на деплое. Скрипт самобейзлайнящийся: на свежей БД применяет всё, на существующей БД из `db push` — помечает `0_init` как применённую и катит только новое.
+- Новую миграцию сгенерировать офлайн (без локального Postgres): обновите `schema.postgres.prisma`, затем `npm run prisma:migrate:diff:postgres -w server` и сохраните вывод в `prisma/migrations/<timestamp>_<name>/migration.sql`.
+
+Локальная разработка работает на SQLite через `prisma db push` (нулевые внешние зависимости).
+
 ## Деплой (Render + Supabase)
 
-- **Build:** `npm run build:render`
+- **Build:** `npm run build:render` (применяет миграции через `migrate deploy`).
 - **Start:** `npm run start`
 - **Env на Render:** `DATABASE_URL` (Supabase), `JWT_SECRET`, `BASALT_CORS_ORIGIN`, `NODE_ENV=production`.
 
@@ -143,5 +152,5 @@ npm run bootstrap:admin:remote -w server   # нужен postgres DATABASE_URL в
 - Не коммитить `.env` и `*.db`.
 - Новые эндпоинты — DTO + class-validator (+ Swagger по возможности).
 - Админские действия логируются через журнал аудита.
-- Изменения схемы — **в обеих** схемах Prisma (SQLite и PostgreSQL).
+- Изменения схемы — **в обеих** схемах Prisma (SQLite и PostgreSQL) + сгенерировать миграцию (`prisma:migrate:diff:postgres`).
 - В production задавать сильный `JWT_SECRET` и конкретный `BASALT_CORS_ORIGIN`.
