@@ -10,6 +10,7 @@ import { MetaService } from './domain/meta.service'
 import { NotificationService } from './domain/notification.service'
 import { PasswordService } from './domain/password.service'
 import { PrizeSettlementService } from './domain/prize-settlement.service'
+import { RealtimeService } from './domain/realtime.service'
 import { SolutionsService } from './domain/solutions.service'
 import { SprintsService } from './domain/sprints.service'
 import { SubmissionsService } from './domain/submissions.service'
@@ -42,6 +43,7 @@ import { UsersService } from './domain/users.service'
     SprintsService,
     SubmissionsService,
     SolutionsService,
+    RealtimeService,
   ],
   exports: [
     AuthSessionService,
@@ -58,6 +60,7 @@ import { UsersService } from './domain/users.service'
     SprintsService,
     SubmissionsService,
     SolutionsService,
+    RealtimeService,
   ],
 })
 export class CoreModule {}

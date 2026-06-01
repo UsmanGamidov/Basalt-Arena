@@ -1,10 +1,24 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  type MessageEvent,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Sse,
+  UseGuards,
+} from '@nestjs/common'
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
+import { Observable, interval, map, merge } from 'rxjs'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import { OptionalUser } from '../../common/decorators/optional-user.decorator'
 import { AuthGuard } from '../../common/guards/auth.guard'
 import { OptionalAuthGuard } from '../../common/guards/optional-auth.guard'
 import { MetaService } from '../../domain/meta.service'
+import { RealtimeService } from '../../domain/realtime.service'
 import { SolutionsService } from '../../domain/solutions.service'
 import { SprintsService } from '../../domain/sprints.service'
 import { SubmissionsService } from '../../domain/submissions.service'
@@ -25,11 +39,28 @@ export class V2Controller {
     private readonly sprintsService: SprintsService,
     private readonly submissions: SubmissionsService,
     private readonly solutions: SolutionsService,
+    private readonly realtime: RealtimeService,
   ) {}
 
   @Get('meta')
   metaRoute() {
     return this.meta.getMeta()
+  }
+
+  /**
+   * SSE-поток серверных событий. Публичный: тело события не содержит PII —
+   * это лишь сигнал «данные изменились», по которому клиент перезапрашивает.
+   * Heartbeat каждые 25с держит соединение живым сквозь прокси.
+   */
+  @Sse('events')
+  events(): Observable<MessageEvent> {
+    const updates = this.realtime.stream$.pipe(
+      map((event): MessageEvent => ({ type: 'update', data: event })),
+    )
+    const heartbeat = interval(25_000).pipe(
+      map((): MessageEvent => ({ type: 'ping', data: { at: new Date().toISOString() } })),
+    )
+    return merge(updates, heartbeat)
   }
 
   @Get('me/sprints')

@@ -15,6 +15,7 @@ import { AdminAuditService } from './admin-audit.service'
 import { NotificationService } from './notification.service'
 import { PasswordService } from './password.service'
 import { PrizeSettlementService } from './prize-settlement.service'
+import { RealtimeService } from './realtime.service'
 import { SprintLifecycleService } from './sprint-lifecycle.service'
 import { UserDerivedStatsService } from './user-derived-stats.service'
 import { PrismaService } from '../prisma/prisma.service'
@@ -30,6 +31,7 @@ export class AdminService {
     private readonly sprintLifecycle: SprintLifecycleService,
     private readonly prizeSettlement: PrizeSettlementService,
     private readonly derivedStats: UserDerivedStatsService,
+    private readonly realtime: RealtimeService,
   ) {}
 
   private withSprintTiming<T extends { published: boolean; endsAt: Date | null }>(sprint: T) {
@@ -545,6 +547,7 @@ export class AdminService {
       created.id,
       `Создан спринт «${created.tabLabel || created.title}» (${created.id})`,
     )
+    this.realtime.publish('sprint')
     return this.withSprintTiming(created)
   }
 
@@ -626,6 +629,7 @@ export class AdminService {
       sprintId,
       `Обновлён спринт «${updated.tabLabel || updated.title}» (${sprintId})`,
     )
+    this.realtime.publish('sprint')
     return this.withSprintTiming(updated)
   }
 
@@ -643,6 +647,7 @@ export class AdminService {
       sprintId,
       `Удалён спринт «${sprint.tabLabel || sprint.title}» (${sprintId})`,
     )
+    this.realtime.publish('sprint')
     return { ok: true }
   }
 
@@ -821,6 +826,7 @@ export class AdminService {
       submissionId,
       `Принята отправка ${submissionId} (@${userHandle}, ${sprintLabel}) с баллом ${score}`,
     )
+    this.realtime.publish('solution')
     return { submission: mapSubmissionForAdmin(updated) }
   }
 
@@ -966,6 +972,7 @@ export class AdminService {
         `Создано решение ${created.id} (sprint=${sprintId}, user=@${userHandle})`,
       )
     }
+    this.realtime.publish('solution')
     return { solution: created }
   }
 
@@ -1038,6 +1045,7 @@ export class AdminService {
       solutionId,
       `Обновлено решение ${solutionId} (sprint=${current.sprintId}, user=@${userHandle})`,
     )
+    this.realtime.publish('solution')
     return { solution: updated }
   }
 
@@ -1077,6 +1085,7 @@ export class AdminService {
       solutionId,
       `Удалено решение ${solutionId} (sprint=${sprintId}, user=@${userHandle})`,
     )
+    this.realtime.publish('solution')
     return { ok: true }
   }
 

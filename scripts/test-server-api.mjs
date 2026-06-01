@@ -112,6 +112,48 @@ function assert(condition, message) {
   if (!condition) throw new Error(message)
 }
 
+/**
+ * Открывает SSE-поток /v2/events, выполняет `trigger` (который меняет данные),
+ * и ждёт серверного события `update`. Возвращает true, если событие пришло.
+ */
+async function expectRealtimeUpdate(trigger, timeoutMs = 6000) {
+  const controller = new AbortController()
+  const res = await fetch(`${BASE}/v2/events`, {
+    headers: { accept: 'text/event-stream' },
+    signal: controller.signal,
+  })
+  if (!res.ok || !res.body) {
+    controller.abort()
+    return false
+  }
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let found = false
+  // Поток установлен и подписан — теперь меняем данные.
+  await trigger()
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    const result = await Promise.race([
+      reader.read(),
+      sleep(deadline - Date.now()).then(() => ({ timeout: true })),
+    ])
+    if (result.timeout || result.done) break
+    buffer += decoder.decode(result.value, { stream: true })
+    if (buffer.includes('event: update')) {
+      found = true
+      break
+    }
+  }
+  controller.abort()
+  try {
+    await reader.cancel()
+  } catch {
+    /* поток уже закрыт */
+  }
+  return found
+}
+
 function toIntDigits(value) {
   const digits = String(value ?? '').replace(/[^\d]/g, '')
   return digits ? Number(digits) : 0
@@ -528,6 +570,21 @@ async function main() {
     const adminLogs = await requestJson('/admin/logs?limit=50', { token: adminToken })
     assert(adminLogs.status === 200, `Admin logs list failed: ${adminLogs.status}`)
     assert(Array.isArray(adminLogs.data?.logs), 'Expected logs array')
+
+    // Realtime: открытый SSE-поток получает событие `update` после изменения данных.
+    const hallSolutions = await requestJson('/v2/sprints/S-IT-1/solutions', { token: userToken })
+    const realtimeLikeTarget = Array.isArray(hallSolutions.data) ? hallSolutions.data[0]?.id : null
+    assert(
+      typeof realtimeLikeTarget === 'string',
+      'Expected a solution in S-IT-1 to drive the realtime test',
+    )
+    const gotRealtimeUpdate = await expectRealtimeUpdate(async () => {
+      await requestJson(`/v2/sprints/S-IT-1/solutions/${realtimeLikeTarget}/like`, {
+        method: 'POST',
+        token: userToken,
+      })
+    })
+    assert(gotRealtimeUpdate, 'Expected an SSE "update" event after a data change')
 
     const deleteSelfAdmin = await requestJson(`/admin/users/${adminId}`, {
       method: 'DELETE',

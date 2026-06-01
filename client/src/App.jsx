@@ -3,6 +3,7 @@ import { AuthProvider } from './auth/AuthProvider.jsx'
 import { ConfirmProvider } from './context/ConfirmProvider.jsx'
 import { AdminRoute } from './auth/AdminRoute.jsx'
 import { ProtectedRoute } from './auth/ProtectedRoute.jsx'
+import { useRealtimeBridge } from './hooks/useRealtimeBridge.js'
 import { LoginPage } from './pages/LoginPage.jsx'
 import { AdminPage } from './pages/AdminPage.jsx'
 import { HallOfFamePage } from './pages/HallOfFamePage.jsx'
@@ -10,6 +11,7 @@ import { MainScreen } from './pages/MainScreen.jsx'
 import { ProfilePage } from './pages/ProfilePage.jsx'
 
 export default function App() {
+  useRealtimeBridge()
   return (
     <BrowserRouter>
       <ConfirmProvider>

@@ -12,6 +12,7 @@ import {
 import { SUBMISSION_BLOCKING_STATUSES } from '../common/constants/submission-status'
 import { isUniqueConstraintError } from '../common/utils/prisma-errors.util'
 import { UsersService } from './users.service'
+import { RealtimeService } from './realtime.service'
 import { PrismaService } from '../prisma/prisma.service'
 import type { BasaltSessionUser } from '../types/session-user'
 
@@ -20,6 +21,7 @@ export class SubmissionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly users: UsersService,
+    private readonly realtime: RealtimeService,
   ) {}
 
   async getMyActiveSubmissionForSprint(user: BasaltSessionUser, sprintId: string) {
@@ -60,6 +62,16 @@ export class SubmissionsService {
   }
 
   async createSubmission(
+    user: BasaltSessionUser,
+    sprintId: string,
+    payload: { repoUrl: string; demoUrl?: string },
+  ) {
+    const result = await this.commitSubmission(user, sprintId, payload)
+    this.realtime.publish('submission')
+    return result
+  }
+
+  private async commitSubmission(
     user: BasaltSessionUser,
     sprintId: string,
     payload: { repoUrl: string; demoUrl?: string },

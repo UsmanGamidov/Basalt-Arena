@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { SubmissionsService } from './submissions.service'
 import { UsersService } from './users.service'
+import { RealtimeService } from './realtime.service'
 import { PrismaService } from '../prisma/prisma.service'
 
 describe('SubmissionsService', () => {
@@ -41,6 +42,7 @@ describe('SubmissionsService', () => {
         SubmissionsService,
         { provide: PrismaService, useValue: prisma },
         { provide: UsersService, useValue: users },
+        { provide: RealtimeService, useValue: { publish: jest.fn() } },
       ],
     }).compile()
     submissions = module.get(SubmissionsService)

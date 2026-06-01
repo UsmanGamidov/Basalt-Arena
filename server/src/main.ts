@@ -20,7 +20,16 @@ async function bootstrap() {
   app.useLogger(app.get(Logger))
   app.set('trust proxy', 1)
   app.use(helmet({ contentSecurityPolicy: false, crossOriginResourcePolicy: false }))
-  app.use(compression())
+  app.use(
+    compression({
+      // SSE-потоки (text/event-stream) не сжимаем — иначе буферизация ломает доставку событий.
+      filter: (req, res) => {
+        const contentType = String(res.getHeader('Content-Type') ?? '')
+        if (contentType.includes('text/event-stream')) return false
+        return compression.filter(req, res)
+      },
+    }),
+  )
   app.useBodyParser('json', { limit: '128kb' })
 
   registerClientSpaRoutes(app)
