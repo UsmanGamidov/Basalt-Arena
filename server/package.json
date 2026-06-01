@@ -12,13 +12,17 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:generate:postgres": "prisma generate --schema=prisma/schema.postgres.prisma",
-    "prisma:push:postgres": "prisma db push --schema=prisma/schema.postgres.prisma"
+    "prisma:push:postgres": "prisma db push --schema=prisma/schema.postgres.prisma",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.8",
     "@nestjs/core": "^11.1.8",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.1.8",
+    "@nestjs/swagger": "^11.4.4",
+    "@nestjs/throttler": "^6.5.0",
     "@prisma/client": "^6.8.2",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
@@ -32,7 +36,10 @@
     "@nestjs/schematics": "^11.0.6",
     "@nestjs/testing": "^11.1.8",
     "@types/express": "^5.0.6",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.15.21",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.4",
     "prisma": "^6.8.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

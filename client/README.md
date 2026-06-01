@@ -1,4 +1,16 @@
-# React + Vite
+# Basalt Arena — Client
+
+Фронтенд SPA (React + Vite + Tailwind). Полная документация проекта: [../README.md](../README.md).
+
+## Команды
+
+- `npm run dev` — http://localhost:5173 (прокси `/api` → :3001)
+- `npm run build` — `dist/` для раздачи через Nest
+- `npm run lint` — ESLint
+
+---
+
+<!-- template note below -->
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

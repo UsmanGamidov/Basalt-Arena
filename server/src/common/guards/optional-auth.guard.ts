@@ -1,15 +1,16 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common'
 import { Request } from 'express'
-import { MockDbService } from '../../mock-db.service'
+import { AuthSessionService } from '../../auth/auth-session.service'
 
-/** Bearer по возможности; без токена или при ошибке — `req.basaltUser` не выставляется. */
+/** Опциональная авторизация: если Bearer валиден — кладёт пользователя в req.basaltUser. */
 @Injectable()
 export class OptionalAuthGuard implements CanActivate {
-  constructor(private readonly db: MockDbService) {}
+  constructor(private readonly sessions: AuthSessionService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<Request>()
-    req.basaltUser = (await this.db.trySessionFromAuthHeader(req.headers.authorization)) ?? undefined
+    const user = await this.sessions.trySessionFromAuthHeader(req.headers.authorization)
+    if (user) req.basaltUser = user
     return true
   }
 }

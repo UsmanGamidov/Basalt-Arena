@@ -5,7 +5,7 @@ import {
   postLogin,
   postLogout,
   postNotificationsRead,
-  setStoredToken,
+  setStoredSession,
 } from '../api/basaltApi.js'
 import { useLiveDataRefresh } from '../hooks/useLiveDataRefresh.js'
 import { AuthContext } from './context.js'
@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
     try {
       applyMe(await getMe())
     } catch {
-      setStoredToken(null)
+      setStoredSession({ accessToken: null, refreshToken: null })
       clearSession()
     } finally {
       setReady(true)
@@ -66,7 +66,11 @@ export function AuthProvider({ children }) {
   const login = useCallback(
     async (loginOrEmail, password, rememberSession = true) => {
       const res = await postLogin({ loginOrEmail, password, remember: rememberSession })
-      setStoredToken(res.accessToken, { persist: rememberSession })
+      setStoredSession({
+        accessToken: res.accessToken,
+        refreshToken: res.refreshToken,
+        persist: rememberSession,
+      })
       applyMe(await getMe())
     },
     [applyMe],
@@ -78,7 +82,7 @@ export function AuthProvider({ children }) {
     } catch (_error) {
       void _error
     }
-    setStoredToken(null)
+    setStoredSession({ accessToken: null, refreshToken: null })
     clearSession()
     setReady(true)
   }, [clearSession])

@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger'
 import {
   IsArray,
   IsBoolean,
@@ -13,22 +14,27 @@ import {
   Min,
   MinLength,
 } from 'class-validator'
+import { USER_ROLES } from '../../../common/constants/user-role'
 
 /** Балл наставника за спринт (0–100). */
 export const MENTOR_SCORE_MAX = 100
 
 export class AdminCreateUserDto {
+  @ApiProperty({ example: 'fighter01' })
   @IsString()
   @MinLength(2)
   handle!: string
 
+  @ApiProperty({ example: 'fighter01@example.com' })
   @IsEmail()
   email!: string
 
+  @ApiProperty({ minLength: 6 })
   @IsString()
   @MinLength(6)
   password!: string
 
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   displayName?: string
@@ -37,7 +43,7 @@ export class AdminCreateUserDto {
 export class AdminUpdateUserDto {
   @IsOptional()
   @IsString()
-  @IsIn(['user', 'admin'])
+  @IsIn(USER_ROLES)
   role?: string
 
   @IsOptional()
@@ -121,10 +127,12 @@ export class AdminGrantAchievementDto {
 }
 
 export class AdminCreateSprintDto {
+  @ApiProperty({ example: 'S-12' })
   @IsString()
   @MinLength(1)
   id!: string
 
+  @ApiProperty()
   @IsString()
   tabLabel!: string
 
@@ -147,26 +155,35 @@ export class AdminCreateSprintDto {
   @IsBoolean()
   isMainActive?: boolean
 
+  @ApiPropertyOptional({
+    deprecated: true,
+    description: 'Не используется: подпись строится из endsAt на сервере',
+  })
   @IsOptional()
   @IsString()
   completedLabel?: string
 
+  @ApiProperty({ format: 'date-time' })
   @IsDateString()
   endsAt!: string
 
+  @ApiPropertyOptional({ minimum: 0 })
   @IsOptional()
   @IsInt()
   @Min(0)
   prizeMoney?: number
 
+  @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
   tags?: unknown[]
 
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
   @IsOptional()
   @IsObject()
   metrics?: Record<string, unknown>
 
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
   @IsOptional()
   @IsObject()
   brief?: Record<string, unknown>
@@ -197,31 +214,38 @@ export class AdminUpdateSprintDto {
   @IsBoolean()
   isMainActive?: boolean
 
+  @ApiPropertyOptional({ deprecated: true })
   @IsOptional()
   @IsString()
   completedLabel?: string
 
+  @ApiPropertyOptional({ format: 'date-time' })
   @IsOptional()
   @IsDateString()
   endsAt?: string
 
+  @ApiPropertyOptional({ minimum: 0 })
   @IsOptional()
   @IsInt()
   @Min(0)
   prizeMoney?: number
 
+  @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
   tags?: unknown[]
 
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
   @IsOptional()
   @IsObject()
   metrics?: Record<string, unknown>
 
+  @ApiPropertyOptional({ type: 'object', additionalProperties: true })
   @IsOptional()
   @IsObject()
   brief?: Record<string, unknown>
 
+  @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
   /** Если true и передан `brief`, сохранить `briefJson` целиком без слияния с предыдущим. */
@@ -266,15 +290,18 @@ export class AdminSprintParticipantsDto {
 }
 
 export class AdminReviewSubmissionDto {
+  @ApiProperty({ enum: ['approve'] })
   @IsIn(['approve'])
   action!: 'approve'
 
+  @ApiPropertyOptional({ minimum: 0, maximum: MENTOR_SCORE_MAX })
   @IsOptional()
   @IsInt()
   @Min(0)
   @Max(MENTOR_SCORE_MAX)
   mentorScore?: number
 
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   reviewNote?: string

@@ -7,19 +7,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  user
+  admin
+}
+
 model User {
   id                 String       @id @default(cuid())
   handle             String       @unique
   displayName        String       @default("")
   email              String       @unique
   passwordHash       String
-  role               String       @default("user")
+  role               UserRole     @default(user)
   avatarUrl          String?
   notificationsUnread Int         @default(0)
   points             Int          @default(0)
   globalRank         String       @default("#0")
   sprintsCompleted   Int          @default(0)
-  moneyEarned        String       @default("0 ₽")
+  /** Сумма выигранных призовых, рубли (целое). Отображение — formatMoneyRub на API. */
+  moneyEarned        Int          @default(0)
   bio                String       @default("")
   skillsLabel        String       @default("")
   telegram           String       @default("")
@@ -190,9 +196,14 @@ model Achievement {
 model AuthToken {
   id        String   @id @default(cuid())
   token     String   @unique
+  kind      String   @default("access")
   userId    String
+  expiresAt DateTime?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+
+  @@index([userId, kind])
+  @@index([expiresAt])
 }
 
 model Notification {

@@ -268,8 +268,29 @@ async function main() {
       body: { loginOrEmail: 'user1@example.com', password: 'user5678' },
     })
     assert(userLogin.status === 201, `User login failed: ${userLogin.status}`)
-    const userToken = userLogin.data?.accessToken
+    let userToken = userLogin.data?.accessToken
+    const userRefresh = userLogin.data?.refreshToken
     assert(typeof userToken === 'string' && userToken.length > 20, 'Missing user accessToken')
+    assert(typeof userRefresh === 'string' && userRefresh.length > 20, 'Missing user refreshToken')
+
+    const meBeforeLogout = await requestJson('/v2/me', { token: userToken })
+    assert(meBeforeLogout.status === 200, `GET /v2/me before logout failed: ${meBeforeLogout.status}`)
+    const logoutUser = await requestJson('/auth/logout', {
+      method: 'POST',
+      token: userToken,
+      body: { refreshToken: userRefresh },
+    })
+    assert(logoutUser.status === 201, `Logout failed: ${logoutUser.status}`)
+    const meAfterLogout = await requestJson('/v2/me', { token: userToken })
+    assert(meAfterLogout.status === 401, `GET /v2/me after logout should be 401, got ${meAfterLogout.status}`)
+
+    const userLoginAgain = await requestJson('/auth/login', {
+      method: 'POST',
+      body: { loginOrEmail: 'user1@example.com', password: 'user5678' },
+    })
+    assert(userLoginAgain.status === 201, `Re-login after logout failed: ${userLoginAgain.status}`)
+    userToken = userLoginAgain.data?.accessToken
+    assert(typeof userToken === 'string' && userToken.length > 20, 'Missing user accessToken after re-login')
 
     const endsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     const createSprint = await requestJson('/admin/sprints', {

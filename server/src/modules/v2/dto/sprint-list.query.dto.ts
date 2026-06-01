@@ -1,7 +1,9 @@
+import { ApiPropertyOptional } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
 import { IsInt, IsOptional, Max, Min } from 'class-validator'
 
 export class SprintListQueryDto {
+  @ApiPropertyOptional({ minimum: 1, maximum: 100, default: 20 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -9,6 +11,7 @@ export class SprintListQueryDto {
   @Max(100)
   limit?: number
 
+  @ApiPropertyOptional({ minimum: 0, default: 0 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()

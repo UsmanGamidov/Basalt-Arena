@@ -2,6 +2,7 @@ const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/
 const BASE = `${API_BASE_URL}/api/mock/v1`
 const BASE_V2 = `${API_BASE_URL}/api/mock/v1/v2`
 const TOKEN_KEY = 'basalt_mock_token'
+const REFRESH_TOKEN_KEY = 'basalt_refresh_token'
 
 function safeStorage(fn) {
   try {
@@ -14,6 +15,14 @@ function safeStorage(fn) {
 export function getStoredToken() {
   try {
     return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function getStoredRefreshToken() {
+  try {
+    return localStorage.getItem(REFRESH_TOKEN_KEY) || sessionStorage.getItem(REFRESH_TOKEN_KEY)
   } catch {
     return null
   }
@@ -37,6 +46,61 @@ export function setStoredToken(token, opts = {}) {
   })
 }
 
+export function setStoredRefreshToken(refreshToken, opts = {}) {
+  const persist = opts.persist !== false
+  safeStorage(() => {
+    if (refreshToken) {
+      if (persist) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+        safeStorage(() => sessionStorage.removeItem(REFRESH_TOKEN_KEY))
+      } else {
+        sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+        safeStorage(() => localStorage.removeItem(REFRESH_TOKEN_KEY))
+      }
+    } else {
+      safeStorage(() => localStorage.removeItem(REFRESH_TOKEN_KEY))
+      safeStorage(() => sessionStorage.removeItem(REFRESH_TOKEN_KEY))
+    }
+  })
+}
+
+export function setStoredSession({ accessToken, refreshToken, persist = true } = {}) {
+  setStoredToken(accessToken, { persist })
+  setStoredRefreshToken(refreshToken ?? null, { persist })
+}
+
+async function tryRefreshAccessToken() {
+  const refreshToken = getStoredRefreshToken()
+  if (!refreshToken) return false
+  try {
+    const res = await fetch(`${BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    })
+    const text = await res.text()
+    let data = null
+    try {
+      data = text ? JSON.parse(text) : null
+    } catch {
+      data = null
+    }
+    if (!res.ok || !data?.accessToken) {
+      setStoredSession({ accessToken: null, refreshToken: null })
+      return false
+    }
+    const persist = Boolean(localStorage.getItem(REFRESH_TOKEN_KEY))
+    setStoredSession({
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken ?? refreshToken,
+      persist,
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function request(path, options = {}) {
   return requestBase(BASE, path, options)
 }
@@ -45,7 +109,7 @@ async function requestV2(path, options = {}) {
   return requestBase(BASE_V2, path, options)
 }
 
-async function requestBase(base, path, options = {}) {
+async function requestBase(base, path, options = {}, allowRefresh = true) {
   const token = getStoredToken()
   const res = await fetch(`${base}${path}`, {
     headers: {
@@ -63,12 +127,20 @@ async function requestBase(base, path, options = {}) {
   } catch {
     data = null
   }
+  if (res.status === 401 && allowRefresh && token && (await tryRefreshAccessToken())) {
+    return requestBase(base, path, options, false)
+  }
   if (!res.ok) {
     let msg
     if (data && typeof data === 'object') {
       if (typeof data.message === 'string') msg = data.message
       else if (Array.isArray(data.message)) msg = data.message.join(', ')
       if (!msg && data.error) msg = String(data.error)
+    }
+    if (res.status >= 500) {
+      msg = 'Сервер временно недоступен. Попробуйте позже.'
+    } else if (msg && /prisma|invocation|\.ts:\d+/i.test(msg)) {
+      msg = 'Ошибка сервера. Обратитесь к администратору.'
     }
     throw new Error(msg || res.statusText || `HTTP ${res.status}`)
   }
@@ -173,7 +245,11 @@ export function postRegister(payload, opts = {}) {
 }
 
 export function postLogout() {
-  return request('/auth/logout', { method: 'POST' })
+  const refreshToken = getStoredRefreshToken()
+  return request('/auth/logout', {
+    method: 'POST',
+    body: JSON.stringify(refreshToken ? { refreshToken } : {}),
+  })
 }
 
 export async function getMe() {
@@ -349,8 +425,11 @@ export function postSolutionLike(sprintId, solutionId) {
 
 /** Админ API (Bearer, role admin). */
 
-export function getAdminUsers() {
-  return request('/admin/users')
+export function getAdminUsers({ limit = 500, offset = 0 } = {}) {
+  const params = new URLSearchParams()
+  params.set('limit', String(limit))
+  params.set('offset', String(offset))
+  return request(`/admin/users?${params}`)
 }
 
 export function postAdminCreateUser(body) {
@@ -461,8 +540,11 @@ export function postAdminGrantAchievement(body) {
   return request('/admin/achievements/grant', { method: 'POST', body: JSON.stringify(body) })
 }
 
-export function getAdminAchievements() {
-  return request('/admin/achievements')
+export function getAdminAchievements({ limit = 200, offset = 0 } = {}) {
+  const params = new URLSearchParams()
+  params.set('limit', String(limit))
+  params.set('offset', String(offset))
+  return request(`/admin/achievements?${params}`)
 }
 
 export function deleteAdminAchievement(achievementId) {

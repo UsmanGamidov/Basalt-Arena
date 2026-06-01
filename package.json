@@ -12,16 +12,12 @@
     "build:render": "npm run build -w client && npm run prisma:generate:postgres -w server && npm run prisma:push:postgres -w server && npm run build -w server",
     "start": "npm run start -w server",
     "test": "node --test client/src/lib/adminSubmissions.test.js client/src/lib/adminSolutions.test.js client/src/lib/sprintIds.test.js",
+    "test:server:unit": "npm run build -w server && node scripts/test-money-util.mjs && node scripts/test-auth-session.mjs && npm run test -w server",
     "test:server:health": "node scripts/test-server-health.mjs",
-    "test:server:api": "node scripts/test-server-api.mjs"
+    "test:server:api": "npm run build -w server && node scripts/test-server-api.mjs",
+    "fix:money-earned": "npm run build -w server && node scripts/fix-legacy-money-earned.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.0"
-  },
-  "dependencies": {
-    "json": "^11.0.0",
-    "openai": "^6.34.0",
-    "os": "^0.1.2",
-    "requests": "^0.3.0"
   }
 }
