@@ -25,6 +25,11 @@ export class PrizeSettlementService {
    * Через raw SQL: Prisma Client не может прочитать строку в Int-поле.
    */
   async migrateLegacyMoneyEarnedColumn() {
+    // Хак рассчитан на SQLite (нестрогие типы, `?`-плейсхолдеры). На Postgres тип
+    // колонки чинит versioned-миграция (20260602090000_fix_money_earned_int) — пропускаем.
+    if (/^postgres(ql)?:\/\//i.test(String(process.env.DATABASE_URL ?? ''))) {
+      return
+    }
     const rows = await this.prisma.$queryRawUnsafe<Array<{ id: string; moneyEarned: unknown }>>(
       'SELECT id, moneyEarned FROM User',
     )
