@@ -261,6 +261,7 @@ async function main() {
           username: 'reguser2',
           email: 'reguser2@example.com',
           telegram: '@reguser2',
+          github: 'https://github.com/reg-hub/some-repo',
           skillsLabel: 'TypeScript, React',
           about: 'about from integration test',
         },
@@ -270,6 +271,10 @@ async function main() {
     assert(
       patchProfile.data?.profile?.skillsLabel === 'TypeScript, React',
       'skillsLabel patch not returned by profile update',
+    )
+    assert(
+      patchProfile.data?.profile?.contacts?.github === 'reg-hub',
+      `github should be normalized to username, got ${patchProfile.data?.profile?.contacts?.github}`,
     )
 
     const regMeAfterPatch = await requestJson('/v2/me', { token: regToken })

@@ -19,6 +19,12 @@ export class ProfileFormDto {
   @IsString()
   telegram?: string
 
+  @ApiPropertyOptional({ example: 'octocat', description: 'GitHub username (or full profile URL)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  github?: string
+
   @ApiPropertyOptional({ example: 'JavaScript, React' })
   @IsOptional()
   @IsString()

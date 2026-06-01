@@ -10,6 +10,7 @@ import {
 import { SUBMISSION_BLOCKING_STATUSES } from '../common/constants/submission-status'
 import { isUniqueConstraintError } from '../common/utils/prisma-errors.util'
 import { formatMoneyRub, normalizeMoneyRub } from '../common/utils/money.util'
+import { normalizeGithubUsername } from '../common/utils/github.util'
 import { sprintTimingFields } from '../common/utils/sprint-timing.util'
 import { PrizeSettlementService } from './prize-settlement.service'
 import { UserDerivedStatsService } from './user-derived-stats.service'
@@ -125,6 +126,7 @@ export class UsersService {
         username?: string
         email?: string
         telegram?: string
+        github?: string
         skillsLabel?: string
         about?: string
       }
@@ -164,7 +166,11 @@ export class UsersService {
     if (handleTaken) {
       throw new ConflictException('Этот логин уже занят')
     }
-    const github = `/${username}`
+    // GitHub редактируется отдельно от логина: берём из формы (с нормализацией) или оставляем текущий.
+    const github =
+      payload.form.github !== undefined
+        ? normalizeGithubUsername(payload.form.github)
+        : user.github
     let updated
     try {
       updated = await this.prisma.user.update({

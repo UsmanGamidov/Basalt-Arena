@@ -7,6 +7,7 @@ import { AppFooter } from '../components/layout/AppFooter.jsx'
 import { AppHeader } from '../components/layout/AppHeader.jsx'
 import { MaterialIcon } from '../components/ui/MaterialIcon.jsx'
 import { resolveUserAvatarUrl } from '../lib/avatar.js'
+import { githubProfileUrl, githubUsername } from '../lib/github.js'
 import { useConfirm } from '../context/ConfirmProvider.jsx'
 
 function isSubmissionHistoryDeleted(row) {
@@ -201,7 +202,7 @@ export function ProfilePage() {
   const [historyNotice, setHistoryNotice] = useState(null)
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
   const [editingContacts, setEditingContacts] = useState(false)
-  const [contactsDraft, setContactsDraft] = useState({ telegram: '', email: '' })
+  const [contactsDraft, setContactsDraft] = useState({ telegram: '', email: '', github: '' })
   const [contactsBusy, setContactsBusy] = useState(false)
   const [contactsError, setContactsError] = useState(null)
   const [editingSkills, setEditingSkills] = useState(false)
@@ -288,7 +289,11 @@ export function ProfilePage() {
     setContactsError(null)
     try {
       await patchProfile({
-        form: { telegram: contactsDraft.telegram, email: contactsDraft.email },
+        form: {
+          telegram: contactsDraft.telegram,
+          email: contactsDraft.email,
+          github: contactsDraft.github,
+        },
       })
       await refreshSession()
       setEditingContacts(false)
@@ -372,6 +377,7 @@ export function ProfilePage() {
                         setContactsDraft({
                           telegram: profile.contacts.telegram ?? '',
                           email: profile.contacts.email ?? '',
+                          github: githubUsername(profile.contacts.github),
                         })
                         setEditingContacts(true)
                       }}
@@ -413,9 +419,22 @@ export function ProfilePage() {
                         className="h-10 rounded-lg border border-plantation bg-aztec px-3 text-sm text-white outline-none focus:border-turquoise/40"
                       />
                     </label>
-                    <p className="font-mono text-[10px] leading-relaxed text-slate-arena">
-                      GitHub формируется из логина и меняется в настройках профиля.
-                    </p>
+                    <label className="flex flex-col gap-1">
+                      <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-wide text-slate-arena">
+                        <MaterialIcon name="code" size={14} opticalSize={14} /> GitHub
+                      </span>
+                      <div className="flex items-center rounded-lg border border-plantation bg-aztec focus-within:border-turquoise/40">
+                        <span className="pl-3 font-mono text-xs text-slate-arena">github.com/</span>
+                        <input
+                          value={contactsDraft.github}
+                          onChange={(e) =>
+                            setContactsDraft((d) => ({ ...d, github: e.target.value }))
+                          }
+                          placeholder="username"
+                          className="h-10 min-w-0 flex-1 rounded-r-lg bg-transparent pl-1 pr-3 text-sm text-white outline-none"
+                        />
+                      </div>
+                    </label>
                     {contactsError ? (
                       <p className="font-mono text-[11px] text-red-400">{contactsError}</p>
                     ) : null}
@@ -476,7 +495,18 @@ export function ProfilePage() {
                         />
                         GitHub
                       </span>
-                      <span className="text-sm text-turquoise max-[360px]:text-xs">{profile.contacts.github}</span>
+                      {githubProfileUrl(profile.contacts.github) ? (
+                        <a
+                          href={githubProfileUrl(profile.contacts.github)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="truncate text-sm text-turquoise transition-colors hover:underline max-[360px]:text-xs"
+                        >
+                          @{githubUsername(profile.contacts.github)}
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gull max-[360px]:text-xs">—</span>
+                      )}
                     </div>
                   </div>
                 )}
