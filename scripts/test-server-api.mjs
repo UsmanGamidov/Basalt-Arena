@@ -160,9 +160,19 @@ function toIntDigits(value) {
 }
 
 async function main() {
-  const tempDir = await mkdtemp(join(tmpdir(), 'basalt-api-test-'))
-  const dbPath = join(tempDir, 'test.db')
-  const dbUrl = `file:${dbPath.replace(/\\/g, '/')}`
+  // Если задан BASALT_API_TEST_DATABASE_URL (postgres) — гоняем против реального Postgres
+  // через настоящий путь деплоя (миграции). Иначе — локальный SQLite через db push.
+  const pgUrl = String(process.env.BASALT_API_TEST_DATABASE_URL ?? '').trim()
+  const usePostgres = /^postgres(ql)?:\/\//i.test(pgUrl)
+
+  let tempDir = null
+  let dbUrl
+  if (usePostgres) {
+    dbUrl = pgUrl
+  } else {
+    tempDir = await mkdtemp(join(tmpdir(), 'basalt-api-test-'))
+    dbUrl = `file:${join(tempDir, 'test.db').replace(/\\/g, '/')}`
+  }
 
   const env = createEnv({
     DATABASE_URL: dbUrl,
@@ -174,7 +184,12 @@ async function main() {
     BASALT_BOOTSTRAP_ADMIN_DISPLAY_NAME: 'Admin',
   })
 
-  await spawnCapture(npmCommand(), ['run', 'prisma:push', '-w', 'server'], env)
+  if (usePostgres) {
+    console.log('Integration DB: PostgreSQL (via prisma migrate deploy)')
+    await spawnCapture(npmCommand(), ['run', 'prisma:deploy:postgres', '-w', 'server'], env)
+  } else {
+    await spawnCapture(npmCommand(), ['run', 'prisma:push', '-w', 'server'], env)
+  }
   await spawnCapture(npmCommand(), ['run', 'bootstrap:admin', '-w', 'server'], env)
 
   const server = spawn(process.execPath, ['server/dist/main.js'], {
@@ -623,7 +638,7 @@ async function main() {
       new Promise((resolve) => server.once('exit', resolve)),
       sleep(3000),
     ])
-    await rm(tempDir, { recursive: true, force: true })
+    if (tempDir) await rm(tempDir, { recursive: true, force: true })
   }
 }
 

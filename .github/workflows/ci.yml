@@ -38,5 +38,46 @@ jobs:
       - name: Server smoke test (health)
         run: npm run test:server:health
 
-      - name: Server integration test (api)
+      - name: Server integration test (api, sqlite)
         run: npm run test:server:api
+
+  # Прогон того же интеграционного флоу против НАСТОЯЩЕГО PostgreSQL через путь
+  # деплоя (prisma migrate deploy). Ловит расхождения диалектов SQLite↔Postgres
+  # и битые миграции ДО прода.
+  integration-postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: basalt
+          POSTGRES_PASSWORD: basalt
+          POSTGRES_DB: basalt
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U basalt"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client (postgres)
+        run: npm run prisma:generate:postgres -w server
+
+      - name: Build server
+        run: npm run build -w server
+
+      - name: Integration test against PostgreSQL
+        env:
+          BASALT_API_TEST_DATABASE_URL: postgres://basalt:basalt@localhost:5432/basalt?schema=public
+        run: node scripts/test-server-api.mjs

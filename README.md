@@ -122,10 +122,17 @@ npm run bootstrap:admin -w server
 ```bash
 npm test                  # клиент (node:test)
 npm run test:server:unit  # сервер (Jest)
-npm run test:server:api   # интеграционный прогон API
+npm run test:server:api   # интеграционный прогон API (SQLite)
+
+# тот же флоу против реального PostgreSQL (через миграции):
+BASALT_API_TEST_DATABASE_URL=postgres://user:pass@localhost:5432/db?schema=public \
+  npm run prisma:generate:postgres -w server && npm run test:server:api
 ```
 
-CI (GitHub Actions) гоняет линт/сборку клиента и серверные тесты на каждый push.
+CI (GitHub Actions) на каждый push гоняет: клиентские тесты, сборку, серверные
+unit + интеграцию на SQLite, **и тот же интеграционный флоу на настоящем PostgreSQL**
+(поднимает postgres-сервис, применяет миграции). Это ловит расхождения диалектов
+SQLite↔Postgres до прода.
 
 ## Миграции БД
 
