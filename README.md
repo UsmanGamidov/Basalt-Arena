@@ -16,14 +16,14 @@
 
 ## Стек
 
-| Слой | Технологии |
-|------|------------|
-| Frontend | React 19, React Router 7, Tailwind 4, Vite 8 |
-| Backend | NestJS 11, class-validator, Swagger |
+| Слой     | Технологии                                                 |
+| -------- | ---------------------------------------------------------- |
+| Frontend | React 19, React Router 7, Tailwind 4, Vite 8               |
+| Backend  | NestJS 11, class-validator, Swagger                        |
 | ORM / БД | Prisma 6 · SQLite локально, PostgreSQL на проде (Supabase) |
-| Auth | JWT access (15 мин) + refresh (30 дней, в БД), bcrypt |
-| Монорепо | npm workspaces (`client`, `server`) |
-| Деплой | Render (один сервис: API + статика клиента) |
+| Auth     | JWT access (15 мин) + refresh (30 дней, в БД), bcrypt      |
+| Монорепо | npm workspaces (`client`, `server`)                        |
+| Деплой   | Render (один сервис: API + статика клиента)                |
 
 ## Архитектура
 
@@ -60,11 +60,11 @@ cp server/.env.example server/.env   # заполнить JWT_SECRET и BASALT_D
 npm run dev
 ```
 
-| URL | |
-|-----|---|
-| http://localhost:5173 | фронтенд (прокси `/api` → :3001) |
-| http://localhost:3001/health | healthcheck |
-| http://localhost:3001/api/docs | Swagger UI |
+| URL                            |                                  |
+| ------------------------------ | -------------------------------- |
+| http://localhost:5173          | фронтенд (прокси `/api` → :3001) |
+| http://localhost:3001/health   | healthcheck                      |
+| http://localhost:3001/api/docs | Swagger UI                       |
 
 ### Первый администратор
 
@@ -86,26 +86,26 @@ npm run bootstrap:admin -w server
 
 Шаблон: [`server/.env.example`](server/.env.example).
 
-| Переменная | Описание |
-|------------|----------|
-| `DATABASE_URL` | `file:./dev.db` локально; PostgreSQL URI на проде |
-| `JWT_SECRET` | Секрет JWT — **обязателен в production** (иначе сервер не стартует) |
-| `BASALT_DEV_REGISTER_KEY` | Ключ для `POST /auth/register` (без него регистрация отключена) |
-| `BASALT_CORS_ORIGIN` | Разрешённые origin через запятую (прод) |
-| `BASALT_APP_BUILD`, `BASALT_PRIZE_*` | Метаданные для `GET /v2/meta` (опционально) |
-| `BASALT_BOOTSTRAP_ADMIN_*` | Создание первого администратора |
+| Переменная                           | Описание                                                            |
+| ------------------------------------ | ------------------------------------------------------------------- |
+| `DATABASE_URL`                       | `file:./dev.db` локально; PostgreSQL URI на проде                   |
+| `JWT_SECRET`                         | Секрет JWT — **обязателен в production** (иначе сервер не стартует) |
+| `BASALT_DEV_REGISTER_KEY`            | Ключ для `POST /auth/register` (без него регистрация отключена)     |
+| `BASALT_CORS_ORIGIN`                 | Разрешённые origin через запятую (прод)                             |
+| `BASALT_APP_BUILD`, `BASALT_PRIZE_*` | Метаданные для `GET /v2/meta` (опционально)                         |
+| `BASALT_BOOTSTRAP_ADMIN_*`           | Создание первого администратора                                     |
 
 ## Команды
 
-| Команда | Действие |
-|---------|----------|
-| `npm run dev` | клиент + сервер в режиме разработки |
-| `npm run build` | сборка клиента |
-| `npm run build:render` | сборка для Render (клиент + Prisma postgres + сервер) |
-| `npm run start` | production-сервер |
-| `npm test` | unit-тесты клиента |
-| `npm run test:server:unit` | unit-тесты сервера (Jest + утилиты) |
-| `npm run test:server:api` | интеграционный smoke-тест API |
+| Команда                    | Действие                                              |
+| -------------------------- | ----------------------------------------------------- |
+| `npm run dev`              | клиент + сервер в режиме разработки                   |
+| `npm run build`            | сборка клиента                                        |
+| `npm run build:render`     | сборка для Render (клиент + Prisma postgres + сервер) |
+| `npm run start`            | production-сервер                                     |
+| `npm test`                 | unit-тесты клиента                                    |
+| `npm run test:server:unit` | unit-тесты сервера (Jest + утилиты)                   |
+| `npm run test:server:api`  | интеграционный smoke-тест API                         |
 
 ## API
 
@@ -147,13 +147,13 @@ SQLite↔Postgres до прода.
 
 Прод разнесён на два сервиса (см. [`render.yaml`](render.yaml), Render Blueprint):
 
-| Сервис | Что | Хост |
-|--------|-----|------|
-| `basalt-arena-web` | Статический SPA (CDN, не засыпает) | Render Static |
-| `basalt-arena-api` | NestJS API + `/health` | Render Web (free) |
-| БД | PostgreSQL | Supabase |
+| Сервис             | Что                                | Хост              |
+| ------------------ | ---------------------------------- | ----------------- |
+| `basalt-arena-web` | Статический SPA (CDN, не засыпает) | Render Static     |
+| `basalt-arena-api` | NestJS API + `/health`             | Render Web (free) |
+| БД                 | PostgreSQL                         | Supabase          |
 
-Сборки: фронт — `npm run build:web`, бэк — `npm run build:api` (применяет миграции). Связка по env:
+Сборки: фронт — `npm run build:web`, бэк — `npm run build:api` (сборка без БД). Миграции применяются при старте бэка (`start:api` → `migrate deploy`), поэтому билд не зависит от доступности БД. Связка по env:
 
 - **web:** `VITE_API_BASE_URL` = URL API (напр. `https://basalt-arena-api.onrender.com`).
 - **api:** `DATABASE_URL` (Supabase), `JWT_SECRET` (32+), `BASALT_DEV_REGISTER_KEY`, `NODE_ENV=production`, `BASALT_CORS_ORIGIN` = URL фронта.

@@ -12,7 +12,7 @@ services:
     plan: free
     region: frankfurt # ближе к Supabase (eu-west) и RU-пользователям
     buildCommand: npm install && npm run build:api
-    startCommand: npm run start
+    startCommand: npm run start:api # миграции применяются при старте, не в билде
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
