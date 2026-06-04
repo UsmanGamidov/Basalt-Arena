@@ -11,7 +11,9 @@ services:
     runtime: node
     plan: free
     region: frankfurt # ближе к Supabase (eu-west) и RU-пользователям
-    buildCommand: npm install && npm run build:api
+    # --include=dev обязателен: при NODE_ENV=production npm иначе пропускает
+    # devDependencies (@nestjs/cli, typescript, prisma) → "nest: not found".
+    buildCommand: npm install --include=dev && npm run build:api
     startCommand: npm run start:api # миграции применяются при старте, не в билде
     healthCheckPath: /health
     envVars:
@@ -30,7 +32,7 @@ services:
   - type: web
     name: basalt-arena-web
     runtime: static
-    buildCommand: npm install && npm run build:web
+    buildCommand: npm install --include=dev && npm run build:web
     staticPublishPath: ./client/dist
     envVars:
       - key: VITE_API_BASE_URL # URL API, напр. https://basalt-arena-api.onrender.com
