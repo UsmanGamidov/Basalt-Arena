@@ -27,7 +27,7 @@
 
 ## Архитектура
 
-Один сервис NestJS отдаёт REST API и статику собранного клиента. Весь API под префиксом `/api/mock/v1` (вне префикса только `/health`).
+В проде фронт раздаётся со статик-CDN, а API — отдельным сервисом NestJS (он же умеет отдавать статику для single-service режима). Весь API под префиксом `/api/mock/v1` (вне префикса только `/health`).
 
 - **HTTP-модули:** `auth` (логин/refresh/logout), `v2` (участник), `admin` (под `AdminGuard`).
 - **Domain-сервисы** (`CoreModule`, `@Global`): бизнес-логика разбита по зонам — пользователи, спринты, отправки, решения, призовая логика, уведомления, аудит.
@@ -145,9 +145,22 @@ SQLite↔Postgres до прода.
 
 ## Деплой (Render + Supabase)
 
-- **Build:** `npm run build:render` (применяет миграции через `migrate deploy`).
-- **Start:** `npm run start`
-- **Env на Render:** `DATABASE_URL` (Supabase), `JWT_SECRET`, `BASALT_CORS_ORIGIN`, `NODE_ENV=production`.
+Прод разнесён на два сервиса (см. [`render.yaml`](render.yaml), Render Blueprint):
+
+| Сервис | Что | Хост |
+|--------|-----|------|
+| `basalt-arena-web` | Статический SPA (CDN, не засыпает) | Render Static |
+| `basalt-arena-api` | NestJS API + `/health` | Render Web (free) |
+| БД | PostgreSQL | Supabase |
+
+Сборки: фронт — `npm run build:web`, бэк — `npm run build:api` (применяет миграции). Связка по env:
+
+- **web:** `VITE_API_BASE_URL` = URL API (напр. `https://basalt-arena-api.onrender.com`).
+- **api:** `DATABASE_URL` (Supabase), `JWT_SECRET` (32+), `BASALT_DEV_REGISTER_KEY`, `NODE_ENV=production`, `BASALT_CORS_ORIGIN` = URL фронта.
+
+Развернуть: Render → New → **Blueprint** → выбрать репозиторий → задать секреты (`sync: false`). Клиент берёт адрес API из `VITE_API_BASE_URL` (CORS/SSE работают cross-origin).
+
+> Single-service режим (один сервис отдаёт API + статику) тоже поддерживается: `build:render` + `start`.
 
 После первого деплоя с пустой БД создать администратора:
 
